@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest-xl
 
     steps:
     - name: Checkout code
@@ -16,37 +16,21 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'  # Bijgewerkt naar Node.js versie 20
+        node-version: '20'  # Specificeer de Node.js versie die je wilt gebruiken
 
     - name: Install dependencies
       run: |
         cd frontend
         npm install
 
-    - name: Check node and npm versions
-      run: |
-        node -v
-        npm -v
-
-    - name: Log package.json
-      run: cat frontend/package.json
-
-    - name: List node_modules
-      run: ls -la frontend/node_modules
-
     - name: Build frontend
-      env:
-        NODE_OPTIONS: "--max-old-space-size=4096"  # Verhoog de geheugenlimiet naar 4GB
       run: |
         cd frontend
         npm run build
-
-    - name: Log build output
-      run: ls -la static
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v3
       with:
         name: frontend-static
         path: |
-          static/**
+          static/**  # Upload de static map
