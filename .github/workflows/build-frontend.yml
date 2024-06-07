@@ -16,21 +16,35 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '20'  # Specificeer de Node.js versie die je wilt gebruiken
+        node-version: '20'  # Bijgewerkt naar Node.js versie 20
 
     - name: Install dependencies
       run: |
         cd frontend
         npm install
 
+    - name: Check node and npm versions
+      run: |
+        node -v
+        npm -v
+
+    - name: Log package.json
+      run: cat frontend/package.json
+
+    - name: List node_modules
+      run: ls -la frontend/node_modules
+
     - name: Build frontend
       run: |
         cd frontend
         npm run build
+
+    - name: Log build output
+      run: ls -la static
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v3
       with:
         name: frontend-static
         path: |
-          static/**  # Upload de static map
+          static/**
