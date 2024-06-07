@@ -1,0 +1,36 @@
+name: Build Frontend
+
+on:
+  push:
+    paths:
+      - 'frontend/**'  # Trigger deze workflow alleen wanneer er iets in de frontend map wordt gewijzigd
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'  # Specificeer de Node.js versie die je wilt gebruiken
+
+    - name: Install dependencies
+      run: |
+        cd frontend
+        npm install
+
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: frontend-static
+        path: |
+          static/**  # Upload de static map
