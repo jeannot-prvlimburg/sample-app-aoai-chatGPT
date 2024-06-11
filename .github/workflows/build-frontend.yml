@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest-xl
+    runs-on: runner-01
 
     steps:
     - name: Checkout code
