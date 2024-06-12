@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: runner-01
+    runs-on: limburg_runner
 
     steps:
     - name: Checkout code
