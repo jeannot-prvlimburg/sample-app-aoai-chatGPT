@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: limburg_runner
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
@@ -26,11 +26,4 @@ jobs:
     - name: Build frontend
       run: |
         cd frontend
-        npm run build
-
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: frontend-static
-        path: |
-          static/**  # Upload de static map
+        NODE_OPTIONS="--max-old-space-size=8192" npm run build
