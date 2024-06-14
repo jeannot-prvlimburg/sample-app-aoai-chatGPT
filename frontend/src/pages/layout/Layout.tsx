@@ -52,7 +52,7 @@ const Layout = () => {
       if (window.innerWidth < 480) {
         setShareLabel(undefined)
         setHideHistoryLabel('Hide history')
-        setShowHistoryLabel('9:39') 
+        setShowHistoryLabel('Show history') 
       } else {
         setShareLabel('Share')
         setHideHistoryLabel('Hide chat history')
