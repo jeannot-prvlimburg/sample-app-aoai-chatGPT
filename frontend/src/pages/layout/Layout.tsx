@@ -10,17 +10,14 @@ import { AppStateContext } from '../../state/AppProvider'
 
 import styles from './Layout.module.css'
 
-# Adaptations - Start
-import { Dropdown, IDropdownOption } from '@fluentui/react';
+import { Dropdown, IDropdownOption } from '@fluentui/react'
 
-const [selectedModel, setSelectedModel] = useState<string>('gpt-3.5');
+const [selectedModel, setSelectedModel] = useState<string>('gpt-3.5')
 
 const modelOptions: IDropdownOption[] = [
   { key: 'gpt-3.5', text: 'GPT-3.5' },
   { key: 'gpt-4', text: 'GPT-4' },
-];
-
-# Adapatations - End
+]
 
 const Layout = () => {
   const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false)
