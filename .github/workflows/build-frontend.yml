@@ -30,21 +30,12 @@ jobs:
       env:
         CI: true  # Zorg ervoor dat CI omgevingsvariabelen juist zijn ingesteld
 
-    - name: Debug build output
+    - name: List files in static directory
       run: |
-        cd frontend
-        echo "Contents of frontend directory after build:"
-        ls -la
-        echo "Contents of dist directory (if exists):"
-        if [ -d "dist" ]; then ls -la dist; else echo "Dist directory does not exist"; fi
+        ls -la static
 
-    - name: List files in dist directory
-      if: always()  # Zorg ervoor dat deze stap altijd wordt uitgevoerd voor debugging
-      run: |
-        cd frontend
-        ls -la dist
-
-    - name: Copy build files to static folder
-      run: |
-        mkdir -p static
-        cp -r frontend/dist/* static/
+    - name: Upload static files
+      uses: actions/upload-artifact@v3
+      with:
+        name: static-files
+        path: static
