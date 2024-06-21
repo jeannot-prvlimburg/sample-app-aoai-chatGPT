@@ -84,7 +84,7 @@ const Layout = () => {
                     }]
                 }}
                 dialogContentProps={{
-                    title: "Share the web app",
+                    title: "Bewaar instellingen",
                     showCloseButton: true
                 }}
             >
