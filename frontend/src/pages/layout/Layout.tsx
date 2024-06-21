@@ -51,7 +51,7 @@ const Layout = () => {
     const handleResize = () => {
       if (window.innerWidth < 480) {
         setShareLabel(undefined)
-        setHideHistoryLabel('Hide history')
+        setHideHistoryLabel('Hide history.')
         setShowHistoryLabel('Show history')
       } else {
         setShareLabel('Instellingen')
