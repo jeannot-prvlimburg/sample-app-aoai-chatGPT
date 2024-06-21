@@ -7,7 +7,7 @@ interface ShareButtonProps extends IButtonProps {
 export const ShareButton: React.FC<ShareButtonProps> = ({onClick}) => {
     const shareButtonStyles: ICommandBarStyles & IButtonStyles = {
         root: {
-          width: 86,
+          width: 120,
           height: 32,
           borderRadius: 4,
           background: 'radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)',
