@@ -10,6 +10,8 @@ import { AppStateContext } from '../../state/AppProvider'
 
 import styles from './Layout.module.css'
 
+import { Dropdown, IDropdownOption, DropdownMenuItemType } from 'office-ui-fabric-react';
+
 const Layout = () => {
   const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false)
   const [copyClicked, setCopyClicked] = useState<boolean>(false)
@@ -38,6 +40,13 @@ const Layout = () => {
   const handleHistoryClick = () => {
     appStateContext?.dispatch({ type: 'TOGGLE_CHAT_HISTORY' })
   }
+
+  const handleDropdownChange = (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption, index?: number) => {
+    if (option) {
+        // Hier kun je logica toevoegen om te reageren op de geselecteerde waarde (bijv. switch statement voor verschillende modellen)
+        console.log('Selected model:', option.key);
+    }
+  };
 
   useEffect(() => {
     if (copyClicked) {
@@ -111,18 +120,28 @@ const Layout = () => {
           title: 'Share the web app',
           showCloseButton: true
         }}>
-        <Stack horizontal verticalAlign="center" style={{ gap: '8px' }}>
-          <TextField className={styles.urlTextBox} defaultValue={window.location.href} readOnly />
-          <div
-            className={styles.copyButtonContainer}
-            role="button"
-            tabIndex={0}
-            aria-label="Copy"
-            onClick={handleCopyClick}
-            onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? handleCopyClick() : null)}>
-            <CopyRegular className={styles.copyButton} />
-            <span className={styles.copyButtonText}>{copyText}</span>
-          </div>
+        <Stack horizontal verticalAlign="center" style={{ gap: "8px" }}>
+            <TextField className={styles.urlTextBox} defaultValue={window.location.href} readOnly />
+            <Dropdown
+                placeholder="Select model"
+                options={[
+                    { key: 'gpt-3.5', text: 'GPT-3.5' },
+                    { key: 'gpt-4', text: 'GPT-4' }
+                ]}
+                onChange={handleDropdownChange} // Voeg een functie toe om te reageren op de dropdown selectie
+                styles={{ dropdown: { width: 200 } }} // Pas de stijl van de dropdown aan indien nodig
+            />
+            <div
+                className={styles.copyButtonContainer}
+                role="button"
+                tabIndex={0}
+                aria-label="Copy"
+                onClick={handleCopyClick}
+                onKeyDown={e => e.key === "Enter" || e.key === " " ? handleCopyClick() : null}
+            >
+                <CopyRegular className={styles.copyButton} />
+                <span className={styles.copyButtonText}>{copyText}</span>
+            </div>
         </Stack>
       </Dialog>
     </div>
