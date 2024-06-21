@@ -32,7 +32,8 @@ jobs:
 
     - name: Remove old static files
       run: |
-        git rm -r --ignore-unmatch static
+        git rm -r --cached static
+        rm -rf static
         mkdir -p static
 
     - name: Copy new static files
