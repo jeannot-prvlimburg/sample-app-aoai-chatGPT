@@ -3,7 +3,7 @@ name: Build Frontend
 on:
   push:
     paths:
-      - 'frontend/**'  # Trigger deze workflow alleen wanneer er iets in de frontend map wordt gewijzigd
+      - 'frontend/**'  # Trigger this workflow only when something changes in the frontend directory
 
 jobs:
   build:
@@ -16,7 +16,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'  # Specificeer de Node.js versie die je wilt gebruiken
+        node-version: '20'  # Specify the Node.js version you want to use
 
     - name: Install dependencies
       run: |
@@ -27,3 +27,9 @@ jobs:
       run: |
         cd frontend
         NODE_OPTIONS="--max-old-space-size=8192" npm run build
+
+    - name: Create artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: frontend-build
+        path: frontend/build
