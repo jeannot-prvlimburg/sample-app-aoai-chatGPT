@@ -17,7 +17,7 @@ const Layout = () => {
   const ui = appStateContext?.state.frontendSettings?.ui
 
   const modelOptions: IDropdownOption[] = [
-    { key: 'gpt-3.5', text: 'GPT-3.5' },
+    { key: 'gpt-35-turbo', text: 'GPT-3.5' },
     { key: 'gpt-4', text: 'GPT-4' },
   ]
 
@@ -92,8 +92,8 @@ const Layout = () => {
       >
         <Stack tokens={{ childrenGap: 16 }}>
           <Dropdown
-            placeholder="Select an AI model"
-            label="AI Model"
+            placeholder="Instellingen"
+            label="Taalmodel"
             options={modelOptions}
             selectedKey={selectedModel}
             onChange={handleModelChange}
