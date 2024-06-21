@@ -10,6 +10,18 @@ import { AppStateContext } from '../../state/AppProvider'
 
 import styles from './Layout.module.css'
 
+# Adaptations - Start
+import { Dropdown, IDropdownOption } from '@fluentui/react';
+
+const [selectedModel, setSelectedModel] = useState<string>('gpt-3.5');
+
+const modelOptions: IDropdownOption[] = [
+  { key: 'gpt-3.5', text: 'GPT-3.5' },
+  { key: 'gpt-4', text: 'GPT-4' },
+];
+
+# Adapatations - End
+
 const Layout = () => {
   const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false)
   const [copyClicked, setCopyClicked] = useState<boolean>(false)
@@ -108,22 +120,18 @@ const Layout = () => {
           ]
         }}
         dialogContentProps={{
-          title: 'Share the web app',
+          title: 'Select AI Model',
           showCloseButton: true
         }}>
-        <Stack horizontal verticalAlign="center" style={{ gap: '8px' }}>
-          <TextField className={styles.urlTextBox} defaultValue={window.location.href} readOnly />
-          <div
-            className={styles.copyButtonContainer}
-            role="button"
-            tabIndex={0}
-            aria-label="Copy"
-            onClick={handleCopyClick}
-            onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? handleCopyClick() : null)}>
-            <CopyRegular className={styles.copyButton} />
-            <span className={styles.copyButtonText}>{copyText}</span>
-          </div>
-        </Stack>
+        <Stack tokens={{ childrenGap: 16 }}>
+          <Dropdown
+            placeholder="Select an AI model"
+            label="AI Model"
+            options={modelOptions}
+            selectedKey={selectedModel}
+            onChange={handleModelChange}
+          />
+          </Stack>
       </Dialog>
     </div>
   )
