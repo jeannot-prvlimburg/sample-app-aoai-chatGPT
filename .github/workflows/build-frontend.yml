@@ -30,16 +30,6 @@ jobs:
       env:
         CI: true  # Ensure that CI environment variables are set correctly
 
-    - name: Remove old static files
-      run: |
-        git rm -r --cached static
-        rm -rf static
-        mkdir -p static
-
-    - name: Copy new static files
-      run: |
-        cp -r frontend/build/* static/
-
     - name: List files in static directory
       run: |
         ls -la static
