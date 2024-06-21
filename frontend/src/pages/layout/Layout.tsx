@@ -84,7 +84,7 @@ const Layout = () => {
                     }]
                 }}
                 dialogContentProps={{
-                    title: "Bewaar instellingen",
+                    title: "Bewaar instellingen.",
                     showCloseButton: true
                 }}
             >
