@@ -86,13 +86,13 @@ const Layout = () => {
         onDismiss={handleSharePanelDismiss}
         hidden={!isSharePanelOpen}
         dialogContentProps={{
-          title: 'Select AI Model',
+          title: 'Instellingen',
           showCloseButton: true
         }}
       >
         <Stack tokens={{ childrenGap: 16 }}>
           <Dropdown
-            placeholder="Instellingen"
+            placeholder="Maak een keuze"
             label="Taalmodel"
             options={modelOptions}
             selectedKey={selectedModel}
