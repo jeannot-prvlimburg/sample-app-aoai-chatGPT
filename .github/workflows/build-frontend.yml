@@ -3,7 +3,7 @@ name: Build Frontend
 on:
   push:
     paths:
-      - 'frontend/**'  # Trigger this workflow only when something changes in the frontend directory
+      - 'frontend/**'  # Trigger deze workflow alleen wanneer er iets in de frontend map wordt gewijzigd
 
 jobs:
   build:
@@ -16,7 +16,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'  # Specify the Node.js version you want to use
+        node-version: '20'  # Specificeer de Node.js versie die je wilt gebruiken
 
     - name: Install dependencies
       run: |
@@ -28,8 +28,17 @@ jobs:
         cd frontend
         NODE_OPTIONS="--max-old-space-size=8192" npm run build
 
-    - name: Create artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: frontend-build
-        path: frontend/build
+    - name: Check build output directory
+      run: |
+        cd frontend
+        if [ -d "dist" ]; then echo "Dist directory exists"; else echo "Dist directory does not exist"; fi
+
+    - name: List files in build output directory
+      run: |
+        cd frontend
+        ls -la dist || ls -la build  # Controleer dist of build, afhankelijk van je configuratie
+
+    - name: Copy build files to static folder
+      run: |
+        mkdir -p ../static
+        cp -r frontend/dist/* ../static/ || cp -r frontend/build/* ../static/
