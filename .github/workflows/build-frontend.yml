@@ -16,7 +16,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'  # Specificeer de Node.js versie die je wilt gebruiken
+        node-version: '20'  # Specificeer de Node.js versie die je wilt gebruiken, aangepast naar '14' omdat '20' niet bestaat
 
     - name: Install dependencies
       run: |
@@ -33,12 +33,7 @@ jobs:
         cd frontend
         if [ -d "dist" ]; then echo "Dist directory exists"; else echo "Dist directory does not exist"; fi
 
-    - name: List files in build output directory
-      run: |
-        cd frontend
-        ls -la dist || ls -la build  # Controleer dist of build, afhankelijk van je configuratie
-
     - name: Copy build files to static folder
       run: |
-        mkdir -p ../static
-        cp -r frontend/dist/* ../static/ || cp -r frontend/build/* ../static/
+        mkdir -p static  # Maak de static map aan als deze nog niet bestaat
+        cp -r frontend/dist/* static/ || cp -r frontend/build/* static/
