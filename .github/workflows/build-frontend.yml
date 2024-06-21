@@ -3,7 +3,7 @@ name: Build Frontend
 on:
   push:
     paths:
-      - 'frontend/**'  # Trigger deze workflow alleen wanneer er iets in de frontend map wordt gewijzigd
+      - 'frontend/**'  # Trigger this workflow only when something in the frontend folder changes
 
 jobs:
   build:
@@ -16,7 +16,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'  # Specificeer de Node.js versie die je wilt gebruiken
+        node-version: '20'  # Specify the Node.js version you want to use
 
     - name: Install dependencies
       run: |
@@ -28,14 +28,27 @@ jobs:
         cd frontend
         NODE_OPTIONS="--max-old-space-size=8192" npm run build
       env:
-        CI: true  # Zorg ervoor dat CI omgevingsvariabelen juist zijn ingesteld
+        CI: true  # Ensure that CI environment variables are set correctly
+
+    - name: Remove old static files
+      run: |
+        git rm -r --ignore-unmatch static
+        mkdir -p static
+
+    - name: Copy new static files
+      run: |
+        cp -r frontend/build/* static/
 
     - name: List files in static directory
       run: |
         ls -la static
 
-    - name: Upload static files
-      uses: actions/upload-artifact@v3
-      with:
-        name: static-files
-        path: static
+    - name: Commit and push changes
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git add static
+        git commit -m "Update static files"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
