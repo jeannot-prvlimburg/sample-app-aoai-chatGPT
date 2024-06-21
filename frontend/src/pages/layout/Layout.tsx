@@ -54,7 +54,7 @@ const Layout = () => {
         setHideHistoryLabel('Hide history')
         setShowHistoryLabel('Show history')
       } else {
-        setShareLabel('Share')
+        setShareLabel('Test123')
         setHideHistoryLabel('Hide chat history')
         setShowHistoryLabel('Show chat history')
       }
