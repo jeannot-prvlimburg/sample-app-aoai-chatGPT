@@ -5,7 +5,10 @@ name: Build Frontend
 
 on:
   push:
-    branches: [ "latest" ]
+    branches:
+      - latest
+    paths:
+      - 'frontend/**'
     
 jobs:
   build:
