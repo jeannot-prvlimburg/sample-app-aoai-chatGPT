@@ -52,7 +52,7 @@ const Layout = () => {
       if (window.innerWidth < 480) {
         setShareLabel(undefined)
         setHideHistoryLabel('Hide history.')
-        setShowHistoryLabel('Show history')
+        setShowHistoryLabel('Show history.')
       } else {
         setShareLabel('Instellingen')
         setHideHistoryLabel('Toon Geschiedenis')
