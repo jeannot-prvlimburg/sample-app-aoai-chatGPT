@@ -54,7 +54,7 @@ const Layout = () => {
         setHideHistoryLabel('Hide history')
         setShowHistoryLabel('Show history')
       } else {
-        setShareLabel('Share')
+        setShareLabel('Instellingen')
         setHideHistoryLabel('Hide chat history')
         setShowHistoryLabel('Show chat history')
       }
@@ -108,7 +108,7 @@ const Layout = () => {
           ]
         }}
         dialogContentProps={{
-          title: 'Share the web app',
+          title: 'Bewaar instellingen',
           showCloseButton: true
         }}>
         <Stack horizontal verticalAlign="center" style={{ gap: '8px' }}>
