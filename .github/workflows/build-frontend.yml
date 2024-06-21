@@ -32,7 +32,7 @@ jobs:
 
     - name: List files in static directory
       run: |
-        ls -la ../static
+        ls -la static
 
     - name: Upload static files
       uses: actions/upload-artifact@v3
