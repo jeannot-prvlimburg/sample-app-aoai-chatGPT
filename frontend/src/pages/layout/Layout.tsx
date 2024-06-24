@@ -9,7 +9,7 @@ import styles from './Layout.module.css'
 
 const Layout = () => {
   const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false)
-  const [selectedModel, setSelectedModel] = useState<string>('gpt-3.5')
+  const [selectedModel, setSelectedModel] = useState<string>('gpt-3.5-turbo')
   const [shareLabel, setShareLabel] = useState<string | undefined>('Share')
   const [hideHistoryLabel, setHideHistoryLabel] = useState<string>('Hide chat history')
   const [showHistoryLabel, setShowHistoryLabel] = useState<string>('Show chat history')
