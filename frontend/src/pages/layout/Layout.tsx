@@ -55,7 +55,9 @@ const Layout = () => {
 }
 
   const handleTemperatureChange = async (value: number) => {
-    setTemperature(value)
+    const formattedValue = parseFloat(value.toFixed(1))
+    
+    setTemperature(formattedValue)
     
     try {
         const response = await fetch('/api/set_temperature', {
@@ -74,6 +76,7 @@ const Layout = () => {
         console.log('Temperature updated successfully:', data)
 
     } catch (error) {
+        console.log(value)
         console.error('Error updating temperature:', error)
         // Handle the error (e.g., show an error message to the user)
     }
