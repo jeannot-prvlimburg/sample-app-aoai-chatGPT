@@ -390,6 +390,7 @@ def set_model():
     new_model = data.get('model')
     
     AZURE_OPENAI_MODEL_NAME = new_model
+    AZURE_OPENAI_MODEL = new_model
         
     return jsonify({"success": True, "message": f"Model updated to {AZURE_OPENAI_MODEL_NAME}"})
 
