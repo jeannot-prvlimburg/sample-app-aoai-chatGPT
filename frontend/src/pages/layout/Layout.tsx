@@ -41,7 +41,7 @@ const Layout = () => {
     } catch (error) {
       console.error('Error updating model:', error);
     }
-  };
+  }
 
   const handleShareClick = () => {
     setIsSharePanelOpen(true)
