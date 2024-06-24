@@ -405,13 +405,13 @@ async def set_model():
 @bp.route("/api/set_temperature", methods=['POST'])
 async def set_temperature():
     if not request.is_json:
-        return jsonify({"success": False, "message": "Request must be JSON"}), 400
+        return jsonify({"success": False, "message": "Request must be JSON"}), 401
         
     data = await request.get_json()
     new_temperature = data.get('temperature')
     
     if not new_temperature:
-        return jsonify({"success": False, "message": "New temperature is required"}), 400
+        return jsonify({"success": False, "message": f"New temperature is required {data}"}), 402
 
     try:
         # Update the model name in app settings
