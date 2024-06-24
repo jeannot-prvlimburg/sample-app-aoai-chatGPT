@@ -307,6 +307,7 @@ async def promptflow_request(request):
 
 
 async def send_chat_request(request_body, request_headers):
+    global azure_openai_client
     filtered_messages = []
     messages = request_body.get("messages", [])
     for message in messages:
@@ -317,7 +318,8 @@ async def send_chat_request(request_body, request_headers):
     model_args = prepare_model_args(request_body, request_headers)
 
     try:
-        azure_openai_client = init_openai_client()
+        if azure_openai_client is None:
+            azure_openai_client = init_openai_client()
         raw_response = await azure_openai_client.chat.completions.with_raw_response.create(**model_args)
         response = raw_response.parse()
         apim_request_id = raw_response.headers.get("apim-request-id") 
@@ -326,7 +328,6 @@ async def send_chat_request(request_body, request_headers):
         raise e
 
     return response, apim_request_id
-
 
 async def complete_chat_request(request_body, request_headers):
     if app_settings.base_settings.use_promptflow:
@@ -404,7 +405,7 @@ async def set_model():
         
         return jsonify({"success": True, "message": f"Model updated to {new_model}"})
     except Exception as e:
-        logging.exception("Error updating model")
+        logging.exception(f"Error updating model to {new_model}")
         return jsonify({"success": False, "message": f"Error updating model: {str(e)}"}), 500
 
 @bp.route("/frontend_settings", methods=["GET"])
