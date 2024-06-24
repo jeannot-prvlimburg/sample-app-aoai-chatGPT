@@ -307,7 +307,6 @@ async def promptflow_request(request):
 
 
 async def send_chat_request(request_body, request_headers):
-    global azure_openai_client
     filtered_messages = []
     messages = request_body.get("messages", [])
     for message in messages:
@@ -318,8 +317,7 @@ async def send_chat_request(request_body, request_headers):
     model_args = prepare_model_args(request_body, request_headers)
 
     try:
-        if azure_openai_client is None:
-            azure_openai_client = init_openai_client()
+        azure_openai_client = init_openai_client()
         raw_response = await azure_openai_client.chat.completions.with_raw_response.create(**model_args)
         response = raw_response.parse()
         apim_request_id = raw_response.headers.get("apim-request-id") 
@@ -386,7 +384,6 @@ async def conversation():
 
 @bp.route("/api/set_model", methods=['POST'])
 async def set_model():
-    global azure_openai_client
     if not request.is_json:
         return jsonify({"success": False, "message": "Request must be JSON"}), 400
         
@@ -399,9 +396,6 @@ async def set_model():
     try:
         # Update the model name in app settings
         app_settings.azure_openai.model = new_model
-        
-        # Reinitialize the Azure OpenAI client
-        azure_openai_client = init_openai_client()
         
         return jsonify({"success": True, "message": f"Model updated to {new_model}"})
     except Exception as e:
