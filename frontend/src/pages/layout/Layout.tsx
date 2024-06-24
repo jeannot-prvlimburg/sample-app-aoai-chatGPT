@@ -22,11 +22,19 @@ const Layout = () => {
   ]
 
   const handleModelChange = (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
-    if (option) {
-      setSelectedModel(option.key as string);
-      // You might want to dispatch an action to update the app state with the new model
-      // appStateContext?.dispatch({ type: 'SET_AI_MODEL', payload: option.key });
-    }
+    // Send the selected model to the backend
+    try {
+      const response = await fetch('/api/set_model', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ model: option.key }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update model on server');
+      }
   }
 
   const handleShareClick = () => {
