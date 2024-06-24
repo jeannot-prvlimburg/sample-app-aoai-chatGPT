@@ -28,7 +28,7 @@ const Layout = () => {
     }
 
     setSelectedModel(option.key as string)
-    setShowHistoryLabel('blablabla')
+    setShowHistoryLabel('sjeng oan de geng')
 
     // Send the selected model to the backend
     try {
