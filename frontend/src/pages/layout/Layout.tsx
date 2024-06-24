@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { Link, Outlet } from 'react-router-dom'
-import { Dialog, Stack, Dropdown, IDropdownOption } from '@fluentui/react'
+import { Dialog, Stack, Dropdown, IDropdownOption, Slider } from '@fluentui/react'
 import { CosmosDBStatus } from '../../api'
 import Contoso from '../../assets/Contoso.svg'
 import { HistoryButton, ShareButton } from '../../components/common/Button'
@@ -9,12 +9,14 @@ import styles from './Layout.module.css'
 
 const Layout = () => {
   const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false)
-  const [selectedModel, setSelectedModel] = useState<string>('gpt-3.5-turbo')
   const [shareLabel, setShareLabel] = useState<string | undefined>('Share')
   const [hideHistoryLabel, setHideHistoryLabel] = useState<string>('Hide chat history')
   const [showHistoryLabel, setShowHistoryLabel] = useState<string>('Show chat history')
   const appStateContext = useContext(AppStateContext)
   const ui = appStateContext?.state.frontendSettings?.ui
+
+  const [selectedModel, setSelectedModel] = useState<string>('gpt-3.5-turbo')
+  const [temperature, setTemperature] = useState<number>(0.5)
 
   const modelOptions: IDropdownOption[] = [
     { key: 'gpt-35-turbo', text: 'GPT-3.5' },
@@ -48,6 +50,31 @@ const Layout = () => {
 
     } catch (error) {
         console.error('Error updating model:', error);
+        // Handle the error (e.g., show an error message to the user)
+    }
+}
+
+  const handleTemperatureChange = (value: number) => {
+    setTemperature(value)
+    }
+    try {
+        const response = await fetch('/api/set_temperature', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ temperature: value }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Temperature updated successfully:', data);
+
+    } catch (error) {
+        console.error('Error updating temperature:', error);
         // Handle the error (e.g., show an error message to the user)
     }
 }
@@ -120,6 +147,16 @@ const Layout = () => {
             options={modelOptions}
             selectedKey={selectedModel}
             onChange={handleModelChange}
+          />
+          <Slider
+            label="Temperatuur"
+            min={0}
+            max={1}
+            step={0.1}
+            value={temperature}
+            onChange={handleTemperatureChange}
+            showValue
+            valueFormat={value => value.toFixed(1)}
           />
         </Stack>
       </Dialog>
