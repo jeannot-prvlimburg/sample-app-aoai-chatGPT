@@ -153,7 +153,7 @@ const Layout = () => {
           />
           <Slider
             label="Temperatuur"
-            min={0}
+            min={-0.1}
             max={1}
             step={0.1}
             value={temperature}
