@@ -379,6 +379,19 @@ async def conversation():
 
     return await conversation_internal(request_json, request.headers)
 
+# Gebruik de Blueprint decorator
+@bp.route("/api/set_model", methods=['POST'])
+def set_model():
+    global AZURE_OPENAI_MODEL_NAME
+    if not request.is_json:
+        return jsonify({"success": False, "message": "Request must be JSON"}), 400
+        
+    data = request.json
+    new_model = data.get('model')
+    
+    AZURE_OPENAI_MODEL_NAME = new_model
+        
+    return jsonify({"success": True, "message": f"Model updated to {AZURE_OPENAI_MODEL_NAME}"})
 
 @bp.route("/frontend_settings", methods=["GET"])
 def get_frontend_settings():
