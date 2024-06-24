@@ -19,6 +19,7 @@ const Layout = () => {
   const modelOptions: IDropdownOption[] = [
     { key: 'gpt-35-turbo', text: 'GPT-3.5' },
     { key: 'gpt-4', text: 'GPT-4' },
+    { key: 'gpt-4o', text: 'GPT-4o' },
   ]
 
   const handleModelChange = async (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
