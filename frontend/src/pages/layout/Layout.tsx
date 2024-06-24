@@ -23,11 +23,12 @@ const Layout = () => {
 
   const handleModelChange = async (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
     if (!option) {
-      console.error('No option provided');
-      return;
+      console.error('No option provided')
+      return
     }
 
-    setSelectedModel(option.key as string);
+    setSelectedModel(option.key as string)
+    setShowHistoryLabel('blablabla')
 
     // Send the selected model to the backend
     try {
@@ -37,16 +38,16 @@ const Layout = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ model: option.key }),
-      });
+      })
 
       if (!response.ok) {
-        throw new Error(`Failed to update model on server: ${response.statusText}`);
+        throw new Error(`Failed to update model on server: ${response.statusText}`)
       }
 
       const data = await response.json();
-      console.log('Model updated successfully:', data);
+      console.log('Model updated successfully:', data)
     } catch (error) {
-      console.error('Error updating model:', error);
+      console.error('Error updating model:', error)
     }
   }
 
