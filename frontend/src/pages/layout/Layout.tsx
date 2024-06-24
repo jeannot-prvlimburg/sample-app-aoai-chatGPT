@@ -21,7 +21,7 @@ const Layout = () => {
     { key: 'gpt-4', text: 'GPT-4' },
   ]
 
-  const handleModelChange = (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
+  const handleModelChange = async (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
     // Send the selected model to the backend
     try {
       const response = await fetch('/api/set_model', {
@@ -33,9 +33,15 @@ const Layout = () => {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to update model on server');
+        throw new Error(`Failed to update model on server: ${response.statusText}`);
       }
-  }
+  
+      const data = await response.json();
+      console.log('Model updated successfully:', data);
+    } catch (error) {
+      console.error('Error updating model:', error);
+    }
+  };
 
   const handleShareClick = () => {
     setIsSharePanelOpen(true)
