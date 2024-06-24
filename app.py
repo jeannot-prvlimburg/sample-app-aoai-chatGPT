@@ -320,6 +320,7 @@ async def send_chat_request(request_body, request_headers):
         azure_openai_client = init_openai_client()
         raw_response = await azure_openai_client.chat.completions.with_raw_response.create(**model_args)
         response = raw_response.parse()
+        print(response)
         apim_request_id = raw_response.headers.get("apim-request-id") 
     except Exception as e:
         logging.exception("Exception in send_chat_request")
@@ -405,13 +406,10 @@ async def set_model():
 @bp.route("/api/set_temperature", methods=['POST'])
 async def set_temperature():
     if not request.is_json:
-        return jsonify({"success": False, "message": "Request must be JSON"}), 401
+        return jsonify({"success": False, "message": "Request must be JSON"}), 400
         
     data = await request.get_json()
     new_temperature = data.get('temperature')
-    
-    if not new_temperature:
-        return jsonify({"success": False, "message": f"New temperature is required {data}"}), 402
 
     try:
         # Update the model name in app settings
