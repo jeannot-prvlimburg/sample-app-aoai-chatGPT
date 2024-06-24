@@ -54,7 +54,7 @@ const Layout = () => {
     }
 }
 
-  const handleTemperatureChange = (value: number) => {
+  const handleTemperatureChange = async (value: number) => {
     setTemperature(value)
     
     try {
