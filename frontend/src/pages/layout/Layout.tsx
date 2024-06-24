@@ -55,9 +55,7 @@ const Layout = () => {
 }
 
   const handleTemperatureChange = async (value: number) => {
-    const formattedValue = parseFloat(value.toFixed(1))
-    
-    setTemperature(formattedValue)
+    setTemperature(value)
     
     try {
         const response = await fetch('/api/set_temperature', {
@@ -155,7 +153,7 @@ const Layout = () => {
           />
           <Slider
             label="Temperatuur"
-            min={-0.1}
+            min={0}
             max={1}
             step={0.1}
             value={temperature}
