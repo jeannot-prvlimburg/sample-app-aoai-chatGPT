@@ -96,7 +96,9 @@ MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "
 
 # Initialize Azure OpenAI Client
 def init_openai_client():
-    azure_openai_client = None
+    # azure_openai_client = None
+    global azure_openai_client
+    
     try:
         # API version check
         if (
@@ -379,20 +381,29 @@ async def conversation():
 
     return await conversation_internal(request_json, request.headers)
 
-# Gebruik de Blueprint decorator
 @bp.route("/api/set_model", methods=['POST'])
-def set_model():
-    global AZURE_OPENAI_MODEL_NAME
+async def set_model():
+    global azure_openai_client
     if not request.is_json:
         return jsonify({"success": False, "message": "Request must be JSON"}), 400
         
-    data = request.json
+    data = await request.get_json()
     new_model = data.get('model')
     
-    AZURE_OPENAI_MODEL_NAME = new_model
-    AZURE_OPENAI_MODEL = new_model
+    if not new_model:
+        return jsonify({"success": False, "message": "New model name is required"}), 400
+
+    try:
+        # Update the model name in app settings
+        app_settings.azure_openai.model = new_model
         
-    return jsonify({"success": True, "message": f"Model updated to {AZURE_OPENAI_MODEL_NAME}"})
+        # Reinitialize the Azure OpenAI client
+        azure_openai_client = init_openai_client()
+        
+        return jsonify({"success": True, "message": f"Model updated to {new_model}"})
+    except Exception as e:
+        logging.exception("Error updating model")
+        return jsonify({"success": False, "message": f"Error updating model: {str(e)}"}), 500
 
 @bp.route("/frontend_settings", methods=["GET"])
 def get_frontend_settings():
