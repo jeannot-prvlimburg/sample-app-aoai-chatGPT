@@ -34,6 +34,9 @@ from backend.utils import (
     format_pf_non_streaming_response,
 )
 
+global azure_openai_client
+azure_openai_client = None
+
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
 
@@ -96,7 +99,6 @@ MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "
 
 # Initialize Azure OpenAI Client
 def init_openai_client():
-    # azure_openai_client = None
     global azure_openai_client
     
     try:
