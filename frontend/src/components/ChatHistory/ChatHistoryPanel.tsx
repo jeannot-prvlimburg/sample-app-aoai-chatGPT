@@ -107,6 +107,7 @@ return (
       className={`${styles.container} ${appStateContext?.state.isChatHistoryOpen ? styles.visible : ''}`} 
       data-is-scrollable 
       aria-label={'chat history panel'}
+      >
       <Stack horizontal horizontalAlign="space-between" verticalAlign="center" wrap aria-label="chat history header">
         <StackItem>
           <Text
