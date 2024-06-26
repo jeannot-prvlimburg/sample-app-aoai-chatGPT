@@ -440,9 +440,13 @@ async def set_knowledge_base():
     except Exception as e:
         return jsonify({"success": False, "message": f"Problem copying app_settings: {e}"}), 400
 
-    # try:
-    #     # Update de instellingen
-    #     if isinstance(new_settings.datasource, _AzureSearchSettings):
+    try:
+        # Update de instellingen
+        if isinstance(new_settings.datasource, _AzureSearchSettings):
+            return jsonify({"success": True, "message": f"Tot hier gaan we goed."}), 200
+        else:
+            return jsonify({"success": False, "message": "Het gaat hier mis."}), 400
+        
     #         new_settings.datasource.service = "ai-search-v2-0"
     #         new_settings.datasource.index = new_knowledge_base
     #         new_settings.datasource.content_columns = ["chunk"]
