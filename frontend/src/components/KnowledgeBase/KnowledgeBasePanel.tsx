@@ -31,7 +31,7 @@ const commandBarButtonStyle: Partial<IStackStyles> = { root: { height: '50px' } 
 export function KnowledgeBasePanel(_props: KnowledgeBasePanelProps) {
   const appStateContext = useContext(AppStateContext)
 
-  const handleCloseClick = () => {
+  const handleKnowledgeBaseButtonClick = () => {
     appStateContext?.dispatch({ type: 'TOGGLE_KNOWLEDGE_BASE' })
   }
 
@@ -57,7 +57,7 @@ export function KnowledgeBasePanel(_props: KnowledgeBasePanelProps) {
             <CommandBarButton
               iconProps={{ iconName: 'Cancel' }}
               title={'Sluiten'}
-              onClick={handleCloseClick}
+              onClick={handleKnowledgeBaseButtonClick}
               aria-label={'sluit knop'}
               styles={commandBarStyle}
               role="button"
