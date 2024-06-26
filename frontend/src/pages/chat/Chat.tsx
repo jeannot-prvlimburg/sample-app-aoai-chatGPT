@@ -763,6 +763,8 @@ const Chat = () => {
         </Stack>
       ) : (
         <Stack horizontal className={styles.chatRoot}>
+          {appStateContext?.state.isChatHistoryOpen &&
+              appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && <ChatHistoryPanel />}
           <div className={styles.chatContainer}>
             {!messages || messages.length < 1 ? (
               <Stack className={styles.chatEmptyState}>
@@ -1007,8 +1009,6 @@ const Chat = () => {
               </Stack>
             </Stack.Item>
           )}
-          {appStateContext?.state.isChatHistoryOpen &&
-            appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && <ChatHistoryPanel />}
         </Stack>
       )}
     </div>
