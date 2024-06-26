@@ -17,6 +17,7 @@ import { appStateReducer } from './AppReducer'
 
 export interface AppState {
   isChatHistoryOpen: boolean
+  isKnowledgeBasePanelOpen: boolean
   chatHistoryLoadingState: ChatHistoryLoadingState
   isCosmosDBAvailable: CosmosDBHealth
   chatHistory: Conversation[] | null
