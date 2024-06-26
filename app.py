@@ -471,7 +471,7 @@ async def set_knowledge_base():
             return jsonify({"success": False, "message": "Current datasource is not Azure Search"}), 400
 
     except Exception as e:
-        return jsonify({"success": False, "message": f"Problem updating app_settings: {e}"}), 400
+        return jsonify({"success": False, "message": f"Problem updating app_settings: {str(e)}"}), 400
 
 @bp.route("/frontend_settings", methods=["GET"])
 def get_frontend_settings():
