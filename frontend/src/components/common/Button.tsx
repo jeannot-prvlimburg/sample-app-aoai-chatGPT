@@ -28,3 +28,14 @@ export const HistoryButton: React.FC<ButtonProps> = ({ onClick, text }) => {
     />
   )
 }
+
+export const KnowledgeBaseButton: React.FC<ButtonProps> = ({ onClick, text }) => {
+  return (
+    <CommandBarButton
+      className={styles.knowledgeBaseRoot}
+      iconProps={{ iconName: 'KnowledgeBase' }}
+      onClick={onClick}
+      text={text}
+    />
+  )
+}
