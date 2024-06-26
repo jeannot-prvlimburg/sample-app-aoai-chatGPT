@@ -437,14 +437,10 @@ async def set_knowledge_base():
         # Maak een kopie van de huidige instellingen
         new_settings = copy.deepcopy(app_settings)
 
-        return jsonify({"success": True, "message": f"Settings: {new_settings}"}), 200
     except Exception as e:
         return jsonify({"success": False, "message": f"Problem copying app_settings: {e}"}), 400
 
     try:
-        # Maak een kopie van de huidige instellingen
-        new_settings = copy.deepcopy(app_settings)
-
         # Update de instellingen
         if isinstance(new_settings.datasource, _AzureSearchSettings):
             new_settings.datasource.service = "ai-search-v2-0"
