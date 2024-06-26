@@ -136,8 +136,8 @@ const Layout = () => {
         setShowHistoryLabel('Show history')
       } else {
         setShareLabel('Instellingen')
-        setHideHistoryLabel('Verberg Geschiedenis')
-        setShowHistoryLabel('Toon Geschiedenis')
+        setHideHistoryLabel('Verberg')
+        setShowHistoryLabel('Geschiedenis')
       }
     }
 
