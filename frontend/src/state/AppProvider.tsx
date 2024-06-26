@@ -48,6 +48,7 @@ export type Action =
 
 const initialState: AppState = {
   isChatHistoryOpen: false,
+  isKnowledgeBasePanelOpen: false,
   chatHistoryLoadingState: ChatHistoryLoadingState.Loading,
   chatHistory: null,
   filteredChatHistory: null,
