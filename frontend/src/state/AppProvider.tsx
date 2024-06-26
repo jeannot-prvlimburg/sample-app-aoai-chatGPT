@@ -29,6 +29,7 @@ export interface AppState {
 
 export type Action =
   | { type: 'TOGGLE_CHAT_HISTORY' }
+  | { type: 'TOGGLE_KNOWLEDGE_BASE' }
   | { type: 'SET_COSMOSDB_STATUS'; payload: CosmosDBHealth }
   | { type: 'UPDATE_CHAT_HISTORY_LOADING_STATE'; payload: ChatHistoryLoadingState }
   | { type: 'UPDATE_CURRENT_CHAT'; payload: Conversation | null }
