@@ -27,7 +27,7 @@ const Layout = () => {
 
   const knowledgeBaseOptions: IDropdownOption[] = [
     { key: 'none', text: 'Geen' },
-    { key: 'stikstof-24042024', text: 'Stikstof' },
+    { key: 'stikstof-24042024', text: 'Stikstof2' },
     { key: 'griffie-06062024', text: 'Griffie' },
   ]
 
