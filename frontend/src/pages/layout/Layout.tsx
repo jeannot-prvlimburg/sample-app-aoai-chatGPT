@@ -104,7 +104,6 @@ const Layout = () => {
       })
 
       if (!response.ok) {
-        console.log('Error changing knowledge base:', data)
         console.log('Error changing knowledge base:', response)
       }
 
