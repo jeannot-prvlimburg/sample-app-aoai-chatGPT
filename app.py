@@ -422,46 +422,55 @@ async def set_temperature():
 
 @bp.route('/api/set_knowledge_base', methods=['POST'])
 async def set_knowledge_base():
-    return jsonify({"success": True, "message": "Hoihoi"}), 500
-    # if not request.is_json:
-    #     return jsonify({"success": False, "message": "Request must be JSON"}), 400
+    if not request.is_json:
+        return jsonify({"success": False, "message": "Request must be JSON"}), 400
+
+    try: 
+        data = await request.get_json()
+        new_knowledge_base = data.get('knowledge_base')
+        if not new_knowledge_base:
+            return jsonify({"success": False, "message": "Request must include knowledge_base"}), 400
+    except:
+        return jsonify({"success": False, "message": "Invalid JSON in request"}), 400
+
+    try:
+        # Maak een kopie van de huidige instellingen
+        new_settings = deepcopy(app_settings)
+
+        return jsonify({"success": True, "message": f"Settings: {new_settings}"}), 200
+    except
+        return jsonify({"success": False, "message": "Problem copying app_settings"}), 400
+        # # Update de instellingen
+        # if isinstance(new_settings.datasource, _AzureSearchSettings):
+        #     new_settings.datasource.service = "ai-search-v2-0"
+        #     new_settings.datasource.index = new_knowledge_base
+        #     new_settings.datasource.content_columns = ["chunk"]
+        #     new_settings.datasource.vector_columns = ["vector"]
+        #     new_settings.datasource.title_column = "llm_title"
+        #     new_settings.datasource.filename_column = "doc_title"
+
+        #     # Update de fields_mapping
+        #     new_settings.datasource.fields_mapping = {
+        #         "content_fields": ["chunk"],
+        #         "vector_fields": ["vector"],
+        #         "title_field": "llm_title",
+        #         "filepath_field": "doc_title"
+        #     }
+
+        #     # Pas de globale app_settings aan
+        #     global app_settings
+        #     app_settings = new_settings
+
+        #     return jsonify({"success": True, "message": f"Knowledge base updated to {new_knowledge_base}"}), 200
+        # else:
+        #     return jsonify({"success": False, "message": "Current datasource is not Azure Search"}), 400
+
     
-    # try: 
-    #     data = await request.get_json()
-    #     new_knowledge_base = data.get('knowledge_base')
-    #     if not new_knowledge_base:
-    #         return jsonify({"success": False, "message": "Request must include knowledge_base"}), 400
-    # except:
-    #     return jsonify({"success": False, "message": "Invalid JSON in request"}), 400
+    # return jsonify({"success": True, "message": "Hoihoi"}), 200
+    
+    
 
-    # try:
-    #     # Maak een kopie van de huidige instellingen
-    #     new_settings = deepcopy(app_settings)
-
-    #     # Update de instellingen
-    #     if isinstance(new_settings.datasource, _AzureSearchSettings):
-    #         new_settings.datasource.service = "ai-search-v2-0"
-    #         new_settings.datasource.index = new_knowledge_base
-    #         new_settings.datasource.content_columns = ["chunk"]
-    #         new_settings.datasource.vector_columns = ["vector"]
-    #         new_settings.datasource.title_column = "llm_title"
-    #         new_settings.datasource.filename_column = "doc_title"
-
-    #         # Update de fields_mapping
-    #         new_settings.datasource.fields_mapping = {
-    #             "content_fields": ["chunk"],
-    #             "vector_fields": ["vector"],
-    #             "title_field": "llm_title",
-    #             "filepath_field": "doc_title"
-    #         }
-
-    #         # Pas de globale app_settings aan
-    #         global app_settings
-    #         app_settings = new_settings
-
-    #         return jsonify({"success": True, "message": f"Knowledge base updated to {new_knowledge_base}"}), 200
-    #     else:
-    #         return jsonify({"success": False, "message": "Current datasource is not Azure Search"}), 400
+    # 
     # except Exception as e:
     #     logging.exception(f"Error updating knowledge base to {new_knowledge_base}")
     #     return jsonify({"success": False, "message": f"Error updating knowledge base: {str(e)}"}), 500
