@@ -17,11 +17,18 @@ const Layout = () => {
 
   const [selectedModel, setSelectedModel] = useState<string>('gpt-3.5-turbo')
   const [temperature, setTemperature] = useState<number>(0.5)
+  const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<string>('none')
 
   const modelOptions: IDropdownOption[] = [
     { key: 'gpt-35-turbo', text: 'GPT-3.5' },
     { key: 'gpt-4', text: 'GPT-4' },
     { key: 'gpt-4o', text: 'GPT-4o' },
+  ]
+
+  const knowledgeBaseOptions: IDropdownOption[] = [
+    { key: 'none', text: 'Geen' },
+    { key: 'stikstof-24042024', text: 'Stikstof' },
+    { key: 'griffie-06062024', text: 'Griffie' },
   ]
 
   const handleModelChange = async (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
@@ -52,7 +59,7 @@ const Layout = () => {
         console.error('Error updating model:', error)
         // Handle the error (e.g., show an error message to the user)
     }
-}
+  }
 
   const handleTemperatureChange = async (value: number) => {
     setTemperature(value)
@@ -80,7 +87,37 @@ const Layout = () => {
         console.error('Error updating temperature:', error)
         // Handle the error (e.g., show an error message to the user)
     }
-}
+  }
+
+  const handleKnowledgeBaseChange = async (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
+    if (!option) {
+      console.error('No option selected')
+      return
+    }
+
+    setSelectedKnowledgeBase(option.key as string)
+
+    try {
+      const response = await fetch('/api/set_knowledge_base', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ knowledgeBase: option.key }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      console.log('Knowledge base updated successfully:', data)
+
+    } catch (error) {
+      console.error('Error updating knowledge base:', error)
+      // Handle the error (e.g., show an error message to the user)
+    }
+  }
 
   const handleShareClick = () => {
     setIsSharePanelOpen(true)
@@ -150,6 +187,13 @@ const Layout = () => {
             options={modelOptions}
             selectedKey={selectedModel}
             onChange={handleModelChange}
+          />
+          <Dropdown
+            placeholder="Maak een keuze"
+            label="Kennisbank"
+            options={knowledgeBaseOptions}
+            selectedKey={selectedKnowledgeBase}
+            onChange={handleKnowledgeBaseChange}
           />
           <Slider
             label="Temperatuur"
