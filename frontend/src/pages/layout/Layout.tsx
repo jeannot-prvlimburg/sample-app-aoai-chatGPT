@@ -149,21 +149,21 @@ const Layout = () => {
 
   return (
     <div className={styles.layout}>
-      <header className={styles.header} role={'banner'}>
+       <header className={styles.header} role={'banner'}>
         <Stack horizontal verticalAlign="center" horizontalAlign="space-between">
-          <Stack horizontal verticalAlign="center">
-            <img src={ui?.logo ? ui.logo : Contoso} className={styles.headerIcon} aria-hidden="true" alt="" />
-            <Link to="/" className={styles.headerTitleContainer}>
-              <h1 className={styles.headerTitle}>{ui?.title}</h1>
-            </Link>
-          </Stack>
-          <Stack horizontal tokens={{ childrenGap: 4 }} className={styles.shareButtonContainer}>
+          <Stack horizontal verticalAlign="center" tokens={{ childrenGap: 8 }}>
             {appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && (
               <HistoryButton
                 onClick={handleHistoryClick}
                 text={appStateContext?.state?.isChatHistoryOpen ? hideHistoryLabel : showHistoryLabel}
               />
             )}
+            <img src={ui?.logo ? ui.logo : Contoso} className={styles.headerIcon} aria-hidden="true" alt="" />
+            <Link to="/" className={styles.headerTitleContainer}>
+              <h1 className={styles.headerTitle}>{ui?.title}</h1>
+            </Link>
+          </Stack>
+          <Stack horizontal tokens={{ childrenGap: 4 }} className={styles.shareButtonContainer}>
             {ui?.show_share_button && <ShareButton onClick={handleShareClick} text={shareLabel} />}
           </Stack>
         </Stack>
