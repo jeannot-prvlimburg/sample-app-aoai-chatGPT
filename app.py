@@ -398,7 +398,7 @@ async def set_model():
         # Update the model name in app settings
         app_settings.azure_openai.model = new_model
         
-        return jsonify({"success": True, "message": f"Model updated to {new_model}"})
+        return jsonify({"success": True, "message": f"Model updated to {new_model}"}), 200
     except Exception as e:
         logging.exception(f"Error updating model to {new_model}")
         return jsonify({"success": False, "message": f"Error updating model: {str(e)}"}), 500
@@ -412,14 +412,36 @@ async def set_temperature():
     new_temperature = data.get('temperature')
 
     try:
-        # Update the model name in app settings
+        # Update the knowledge base in app settings
         app_settings.azure_openai.temperature = new_temperature
         
-        return jsonify({"success": True, "message": f"Temperature updated to {new_temperature}"})
+        return jsonify({"success": True, "message": f"Temperature updated to {new_temperature}"}), 200
     except Exception as e:
         logging.exception(f"Error updating temperature to {new_temperature}")
         return jsonify({"success": False, "message": f"Error updating temperature: {str(e)}"}), 500
 
+@app.route('/api/set_knowledge_base', methods=['POST'])
+def set_knowledge_base():
+    if not request.is_json:
+        return jsonify({"success": False, "message": "Request must be JSON"}), 400
+        
+    data = await request.get_json()
+    new_knowledge_base = data.get('knowledge_base')
+
+    try:
+        # Update the model name in app settings
+        app_settings.azure_search.service = "ai-search-v2-0"
+        app_settings.azure_search.index = new_knowledge_base
+        # assume app_settings.azure_search.key is provided
+        app_settings.azure_search.content_columns = "chunk"
+        app_settings.azure_search.vector_columns = "vector"
+        app_settings.azure_search.title_column = "llm_title"
+        app_settings.azure_search.filename_column = "doc_title"
+        
+        return jsonify({"success": True, "message": f"Temperature updated to {new_temperature}"}), 200
+    except Exception as e:
+        logging.exception(f"Error updating temperature to {new_temperature}")
+        return jsonify({"success": False, "message": f"Error updating temperature: {str(e)}"}), 500
 
 @bp.route("/frontend_settings", methods=["GET"])
 def get_frontend_settings():
