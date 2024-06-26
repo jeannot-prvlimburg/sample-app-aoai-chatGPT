@@ -79,11 +79,8 @@ const Layout = () => {
 
         const data = await response.json()
         console.log('Temperature updated successfully:', data)
-        console.log(typeof value)
 
     } catch (error) {
-        console.log(value)
-        console.log(typeof value)
         console.error('Error updating temperature:', error)
         // Handle the error (e.g., show an error message to the user)
     }
