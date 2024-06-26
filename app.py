@@ -435,7 +435,7 @@ async def set_knowledge_base():
 
     try:
         # Maak een kopie van de huidige instellingen
-        new_settings = deepcopy(app_settings)
+        new_settings = copy.deepcopy(app_settings)
 
         return jsonify({"success": True, "message": f"Settings: {new_settings}"}), 200
     except Exception as e:
