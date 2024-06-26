@@ -436,35 +436,35 @@ async def set_knowledge_base():
     try:
         # Maak een kopie van de huidige instellingen
         new_settings = copy.deepcopy(app_settings)
-        # return jsonify({"success": True, "message": f"Knowledge base updated to {str(new_settings)}"}), 200
+        return jsonify({"success": True, "message": f"Knowledge base updated to {str(new_settings)}"}), 200
     except Exception as e:
         return jsonify({"success": False, "message": f"Problem copying app_settings: {e}"}), 400
 
-    try:
-        # Update de instellingen
-        new_settings.datasource.service = "ai-search-v2-0"
-        new_settings.datasource.index = new_knowledge_base
-        new_settings.datasource.content_columns = ["chunk"]
-        new_settings.datasource.vector_columns = ["vector"]
-        new_settings.datasource.title_column = "llm_title"
-        new_settings.datasource.filename_column = "doc_title"
+    # try:
+    #     # Update de instellingen
+    #     new_settings.datasource.service = "ai-search-v2-0"
+    #     new_settings.datasource.index = new_knowledge_base
+    #     new_settings.datasource.content_columns = ["chunk"]
+    #     new_settings.datasource.vector_columns = ["vector"]
+    #     new_settings.datasource.title_column = "llm_title"
+    #     new_settings.datasource.filename_column = "doc_title"
 
-        # Update de fields_mapping
-        new_settings.datasource.fields_mapping = {
-            "content_fields": ["chunk"],
-            "vector_fields": ["vector"],
-            "title_field": "llm_title",
-            "filepath_field": "doc_title"
-        }
+    #     # Update de fields_mapping
+    #     new_settings.datasource.fields_mapping = {
+    #         "content_fields": ["chunk"],
+    #         "vector_fields": ["vector"],
+    #         "title_field": "llm_title",
+    #         "filepath_field": "doc_title"
+    #     }
 
-        # Pas de globale app_settings aan
-        global app_settings
-        app_settings = new_settings
+    #     # Pas de globale app_settings aan
+    #     global app_settings
+    #     app_settings = new_settings
 
-        return jsonify({"success": True, "message": f"Knowledge base updated to {new_knowledge_base}"}), 200
+    #     return jsonify({"success": True, "message": f"Knowledge base updated to {new_knowledge_base}"}), 200
         
-    except Exception as e:
-        return jsonify({"success": False, "message": f"Problem updating app_settings: {e}"}), 400
+    # except Exception as e:
+    #     return jsonify({"success": False, "message": f"Problem updating app_settings: {e}"}), 400
 
 @bp.route("/frontend_settings", methods=["GET"])
 def get_frontend_settings():
