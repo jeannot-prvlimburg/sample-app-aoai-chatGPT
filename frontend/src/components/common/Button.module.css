@@ -36,6 +36,20 @@
   border: 1px solid #d1d1d1;
 }
 
+.knowledgeBaseButtonRoot {
+  width: 120px;
+  border: 1px solid #d1d1d1;
+  margin-left: 20px;
+}
+
+.knowledgeBaseButtonRoot:hover {
+  border: 1px solid #d1d1d1;
+}
+
+.knowledgeBaseButtonRoot:active {
+  border: 1px solid #d1d1d1;
+}
+
 @media (max-width: 480px) {
   .shareButtonRoot {
     width: auto;
@@ -43,6 +57,11 @@
   }
 
   .historyButtonRoot {
+    width: auto;
+    padding: 0 8px;
+  }
+
+  .knowledgeBaseButtonRoot {
     width: auto;
     padding: 0 8px;
   }
