@@ -438,7 +438,7 @@ async def set_knowledge_base():
         new_settings = deepcopy(app_settings)
 
         return jsonify({"success": True, "message": f"Settings: {new_settings}"}), 200
-    except
+    except:
         return jsonify({"success": False, "message": "Problem copying app_settings"}), 400
         # # Update de instellingen
         # if isinstance(new_settings.datasource, _AzureSearchSettings):
