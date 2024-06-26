@@ -420,6 +420,31 @@ async def set_temperature():
         logging.exception(f"Error updating temperature to {new_temperature}")
         return jsonify({"success": False, "message": f"Error updating temperature: {str(e)}"}), 500
 
+@bp.route('/api/set_knowledge_base', methods=['POST'])
+def set_knowledge_base():
+    if not request.is_json:
+        return jsonify({"success": False, "message": "Request must be JSON"}), 400
+    try: 
+        data = await request.get_json()
+        new_knowledge_base = data.get('knowledge_base')
+    except:
+        return jsonify({"success": False, "message": "Request must include knowledge_base"}), 400
+
+    try:
+        # Update the model name in app settings
+        app_settings.search.service = "ai-search-v2-0"
+        app_settings.search.index = new_knowledge_base
+        # assume app_settings.azure_search.key is provided
+        app_settings.search.content_columns = "chunk"
+        app_settings.search.vector_columns = "vector"
+        app_settings.search.title_column = "llm_title"
+        app_settings.search.filename_column = "doc_title"
+        
+        return jsonify({"success": True, "message": f"Temperature updated to {new_temperature}"}), 200
+    except Exception as e:
+        logging.exception(f"Error updating temperature to {new_temperature}")
+        return jsonify({"success": False, "message": f"Error updating knowledge base: {str(e)}"}), 500
+
 @bp.route("/frontend_settings", methods=["GET"])
 def get_frontend_settings():
     try:
