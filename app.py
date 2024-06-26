@@ -446,6 +446,8 @@ async def set_knowledge_base():
             return jsonify({"success": True, "message": f"Tot hier gaan we goed."}), 200
         else:
             return jsonify({"success": False, "message": "Het gaat hier mis."}), 400
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Het gaat hier flink mis. {e}"}), 400
         
     #         new_settings.datasource.service = "ai-search-v2-0"
     #         new_settings.datasource.index = new_knowledge_base
