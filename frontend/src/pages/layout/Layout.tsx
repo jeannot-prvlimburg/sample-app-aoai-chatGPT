@@ -132,11 +132,7 @@ const Layout = () => {
   }
 
   const handleKnowledgeBaseClick = () => {
-    setIsKnowledgeBasePanelOpen(true)
-  }
-
-  const handleKnowledgeBasePanelDismiss = () => {
-    setIsKnowledgeBasePanelOpen(false)
+    appStateContext?.dispatch({ type: 'TOGGLE_KNOWLEDGE_BASE' })
   }
 
   useEffect(() => {
