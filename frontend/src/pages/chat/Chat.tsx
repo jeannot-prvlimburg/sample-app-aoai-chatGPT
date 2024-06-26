@@ -36,6 +36,7 @@ import {
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ChatHistoryPanel } from "../../components/ChatHistory/ChatHistoryPanel";
+import { KnowledgeBasePanel } from "../../components/KnowledgeBase/KnowledgeBasePanel";
 import { AppStateContext } from "../../state/AppProvider";
 import { useBoolean } from "@fluentui/react-hooks";
 
@@ -921,6 +922,9 @@ const Chat = () => {
               />
             </Stack>
           </div>
+          <Stack.Item>
+          <KnowledgeBasePanel />
+          </Stack.Item>
           {/* Citation Panel */}
           {messages && messages.length > 0 && isCitationPanelOpen && activeCitation && (
             <Stack.Item className={styles.citationPanel} tabIndex={0} role="tabpanel" aria-label="Citations Panel">
