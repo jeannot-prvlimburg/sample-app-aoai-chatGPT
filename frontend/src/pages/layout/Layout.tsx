@@ -3,7 +3,7 @@ import { Link, Outlet } from 'react-router-dom'
 import { Dialog, Stack, Dropdown, IDropdownOption, Slider } from '@fluentui/react'
 import { CosmosDBStatus } from '../../api'
 import Contoso from '../../assets/Contoso.svg'
-import { HistoryButton, ShareButton } from '../../components/common/Button'
+import { HistoryButton, ShareButton, KnowledgeBaseButton } from '../../components/common/Button'
 import { AppStateContext } from '../../state/AppProvider'
 import styles from './Layout.module.css'
 
@@ -18,6 +18,9 @@ const Layout = () => {
   const [selectedModel, setSelectedModel] = useState<string>('gpt-3.5-turbo')
   const [temperature, setTemperature] = useState<number>(0.5)
   const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<string>('none')
+  const [isKnowledgeBasePanelOpen, setIsKnowledgeBasePanelOpen] = useState<boolean>(false)
+  const [hideKnowledgeBaseLabel, setKnowledgeBaseLabel] = useState<string>('Weg ermee')
+  const [showKnowledgeBaseLabel, setShowKnowledgeBaseLabel] = useState<string>('Laat zien')
 
   const modelOptions: IDropdownOption[] = [
     { key: 'gpt-35-turbo', text: 'GPT-3.5' },
@@ -128,6 +131,14 @@ const Layout = () => {
     appStateContext?.dispatch({ type: 'TOGGLE_CHAT_HISTORY' })
   }
 
+  const handleKnowledgeBaseClick = () => {
+    setIsKnowledgeBasePanelOpen(true)
+  }
+
+  const handleKnowledgeBasePanelDismiss = () => {
+    setIsKnowledgeBasePanelOpen(false)
+  }
+
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 480) {
@@ -164,6 +175,10 @@ const Layout = () => {
             </Link>
           </Stack>
           <Stack horizontal tokens={{ childrenGap: 4 }} className={styles.shareButtonContainer}>
+              <KnowledgeBaseButton
+                onClick={handleKnowledgeBaseClick}
+                text={appStateContext?.state?.isKnowledgeBasePanelOpen ? hideHistoryLabel : showHistoryLabel}
+              />
             {ui?.show_share_button && <ShareButton onClick={handleShareClick} text={shareLabel} />}
           </Stack>
         </Stack>
