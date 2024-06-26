@@ -420,7 +420,7 @@ async def set_temperature():
         logging.exception(f"Error updating temperature to {new_temperature}")
         return jsonify({"success": False, "message": f"Error updating temperature: {str(e)}"}), 500
 
-@app.route('/api/set_knowledge_base', methods=['POST'])
+@bp.route('/api/set_knowledge_base', methods=['POST'])
 def set_knowledge_base():
     if not request.is_json:
         return jsonify({"success": False, "message": "Request must be JSON"}), 400
