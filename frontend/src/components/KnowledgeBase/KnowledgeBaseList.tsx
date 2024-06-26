@@ -24,9 +24,9 @@ const knowledgeBases = [
 const KnowledgeBaseList: React.FC = () => {
   const appStateContext = useContext(AppStateContext)
 
-  const handleSelectKnowledgeBase = (id: string) => {
-    appStateContext?.dispatch({ type: 'SELECT_KNOWLEDGE_BASE', payload: id })
-  }
+  //const handleSelectKnowledgeBase = (id: string) => {
+  //  appStateContext?.dispatch({ type: 'SELECT_KNOWLEDGE_BASE', payload: id })
+  //}
 
   return (
     <div className={styles.listContainer}>
@@ -34,7 +34,7 @@ const KnowledgeBaseList: React.FC = () => {
         <Stack
           key={kb.id}
           className={styles.itemCell}
-          onClick={() => handleSelectKnowledgeBase(kb.id)}
+          onClick={() => {}}//handleSelectKnowledgeBase(kb.id)}
           verticalAlign="center"
           styles={{
             root: {
