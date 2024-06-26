@@ -107,7 +107,8 @@ const Layout = () => {
       })
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        console.log('Error changing knowledge base:', data)
+        console.log('Error changing knowledge base:', response)
       }
 
       const data = await response.json()
