@@ -922,9 +922,6 @@ const Chat = () => {
               />
             </Stack>
           </div>
-          <Stack.Item>
-          <KnowledgeBasePanel />
-          </Stack.Item>
           {/* Citation Panel */}
           {messages && messages.length > 0 && isCitationPanelOpen && activeCitation && (
             <Stack.Item className={styles.citationPanel} tabIndex={0} role="tabpanel" aria-label="Citations Panel">
