@@ -37,9 +37,7 @@ const KnowledgeBaseList: React.FC = () => {
           onClick={() => {}}//handleSelectKnowledgeBase(kb.id)}
           verticalAlign="center"
           styles={{
-            root: {
-              backgroundColor: appStateContext?.state.selectedKnowledgeBase === kb.id ? '#e6e6e6' : 'transparent'
-            }
+            root: {}
           }}
         >
           <Text className={styles.knowledgeBaseTitle}>{kb.name}</Text>
