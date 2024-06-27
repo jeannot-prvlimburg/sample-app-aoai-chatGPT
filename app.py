@@ -14,6 +14,9 @@ from quart import (
     render_template,
 )
 
+from dotenv import load_dotenv, set_key
+from pathlib import Path
+
 from openai import AsyncAzureOpenAI
 from azure.identity.aio import (
     DefaultAzureCredential,
@@ -441,26 +444,33 @@ async def set_knowledge_base():
         return jsonify({"success": False, "message": f"Problem copying app_settings: {e}"}), 400
 
     try:
-        # Controleer of de datasource al bestaat, zo niet, maak een nieuwe aan
+        dotenv_path = Path(DOTENV_PATH)
+        load_dotenv(dotenv_path)
+
         if new_settings.datasource is None:
-            # We maken een nieuwe AzureSearchSettings aan met minimale vereiste velden
-            new_settings.datasource = _AzureSearchSettings(
-                settings=new_settings,
-                service="ai-search-v2-0",
-                index=new_knowledge_base
-            )
+            # Update .env file
+            set_key(dotenv_path, "AZURE_SEARCH_SERVICE", "ai-search-v2-0")
+            set_key(dotenv_path, "AZURE_SEARCH_INDEX", new_knowledge_base)
+            set_key(dotenv_path, "AZURE_SEARCH_CONTENT_COLUMNS", "chunk")
+            set_key(dotenv_path, "AZURE_SEARCH_VECTOR_COLUMNS", "vector")
+            set_key(dotenv_path, "AZURE_SEARCH_TITLE_COLUMN", "llm_title")
+            set_key(dotenv_path, "AZURE_SEARCH_FILENAME_COLUMN", "doc_title")
+
+            # Reload environment variables
+            load_dotenv(dotenv_path, override=True)
+
+            # Create new AzureSearchSettings
+            new_settings.datasource = _AzureSearchSettings()
         else:
-            # Update bestaande datasource
+            # Update existing datasource
             new_settings.datasource.service = "ai-search-v2-0"
             new_settings.datasource.index = new_knowledge_base
+            new_settings.datasource.content_columns = ["chunk"]
+            new_settings.datasource.vector_columns = ["vector"]
+            new_settings.datasource.title_column = "llm_title"
+            new_settings.datasource.filename_column = "doc_title"
 
-        # Update de instellingen
-        new_settings.datasource.content_columns = ["chunk"]
-        new_settings.datasource.vector_columns = ["vector"]
-        new_settings.datasource.title_column = "llm_title"
-        new_settings.datasource.filename_column = "doc_title"
-
-        # Update de fields_mapping
+        # Update the fields_mapping
         new_settings.datasource.fields_mapping = {
             "content_fields": ["chunk"],
             "vector_fields": ["vector"],
@@ -468,13 +478,13 @@ async def set_knowledge_base():
             "filepath_field": "doc_title"
         }
 
-        # Zorg ervoor dat de endpoint wordt ingesteld
+        # Ensure the endpoint is set
         new_settings.datasource.set_endpoint()
 
-        # Zorg ervoor dat de authenticatie wordt ingesteld
+        # Ensure the authentication is set
         new_settings.datasource.set_authentication()
 
-        # Pas de globale app_settings aan
+        # Update the global app_settings
         global app_settings
         app_settings = new_settings
 
