@@ -24,6 +24,7 @@ from backend.security.ms_defender_utils import get_msdefender_user_json
 from backend.history.cosmosdbservice import CosmosConversationClient
 from backend.settings import (
     app_settings,
+    _AzureSearchSettings,
     MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
 )
 from backend.utils import (
@@ -429,45 +430,58 @@ async def set_knowledge_base():
         data = await request.get_json()
         new_knowledge_base = data.get('knowledgeBase')
         if not new_knowledge_base:
-            return jsonify({"success": False, "message": "Request must include knowledge_base"}), 400
+            return jsonify({"success": False, "message": "Request must include knowledgeBase"}), 400
     except:
         return jsonify({"success": False, "message": "Invalid JSON in request"}), 400
 
     try:
         # Maak een kopie van de huidige instellingen
         new_settings = copy.deepcopy(app_settings)
-        # return jsonify({"success": True, "message": f"Knowledge base updated to {str(new_settings)}"}), 200
     except Exception as e:
         return jsonify({"success": False, "message": f"Problem copying app_settings: {e}"}), 400
 
     try:
-         return jsonify({"success": True, "message": str(new_settings.datasource)}), 200
-    except Exception as e:
-        return jsonify({"success": False, "message": f"Problem {e}"}), 400
+        # Controleer of de datasource al bestaat, zo niet, maak een nieuwe aan
+        if new_settings.datasource is None:
+            # We maken een nieuwe AzureSearchSettings aan met minimale vereiste velden
+            new_settings.datasource = _AzureSearchSettings(
+                settings=new_settings,
+                service="ai-search-v2-0",
+                index=new_knowledge_base
+            )
+        else:
+            # Update bestaande datasource
+            new_settings.datasource.service = "ai-search-v2-0"
+            new_settings.datasource.index = new_knowledge_base
+
         # Update de instellingen
-        # new_settings.datasource.service = "ai-search-v2-0"
-        # new_settings.datasource.index = new_knowledge_base
-        # new_settings.datasource.content_columns = ["chunk"]
-        # new_settings.datasource.vector_columns = ["vector"]
-        # new_settings.datasource.title_column = "llm_title"
-        # new_settings.datasource.filename_column = "doc_title"
+        new_settings.datasource.content_columns = ["chunk"]
+        new_settings.datasource.vector_columns = ["vector"]
+        new_settings.datasource.title_column = "llm_title"
+        new_settings.datasource.filename_column = "doc_title"
 
-    #     # Update de fields_mapping
-    #     new_settings.datasource.fields_mapping = {
-    #         "content_fields": ["chunk"],
-    #         "vector_fields": ["vector"],
-    #         "title_field": "llm_title",
-    #         "filepath_field": "doc_title"
-    #     }
+        # Update de fields_mapping
+        new_settings.datasource.fields_mapping = {
+            "content_fields": ["chunk"],
+            "vector_fields": ["vector"],
+            "title_field": "llm_title",
+            "filepath_field": "doc_title"
+        }
 
-    #     # Pas de globale app_settings aan
-    #     global app_settings
-    #     app_settings = new_settings
+        # Zorg ervoor dat de endpoint wordt ingesteld
+        new_settings.datasource.set_endpoint()
 
-    #     return jsonify({"success": True, "message": f"Knowledge base updated to {new_knowledge_base}"}), 200
+        # Zorg ervoor dat de authenticatie wordt ingesteld
+        new_settings.datasource.set_authentication()
+
+        # Pas de globale app_settings aan
+        global app_settings
+        app_settings = new_settings
+
+        return jsonify({"success": True, "message": f"Knowledge base updated to {new_knowledge_base}"}), 200
         
-    # except Exception as e:
-    #     return jsonify({"success": False, "message": f"Problem updating app_settings: {e}"}), 400
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Problem updating app_settings: {e}"}), 400
 
 @bp.route("/frontend_settings", methods=["GET"])
 def get_frontend_settings():
