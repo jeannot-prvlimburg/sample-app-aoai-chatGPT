@@ -14,7 +14,13 @@ from quart import (
     render_template,
 )
 
-from dotenv import load_dotenv, set_key
+try:
+    from dotenv import (
+        load_dotenv, 
+        set_key
+    )
+except:
+    pass
 
 from openai import AsyncAzureOpenAI
 from azure.identity.aio import (
@@ -24,11 +30,16 @@ from azure.identity.aio import (
 from backend.auth.auth_utils import get_authenticated_user_details
 from backend.security.ms_defender_utils import get_msdefender_user_json
 from backend.history.cosmosdbservice import CosmosConversationClient
-from backend.settings import (
-    app_settings,
-    _AzureSearchSettings,
-    MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
-)
+
+try:
+    from backend.settings import (
+        app_settings,
+        _AzureSearchSettings,
+        MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
+    )
+except:
+    pass
+    
 from backend.utils import (
     format_as_ndjson,
     format_stream_response,
