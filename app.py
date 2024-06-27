@@ -15,7 +15,6 @@ from quart import (
 )
 
 from dotenv import load_dotenv, set_key
-from pathlib import Path
 
 from openai import AsyncAzureOpenAI
 from azure.identity.aio import (
@@ -444,7 +443,7 @@ async def set_knowledge_base():
         return jsonify({"success": False, "message": f"Problem copying app_settings: {e}"}), 400
 
     try:
-        dotenv_path = Path(DOTENV_PATH)
+        dotenv_path = DOTENV_PATH
         load_dotenv(dotenv_path)
 
         if new_settings.datasource is None:
