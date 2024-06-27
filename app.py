@@ -440,14 +440,17 @@ async def set_knowledge_base():
     except Exception as e:
         return jsonify({"success": False, "message": f"Problem copying app_settings: {e}"}), 400
 
-    # try:
-    #     # Update de instellingen
-    #     new_settings.datasource.service = "ai-search-v2-0"
-    #     new_settings.datasource.index = new_knowledge_base
-    #     new_settings.datasource.content_columns = ["chunk"]
-    #     new_settings.datasource.vector_columns = ["vector"]
-    #     new_settings.datasource.title_column = "llm_title"
-    #     new_settings.datasource.filename_column = "doc_title"
+    try:
+         return jsonify({"success": True, "message": str(new_settings.datasource)}), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Problem {e}"}), 400
+        # Update de instellingen
+        # new_settings.datasource.service = "ai-search-v2-0"
+        # new_settings.datasource.index = new_knowledge_base
+        # new_settings.datasource.content_columns = ["chunk"]
+        # new_settings.datasource.vector_columns = ["vector"]
+        # new_settings.datasource.title_column = "llm_title"
+        # new_settings.datasource.filename_column = "doc_title"
 
     #     # Update de fields_mapping
     #     new_settings.datasource.fields_mapping = {
