@@ -45,6 +45,11 @@ try:
     from backend.settings import MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
 except:
     pass
+
+try:
+    from backend.settings import DOTENV_PATH
+except:
+    pass
     
 from backend.utils import (
     format_as_ndjson,
@@ -456,13 +461,15 @@ async def set_knowledge_base():
     try:
         # Maak een kopie van de huidige instellingen
         new_settings = copy.deepcopy(app_settings)
-        return jsonify({"success": True, "message": "Success123"}), 200
+        return jsonify({"success": True, "message": "Success12345"}), 200
     except Exception as e:
         return jsonify({"success": False, "message": f"Problem copying app_settings: {e}"}), 400
 
-    #try:
-    #    dotenv_path = DOTENV_PATH
-    #    load_dotenv(dotenv_path)
+    try:
+        dotenv_path = DOTENV_PATH
+        load_dotenv(dotenv_path)
+
+        return jsonify({"success": True, "message": "Success_hoppa"}), 200
 
     #    if new_settings.datasource is None:
             # Update .env file
@@ -507,8 +514,8 @@ async def set_knowledge_base():
 
      #   return jsonify({"success": True, "message": f"Knowledge base updated to {new_knowledge_base}"}), 200
         
-    # except Exception as e:
-    #    return jsonify({"success": False, "message": f"Problem updating app_settings: {e}"}), 400
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Problem updating app_settings: {e}"}), 400
 
 @bp.route("/frontend_settings", methods=["GET"])
 def get_frontend_settings():
