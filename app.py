@@ -60,7 +60,6 @@ from backend.utils import (
 )
 
 global azure_openai_client
-global app_settings
 azure_openai_client = None
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
@@ -468,9 +467,7 @@ async def set_knowledge_base():
     try:
         dotenv_path = DOTENV_PATH
         load_dotenv(dotenv_path)
-
         
-
         if new_settings.datasource is None:
             # Update .env file
             set_key(dotenv_path, "AZURE_SEARCH_SERVICE", "ai-search-v2-0")
@@ -479,7 +476,7 @@ async def set_knowledge_base():
             set_key(dotenv_path, "AZURE_SEARCH_VECTOR_COLUMNS", "vector")
             set_key(dotenv_path, "AZURE_SEARCH_TITLE_COLUMN", "llm_title")
             set_key(dotenv_path, "AZURE_SEARCH_FILENAME_COLUMN", "doc_title")
-            set_key(dotenv_path, "AZURE_SEARCH_QUERY_TYPE", "vectorSimpleHybrid")
+            # set_key(dotenv_path, "AZURE_SEARCH_QUERY_TYPE", "vectorSimpleHybrid")
 
             # Reload environment variables
             load_dotenv(dotenv_path, override=True)
@@ -494,7 +491,7 @@ async def set_knowledge_base():
             new_settings.datasource.vector_columns = ["vector"]
             new_settings.datasource.title_column = "llm_title"
             new_settings.datasource.filename_column = "doc_title"
-            new_settings.datasource.query_type = "vectorSimpleHybrid"
+            # new_settings.datasource.query_type = "vectorSimpleHybrid"
 
         # Update the fields_mapping
         new_settings.datasource.fields_mapping = {
