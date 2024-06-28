@@ -32,11 +32,17 @@ from backend.security.ms_defender_utils import get_msdefender_user_json
 from backend.history.cosmosdbservice import CosmosConversationClient
 
 try:
-    from backend.settings import (
-        app_settings,
-        _AzureSearchSettings,
-        MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
-    )
+    from backend.settings import app_settings
+except:
+    pass
+
+try:
+    from backend.settings import _AzureSearchSettings,
+except:
+    pass
+
+try:
+    from backend.settings import MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
 except:
     pass
     
