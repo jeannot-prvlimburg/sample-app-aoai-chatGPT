@@ -479,44 +479,39 @@ async def set_knowledge_base():
             set_key(dotenv_path, "AZURE_SEARCH_TITLE_COLUMN", "llm_title")
             set_key(dotenv_path, "AZURE_SEARCH_FILENAME_COLUMN", "doc_title")
 
-            return jsonify({"success": True, "message": "Success_ps"}), 200
-
-        else:
-            return jsonify({"success": False, "message": "hoihoi"}), 200
-
             # Reload environment variables
-     #       load_dotenv(dotenv_path, override=True)
+            load_dotenv(dotenv_path, override=True)
 
             # Create new AzureSearchSettings
-     #       new_settings.datasource = _AzureSearchSettings()
-     #   else:
-     #       # Update existing datasource
-     #       new_settings.datasource.service = "ai-search-v2-0"
-     #       new_settings.datasource.index = new_knowledge_base
-     #       new_settings.datasource.content_columns = ["chunk"]
-     #       new_settings.datasource.vector_columns = ["vector"]
-     #       new_settings.datasource.title_column = "llm_title"
-     #       new_settings.datasource.filename_column = "doc_title"
+            new_settings.datasource = _AzureSearchSettings()
+        else:
+            # Update existing datasource
+            new_settings.datasource.service = "ai-search-v2-0"
+            new_settings.datasource.index = new_knowledge_base
+            new_settings.datasource.content_columns = ["chunk"]
+            new_settings.datasource.vector_columns = ["vector"]
+            new_settings.datasource.title_column = "llm_title"
+            new_settings.datasource.filename_column = "doc_title"
 
         # Update the fields_mapping
-     #   new_settings.datasource.fields_mapping = {
-     #       "content_fields": ["chunk"],
-     #       "vector_fields": ["vector"],
-     #       "title_field": "llm_title",
-     #       "filepath_field": "doc_title"
-     #   }
+        new_settings.datasource.fields_mapping = {
+            "content_fields": ["chunk"],
+            "vector_fields": ["vector"],
+            "title_field": "llm_title",
+            "filepath_field": "doc_title"
+        }
 
-        # Ensure the endpoint is set
-     #   new_settings.datasource.set_endpoint()
+         # Ensure the endpoint is set
+        new_settings.datasource.set_endpoint()
 
         # Ensure the authentication is set
-     #   new_settings.datasource.set_authentication()
+        new_settings.datasource.set_authentication()
 
         # Update the global app_settings
-     #   global app_settings
-     #   app_settings = new_settings
+        global app_settings
+        app_settings = new_settings
 
-     #   return jsonify({"success": True, "message": f"Knowledge base updated to {new_knowledge_base}"}), 200
+        return jsonify({"success": True, "message": f"Knowledge base updated to {new_knowledge_base}"}), 200
         
     except Exception as e:
         return jsonify({"success": False, "message": f"Problem updating app_settings: {e}"}), 400
