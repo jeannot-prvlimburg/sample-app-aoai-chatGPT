@@ -508,8 +508,7 @@ async def set_knowledge_base():
         new_settings.datasource.set_authentication()
 
         # Update the global app_settings
-        global app_settings
-        # app_settings = new_settings
+        app_settings.datasource = new_settings.datasource
 
         return jsonify({"success": True, "message": f"Knowledge base updated to {new_knowledge_base}"}), 200
         
