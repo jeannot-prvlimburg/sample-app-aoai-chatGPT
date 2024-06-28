@@ -37,7 +37,7 @@ except:
     pass
 
 try:
-    from backend.settings import _AzureSearchSettings,
+    from backend.settings import _AzureSearchSettings
 except:
     pass
 
