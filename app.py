@@ -468,16 +468,21 @@ async def set_knowledge_base():
         dotenv_path = DOTENV_PATH
         load_dotenv(dotenv_path)
 
-        return jsonify({"success": True, "message": "Success_hoppa"}), 200
+        
 
-    #    if new_settings.datasource is None:
+        if new_settings.datasource is None:
             # Update .env file
-    #        set_key(dotenv_path, "AZURE_SEARCH_SERVICE", "ai-search-v2-0")
-    #        set_key(dotenv_path, "AZURE_SEARCH_INDEX", new_knowledge_base)
-    #        set_key(dotenv_path, "AZURE_SEARCH_CONTENT_COLUMNS", "chunk")
-    #        set_key(dotenv_path, "AZURE_SEARCH_VECTOR_COLUMNS", "vector")
-    #        set_key(dotenv_path, "AZURE_SEARCH_TITLE_COLUMN", "llm_title")
-    #        set_key(dotenv_path, "AZURE_SEARCH_FILENAME_COLUMN", "doc_title")
+            set_key(dotenv_path, "AZURE_SEARCH_SERVICE", "ai-search-v2-0")
+            set_key(dotenv_path, "AZURE_SEARCH_INDEX", new_knowledge_base)
+            set_key(dotenv_path, "AZURE_SEARCH_CONTENT_COLUMNS", "chunk")
+            set_key(dotenv_path, "AZURE_SEARCH_VECTOR_COLUMNS", "vector")
+            set_key(dotenv_path, "AZURE_SEARCH_TITLE_COLUMN", "llm_title")
+            set_key(dotenv_path, "AZURE_SEARCH_FILENAME_COLUMN", "doc_title")
+
+            return jsonify({"success": True, "message": "Success_ps"}), 200
+
+        else:
+            return jsonify({"success": False, "message": "hoihoi"}), 200
 
             # Reload environment variables
      #       load_dotenv(dotenv_path, override=True)
