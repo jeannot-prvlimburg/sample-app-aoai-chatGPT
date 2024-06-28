@@ -60,6 +60,7 @@ from backend.utils import (
 )
 
 global azure_openai_client
+global app_settings
 azure_openai_client = None
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
@@ -508,7 +509,7 @@ async def set_knowledge_base():
         new_settings.datasource.set_authentication()
 
         # Update the global app_settings
-        app_settings.datasource = new_settings.datasource
+        app_settings = new_settings
 
         return jsonify({"success": True, "message": f"Knowledge base updated to {new_knowledge_base}"}), 200
         
