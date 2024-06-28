@@ -59,6 +59,7 @@ from backend.utils import (
     format_pf_non_streaming_response,
 )
 
+global app_settings
 global azure_openai_client
 azure_openai_client = None
 
