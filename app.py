@@ -36,10 +36,10 @@ try:
 except:
     pass
 
-#try:
-#    from backend.settings import _AzureSearchSettings
-#except:
-#    pass
+try:
+   from backend.settings import _AzureSearchSettings
+except:
+   pass
 
 try:
     from backend.settings import MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
