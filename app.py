@@ -483,7 +483,8 @@ async def set_knowledge_base():
             load_dotenv(dotenv_path, override=True)
 
             # Create new AzureSearchSettings
-            new_settings.datasource = _AzureSearchSettings(settings=new_settings)
+            new_settings.datasource = _AzureSearchSettings()
+            new_settings.datasource.initialize_settings(new_settings)
         else:
             # Update existing datasource
             new_settings.datasource.service = "ai-search-v2-0"
