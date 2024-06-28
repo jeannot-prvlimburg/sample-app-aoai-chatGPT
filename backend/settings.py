@@ -232,6 +232,9 @@ class DatasourcePayloadConstructor(BaseModel, ABC):
 
 
 class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
+    def initialize_settings(self, settings: '_AppSettings'):
+        self._settings = settings
+    
     model_config = SettingsConfigDict(
         env_prefix="AZURE_SEARCH_",
         env_file=DOTENV_PATH,
