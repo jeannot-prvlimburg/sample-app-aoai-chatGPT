@@ -494,22 +494,22 @@ async def set_knowledge_base():
             new_settings.datasource.filename_column = "doc_title"
 
         # Update the fields_mapping
-        new_settings.datasource.fields_mapping = {
-            "content_fields": ["chunk"],
-            "vector_fields": ["vector"],
-            "title_field": "llm_title",
-            "filepath_field": "doc_title"
-        }
+        # new_settings.datasource.fields_mapping = {
+        #    "content_fields": ["chunk"],
+        #    "vector_fields": ["vector"],
+        #    "title_field": "llm_title",
+        #    "filepath_field": "doc_title"
+        #}
 
          # Ensure the endpoint is set
-        new_settings.datasource.set_endpoint()
+        # new_settings.datasource.set_endpoint()
 
         # Ensure the authentication is set
-        new_settings.datasource.set_authentication()
+        # new_settings.datasource.set_authentication()
 
         # Update the global app_settings
-        global app_settings
-        app_settings = new_settings
+        # global app_settings
+        # app_settings = new_settings
 
         return jsonify({"success": True, "message": f"Knowledge base updated to {new_knowledge_base}"}), 200
         
