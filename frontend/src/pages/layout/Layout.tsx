@@ -18,9 +18,9 @@ const Layout = () => {
   const [selectedModel, setSelectedModel] = useState<string>('gpt-3.5-turbo')
   const [temperature, setTemperature] = useState<number>(0.5)
   const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<string>('none')
-  const [isKnowledgeBasePanelOpen, setIsKnowledgeBasePanelOpen] = useState<boolean>(false)
-  const [hideKnowledgeBaseLabel, setKnowledgeBaseLabel] = useState<string>('Weg ermee')
-  const [showKnowledgeBaseLabel, setShowKnowledgeBaseLabel] = useState<string>('Laat zien')
+  // const [isKnowledgeBasePanelOpen, setIsKnowledgeBasePanelOpen] = useState<boolean>(false)
+  // const [hideKnowledgeBaseLabel, setKnowledgeBaseLabel] = useState<string>('Weg ermee')
+  // const [showKnowledgeBaseLabel, setShowKnowledgeBaseLabel] = useState<string>('Laat zien')
 
   const modelOptions: IDropdownOption[] = [
     { key: 'gpt-35-turbo', text: 'GPT-3.5' },
@@ -171,10 +171,7 @@ const Layout = () => {
             </Link>
           </Stack>
           <Stack horizontal tokens={{ childrenGap: 4 }} className={styles.shareButtonContainer}>
-              <KnowledgeBaseButton
-                onClick={handleKnowledgeBaseClick}
-                text={appStateContext?.state?.isKnowledgeBasePanelOpen ? hideHistoryLabel : showHistoryLabel}
-              />
+
             {ui?.show_share_button && <ShareButton onClick={handleShareClick} text={shareLabel} />}
           </Stack>
         </Stack>
