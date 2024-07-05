@@ -2,13 +2,12 @@
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 # More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
 
-name: Deploy Python app to Azure Web App - test-omgeving-prv-limburg
+name: Build and deploy Python app to Azure Web App - test-omgeving-prv-limburg
 
 on:
-  workflow_run:
-    workflows: ["Build Frontend"]
-    types:
-      - completed
+  push:
+    branches:
+      - latest
   workflow_dispatch:
 
 jobs:
@@ -67,4 +66,4 @@ jobs:
         with:
           app-name: 'test-omgeving-prv-limburg'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_7EC960C7E3CB472795AB1404D1237F1F }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_4DA9F1D8A8B44617A97BE62AA070661E }}
