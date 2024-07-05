@@ -20,6 +20,13 @@ const Layout = () => {
   const appStateContext = useContext(AppStateContext)
   const ui = appStateContext?.state.frontendSettings?.ui
 
+  const [selectedModel, setSelectedModel] = useState<string>('gpt-3.5-turbo')
+
+  const modelOptions: IModelOption[] = [
+    { key: 'gpt-35-turbo', text: 'GPT-3.5', provider: 'OpenAI' },
+    { key: 'gpt-4', text: 'GPT-4', provider: 'OpenAI' },
+    { key: 'gpt-4o', text: 'GPT-4o', provider: 'OpenAI' },
+  ]
   const handleShareClick = () => {
     setIsSharePanelOpen(true)
   }
@@ -39,6 +46,36 @@ const Layout = () => {
     appStateContext?.dispatch({ type: 'TOGGLE_CHAT_HISTORY' })
   }
 
+    const handleModelChange = async (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
+    if (!option) {
+        console.error('No option selected')
+        return
+    }
+
+    setSelectedModel(option.key as string)
+
+    try {
+        const response = await fetch('/api/set_model', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ model: option.key }),
+        })
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+        }
+
+        const data = await response.json()
+        console.log('Model updated successfully:', data)
+
+    } catch (error) {
+        console.error('Error updating model:', error)
+        // Handle the error (e.g., show an error message to the user)
+    }
+  }
+
   useEffect(() => {
     if (copyClicked) {
       setCopyText('Copied URL')
@@ -51,12 +88,12 @@ const Layout = () => {
     const handleResize = () => {
       if (window.innerWidth < 480) {
         setShareLabel(undefined)
-        setHideHistoryLabel('Hide history')
-        setShowHistoryLabel('Show history')
+        setHideHistoryLabel('Verberg')
+        setShowHistoryLabel('Geschiedenis')
       } else {
-        setShareLabel('Share')
-        setHideHistoryLabel('Hide chat history')
-        setShowHistoryLabel('Show chat history')
+        setShareLabel('Instellingen')
+        setHideHistoryLabel('Verberg')
+        setShowHistoryLabel('Geschiedenis')
       }
     }
 
@@ -91,38 +128,36 @@ const Layout = () => {
       <Dialog
         onDismiss={handleSharePanelDismiss}
         hidden={!isSharePanelOpen}
-        styles={{
-          main: [
-            {
-              selectors: {
-                ['@media (min-width: 480px)']: {
-                  maxWidth: '600px',
-                  background: '#FFFFFF',
-                  boxShadow: '0px 14px 28.8px rgba(0, 0, 0, 0.24), 0px 0px 8px rgba(0, 0, 0, 0.2)',
-                  borderRadius: '8px',
-                  maxHeight: '200px',
-                  minHeight: '100px'
-                }
-              }
-            }
-          ]
-        }}
         dialogContentProps={{
-          title: 'Share the web app',
+          title: 'Instellingen',
           showCloseButton: true
-        }}>
-        <Stack horizontal verticalAlign="center" style={{ gap: '8px' }}>
-          <TextField className={styles.urlTextBox} defaultValue={window.location.href} readOnly />
-          <div
-            className={styles.copyButtonContainer}
-            role="button"
-            tabIndex={0}
-            aria-label="Copy"
-            onClick={handleCopyClick}
-            onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? handleCopyClick() : null)}>
-            <CopyRegular className={styles.copyButton} />
-            <span className={styles.copyButtonText}>{copyText}</span>
-          </div>
+        }}
+      >
+        <Stack tokens={{ childrenGap: 16 }}>
+          <Dropdown
+            placeholder="Maak een keuze"
+            label="Taalmodel"
+            options={modelOptions}
+            selectedKey={selectedModel}
+            onChange={handleModelChange}
+          />
+          <Dropdown
+            placeholder="Maak een keuze"
+            label="Kennisbank"
+            options={knowledgeBaseOptions}
+            selectedKey={selectedKnowledgeBase}
+            onChange={handleKnowledgeBaseChange}
+          />
+          <Slider
+            label="Temperatuur"
+            min={0}
+            max={1}
+            step={0.1}
+            value={temperature}
+            onChange={handleTemperatureChange}
+            showValue
+            valueFormat={value => value.toFixed(1)}
+          />
         </Stack>
       </Dialog>
     </div>
