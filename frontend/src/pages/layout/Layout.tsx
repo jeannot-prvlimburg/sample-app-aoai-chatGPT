@@ -142,7 +142,7 @@ const Layout = () => {
         setHideHistoryLabel('Hide history')
         setShowHistoryLabel('Show history')
       } else {
-        setShareLabel('Instellingen')
+        setShareLabel('Instellingen1')
         setHideHistoryLabel('Verberg')
         setShowHistoryLabel('Geschiedenis')
       }
