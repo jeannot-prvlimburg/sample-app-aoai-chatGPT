@@ -34,6 +34,7 @@ from backend.utils import (
     format_pf_non_streaming_response,
 )
 
+from backend.settings import app_settings
 global app_settings
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
@@ -390,24 +391,6 @@ async def set_model():
     except Exception as e:
         logging.exception(f"Error updating model to {new_model}")
         return jsonify({"success": False, "message": f"Error updating model: {str(e)}"}), 500
-
-
-@bp.route("/api/set_temperature", methods=['POST'])
-async def set_temperature():
-    if not request.is_json:
-        return jsonify({"success": False, "message": "Request must be JSON"}), 400
-        
-    data = await request.get_json()
-    new_temperature = data.get('temperature')
-
-    try:
-        # Update the knowledge base in app settings
-        app_settings.azure_openai.temperature = new_temperature
-        
-        return jsonify({"success": True, "message": f"Temperature updated to {new_temperature}"}), 200
-    except Exception as e:
-        logging.exception(f"Error updating temperature to {new_temperature}")
-        return jsonify({"success": False, "message": f"Error updating temperature: {str(e)}"}), 500
 
 
 @bp.route("/conversation", methods=["POST"])
