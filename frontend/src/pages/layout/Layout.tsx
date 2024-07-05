@@ -167,13 +167,6 @@ const Layout = () => {
             selectedKey={selectedModel}
             onChange={handleModelChange}
           />
-          <Dropdown
-            placeholder="Maak een keuze"
-            label="Kennisbank"
-            options={knowledgeBaseOptions}
-            selectedKey={selectedKnowledgeBase}
-            onChange={handleKnowledgeBaseChange}
-          />
           <Slider
             label="Temperatuur"
             min={0}
