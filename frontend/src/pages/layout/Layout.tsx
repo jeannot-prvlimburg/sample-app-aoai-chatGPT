@@ -131,9 +131,9 @@ const Layout = () => {
     appStateContext?.dispatch({ type: 'TOGGLE_CHAT_HISTORY' })
   }
 
-  const handleKnowledgeBaseClick = () => {
-    appStateContext?.dispatch({ type: 'TOGGLE_KNOWLEDGE_BASE' })
-  }
+  // const handleKnowledgeBaseClick = () => {
+  //  appStateContext?.dispatch({ type: 'TOGGLE_KNOWLEDGE_BASE' })
+  // }
 
   useEffect(() => {
     const handleResize = () => {
