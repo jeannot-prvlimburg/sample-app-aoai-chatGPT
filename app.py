@@ -34,8 +34,9 @@ from backend.utils import (
     format_pf_non_streaming_response,
 )
 
-from backend.settings import app_settings
+global azure_openai_client
 global app_settings
+azure_openai_client = None
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
