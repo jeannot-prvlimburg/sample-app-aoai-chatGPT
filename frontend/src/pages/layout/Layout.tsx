@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from 'react'
 import { Link, Outlet } from 'react-router-dom'
-import { Dialog, Stack, TextField, Dropdown, IDropdownOption, Slider} from '@fluentui/react'
+import { Dialog, Stack, TextField, Dropdown, IModelOption, Slider} from '@fluentui/react'
 import { CopyRegular } from '@fluentui/react-icons'
 
 import { CosmosDBStatus } from '../../api'
@@ -23,7 +23,7 @@ const Layout = () => {
   const [selectedModel, setSelectedModel] = useState<string>('gpt-3.5-turbo')
   const [temperature, setTemperature] = useState<number>(0.5)
 
-  const modelOptions: IDropdownOption[] = [
+  const modelOptions: IModelOption[] = [
     { key: 'gpt-35-turbo', text: 'GPT-3.5', provider: 'OpenAI' },
     { key: 'gpt-4', text: 'GPT-4', provider: 'OpenAI' },
     { key: 'gpt-4o', text: 'GPT-4o', provider: 'OpenAI' },
