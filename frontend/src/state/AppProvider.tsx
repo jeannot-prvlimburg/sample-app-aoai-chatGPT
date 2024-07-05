@@ -17,7 +17,6 @@ import { appStateReducer } from './AppReducer'
 
 export interface AppState {
   isChatHistoryOpen: boolean
-  isKnowledgeBasePanelOpen: boolean
   chatHistoryLoadingState: ChatHistoryLoadingState
   isCosmosDBAvailable: CosmosDBHealth
   chatHistory: Conversation[] | null
@@ -29,8 +28,6 @@ export interface AppState {
 
 export type Action =
   | { type: 'TOGGLE_CHAT_HISTORY' }
-  | { type: 'TOGGLE_KNOWLEDGE_BASE' }
-  | { type: 'SELECT_KNOWLEDGE_BASE' }
   | { type: 'SET_COSMOSDB_STATUS'; payload: CosmosDBHealth }
   | { type: 'UPDATE_CHAT_HISTORY_LOADING_STATE'; payload: ChatHistoryLoadingState }
   | { type: 'UPDATE_CURRENT_CHAT'; payload: Conversation | null }
@@ -50,7 +47,6 @@ export type Action =
 
 const initialState: AppState = {
   isChatHistoryOpen: false,
-  isKnowledgeBasePanelOpen: false,
   chatHistoryLoadingState: ChatHistoryLoadingState.Loading,
   chatHistory: null,
   filteredChatHistory: null,
