@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from 'react'
 import { Link, Outlet } from 'react-router-dom'
-import { Dialog, Stack, TextField } from '@fluentui/react'
+import { Dialog, Stack, TextField, Dropdown, IDropdownOption, Slider} from '@fluentui/react'
 import { CopyRegular } from '@fluentui/react-icons'
 
 import { CosmosDBStatus } from '../../api'
@@ -21,6 +21,7 @@ const Layout = () => {
   const ui = appStateContext?.state.frontendSettings?.ui
 
   const [selectedModel, setSelectedModel] = useState<string>('gpt-3.5-turbo')
+  const [temperature, setTemperature] = useState<number>(0.5)
 
   const modelOptions: IModelOption[] = [
     { key: 'gpt-35-turbo', text: 'GPT-3.5', provider: 'OpenAI' },
@@ -72,6 +73,31 @@ const Layout = () => {
 
     } catch (error) {
         console.error('Error updating model:', error)
+        // Handle the error (e.g., show an error message to the user)
+    }
+  }
+
+  const handleTemperatureChange = async (value: number) => {
+    setTemperature(value)
+    
+    try {
+        const response = await fetch('/api/set_temperature', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ temperature: value }),
+        })
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response}`) 
+        }
+
+        const data = await response.json()
+        console.log('Temperature updated successfully:', data)
+
+    } catch (error) {
+        console.error('Error updating temperature:', error)
         // Handle the error (e.g., show an error message to the user)
     }
   }
