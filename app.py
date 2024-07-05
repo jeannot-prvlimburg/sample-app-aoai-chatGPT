@@ -34,6 +34,8 @@ from backend.utils import (
     format_pf_non_streaming_response,
 )
 
+global app_settings
+
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
 
@@ -70,7 +72,6 @@ if DEBUG.lower() == "true":
 
 USER_AGENT = "GitHubSampleWebApp/AsyncAzureOpenAI/1.0.0"
 
-
 # Frontend Settings via Environment Variables
 frontend_settings = {
     "auth_enabled": app_settings.base_settings.auth_enabled,
@@ -92,7 +93,6 @@ frontend_settings = {
 
 # Enable Microsoft Defender for Cloud Integration
 MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "true"
-
 
 # Initialize Azure OpenAI Client
 def init_openai_client():
@@ -369,6 +369,27 @@ async def conversation_internal(request_body, request_headers):
             return jsonify({"error": str(ex)}), ex.status_code
         else:
             return jsonify({"error": str(ex)}), 500
+
+
+@bp.route("/api/set_model", methods=['POST'])
+async def set_model():
+    if not request.is_json:
+        return jsonify({"success": False, "message": "Request must be JSON"}), 400
+        
+    data = await request.get_json()
+    new_model = data.get('model')
+    
+    if not new_model:
+        return jsonify({"success": False, "message": "New model name is required"}), 400
+
+    try:
+        # Update the model name in app settings
+        app_settings.azure_openai.model = new_model
+        
+        return jsonify({"success": True, "message": f"Model updated to {new_model}"}), 200
+    except Exception as e:
+        logging.exception(f"Error updating model to {new_model}")
+        return jsonify({"success": False, "message": f"Error updating model: {str(e)}"}), 500
 
 
 @bp.route("/conversation", methods=["POST"])
