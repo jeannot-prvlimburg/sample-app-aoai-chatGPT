@@ -20,7 +20,7 @@ const Layout = () => {
   const appStateContext = useContext(AppStateContext)
   const ui = appStateContext?.state.frontendSettings?.ui
 
-  const [selectedModel, setSelectedModel] = useState<string>('gpt-3.5-turbo')
+  const [selectedModel, setSelectedModel] = useState<string>('gpt-35-turbo')
   const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<string>('none')
   const [temperature, setTemperature] = useState<number>(0.5)
 
