@@ -393,6 +393,8 @@ async def set_model():
         logging.exception(f"Error updating model to {new_model}")
         return jsonify({"success": False, "message": f"Error updating model: {str(e)}"}), 500
 
+
+
 @bp.route('/api/set_knowledge_base', methods=['POST'])
 async def set_knowledge_base():
     if not request.is_json:
@@ -405,7 +407,30 @@ async def set_knowledge_base():
     except:
         return jsonify({"success": False, "message": "Invalid JSON in request"}), 400
 
-    return jsonify({"success": False, "message": "Knowledge_base request succesfully received."}), 200
+    try:
+         # Update existing datasource
+        app_settings.datasource.service = "ai-search-v2-0"
+        app_settings.datasource.index = new_knowledge_base
+        app_settings.datasource.content_columns = ["chunk"]
+        app_settings.datasource.vector_columns = ["vector"]
+        app_settings.datasource.title_column = "llm_title"
+        app_settings.datasource.filename_column = "doc_title"
+        app_settings.datasource.query_type = "vectorSimpleHybrid"
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Failed at stage 1: {e}"}), 400
+
+    try:
+        # Update the fields_mapping
+        app_settings.datasource.fields_mapping = {
+            "content_fields": ["chunk"],
+            "vector_fields": ["vector"],
+            "title_field": "llm_title",
+            "filepath_field": "doc_title"
+        }
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Failed at stage 2: {e}"}), 400
+        
+    return jsonify({"success": True, "message": "Knowledge_base request succesfully received."}), 200
 
 
 
