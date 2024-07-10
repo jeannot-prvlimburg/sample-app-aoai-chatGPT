@@ -427,10 +427,12 @@ async def set_knowledge_base():
             "title_field": "llm_title",
             "filepath_field": "doc_title"
         }
+
+        return jsonify({"success": True, "message": f"Knowledgebase udpated to {new_knowledge_base}."}), 200
     except Exception as e:
         return jsonify({"success": False, "message": f"Failed at stage 2: {e}"}), 400
         
-    return jsonify({"success": True, "message": f"Knowledgebase udpated to {new_knowledge_base}."}), 200
+    
 
 
 
