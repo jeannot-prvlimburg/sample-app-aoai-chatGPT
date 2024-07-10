@@ -21,6 +21,8 @@ from typing_extensions import Self
 from quart import Request
 from backend.utils import parse_multi_columns, generateFilterString
 
+import time
+
 DOTENV_PATH = os.environ.get(
     "DOTENV_PATH",
     os.path.join(
@@ -44,7 +46,7 @@ class _UiSettings(BaseSettings):
     title: str = "Contoso"
     logo: Optional[str] = None
     chat_logo: Optional[str] = None
-    chat_title: str = "Start chatting"
+    chat_title: str f"Deployed at: {time.strftime('%H:%M', time.localtime())}"
     chat_description: str = "This chatbot is configured to answer your questions"
     favicon: str = "/favicon.ico"
     show_share_button: bool = True
