@@ -69,6 +69,7 @@ async def assets(path):
 
 # Debug settings
 DEBUG = os.environ.get("DEBUG", "false")
+DEBUG = "true"
 if DEBUG.lower() == "true":
     logging.basicConfig(level=logging.DEBUG)
 
@@ -390,8 +391,8 @@ async def set_model():
         # Update the model name in app settings
         app_settings.azure_openai.model = new_model
 
-        #global azure_openai_client
-        #azure_openai_client = init_openai_client()  # Re-initialize the client
+        global azure_openai_client
+        azure_openai_client = init_openai_client()  # Re-initialize the client
         
         return jsonify({"success": True, "message": f"Model updated to {new_model}"}), 200
     except Exception as e:
