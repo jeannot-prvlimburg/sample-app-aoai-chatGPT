@@ -393,6 +393,20 @@ async def set_model():
         logging.exception(f"Error updating model to {new_model}")
         return jsonify({"success": False, "message": f"Error updating model: {str(e)}"}), 500
 
+@bp.route('/api/set_knowledge_base', methods=['POST'])
+async def set_knowledge_base():
+    if not request.is_json:
+        return jsonify({"success": False, "message": "Request must be JSON"}), 400
+    try: 
+        data = await request.get_json()
+        new_knowledge_base = data.get('knowledgeBase')
+        if not new_knowledge_base:
+            return jsonify({"success": False, "message": "Request must include knowledgeBase"}), 400
+    except:
+        return jsonify({"success": False, "message": "Invalid JSON in request"}), 400
+
+    return jsonify({"success": False, "message": "Knowledge_base request succesfully received."}), 200
+
 
 
 @bp.route("/api/set_temperature", methods=['POST'])
