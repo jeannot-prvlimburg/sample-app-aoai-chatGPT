@@ -430,7 +430,7 @@ async def set_knowledge_base():
     except Exception as e:
         return jsonify({"success": False, "message": f"Failed at stage 2: {e}"}), 400
         
-    return jsonify({"success": True, "message": "Knowledge_base request succesfully received."}), 200
+    return jsonify({"success": True, "message": f"Knowledgebase udpated to {new_knowledge_base}."}), 200
 
 
 
