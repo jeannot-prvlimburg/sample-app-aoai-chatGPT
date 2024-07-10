@@ -135,6 +135,7 @@ def init_openai_client():
 
         # Deployment
         deployment = app_settings.azure_openai.model
+        logging.debug(f"Initializing OpenAI client with model: {deployment}")
         if not deployment:
             raise ValueError("AZURE_OPENAI_MODEL is required")
 
@@ -313,6 +314,7 @@ async def send_chat_request(request_body, request_headers):
             
     request_body['messages'] = filtered_messages
     model_args = prepare_model_args(request_body, request_headers)
+    logging.debug(f"Sending request with model: {model_args['model']}")
 
     try:
         azure_openai_client = init_openai_client()
@@ -387,6 +389,9 @@ async def set_model():
     try:
         # Update the model name in app settings
         app_settings.azure_openai.model = new_model
+
+        #global azure_openai_client
+        #azure_openai_client = init_openai_client()  # Re-initialize the client
         
         return jsonify({"success": True, "message": f"Model updated to {new_model}"}), 200
     except Exception as e:
