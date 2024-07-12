@@ -407,29 +407,11 @@ async def set_knowledge_base():
         return jsonify({"success": False, "message": "Invalid JSON in request"}), 400
 
     try:
-         # Update existing datasource
-        app_settings.datasource.service = "ai-search-v2-0"
-        app_settings.datasource.index = new_knowledge_base
-        app_settings.datasource.content_columns = ["chunk"]
-        app_settings.datasource.vector_columns = ["vector"]
-        app_settings.datasource.title_column = "llm_title"
-        app_settings.datasource.filename_column = "doc_title"
-        app_settings.datasource.query_type = "vectorSimpleHybrid"
+        # In plaats van de globale instelling te updaten, geven we alleen een succesbericht terug
+        # De daadwerkelijke knowledgebase zal per bericht worden gebruikt
+        return jsonify({"success": True, "message": f"Knowledge base '{new_knowledge_base}' will be used for the next message."}), 200
     except Exception as e:
-        return jsonify({"success": False, "message": f"Failed at stage 1: {e}"}), 400
-
-    try:
-        # Update the fields_mapping
-        app_settings.datasource.fields_mapping = {
-            "content_fields": ["chunk"],
-            "vector_fields": ["vector"],
-            "title_field": "llm_title",
-            "filepath_field": "doc_title"
-        }
-
-        return jsonify({"success": True, "message": f"Knowledgebase udpated to {new_knowledge_base}."}), 200
-    except Exception as e:
-        return jsonify({"success": False, "message": f"Failed at stage 2: {e}"}), 400
+        return jsonify({"success": False, "message": f"Error processing knowledge base: {str(e)}"}), 500
         
     
 
