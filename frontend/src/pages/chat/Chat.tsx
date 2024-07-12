@@ -787,7 +787,8 @@ const Chat = () => {
                             plotly_data: parsePlotFromMessage(messages[index - 1]),
                             message_id: answer.id,
                             feedback: answer.feedback,
-                            exec_results: execResults
+                            exec_results: execResults,
+                            modelInfo: answer.model
                           }}
                           onCitationClicked={c => onShowCitation(c)}
                           onExectResultClicked={() => onShowExecResult()}
