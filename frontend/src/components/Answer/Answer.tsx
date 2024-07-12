@@ -384,7 +384,6 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                 />
               </TooltipHost>
             </Stack>
-          </Stack>
       </Stack>
         <Dialog
         onDismiss={() => {
