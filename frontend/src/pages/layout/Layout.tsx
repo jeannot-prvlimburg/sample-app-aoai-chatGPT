@@ -20,7 +20,7 @@ const Layout = () => {
   const appStateContext = useContext(AppStateContext)
   const ui = appStateContext?.state.frontendSettings?.ui
 
-  const [selectedModel, setSelectedModel] = useState(appStateContext?.state.currentModel);
+  const [selectedModel, setSelectedModel] = useState(appStateContext?.state.selectedModel);
   const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<string>('none')
   const [temperature, setTemperature] = useState<number>(0.5)
 
@@ -54,36 +54,39 @@ const Layout = () => {
     appStateContext?.dispatch({ type: 'TOGGLE_CHAT_HISTORY' })
   }
 
-  const handleModelChange = async (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
-    if (!option) {
-        console.error('No option selected')
-        return
+const handleModelChange = async (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
+  if (!option) {
+    console.error('No option selected')
+    return
+  }
+
+  const newModel = option.key as string;
+
+  try {
+    const response = await fetch('/api/set_model', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ model: newModel }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
     }
+
+    const data = await response.json()
 
     setSelectedModel(newModel);
-    appStateContext?.dispatch({ type: 'UPDATE_SELECTED_MODEL', payload: newModel });
+    appStateContext?.dispatch({ type: 'UPDATE_CURRENT_MODEL', payload: newModel });
+    
+    console.log('Model updated successfully:', data)
 
-    try {
-        const response = await fetch('/api/set_model', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ model: option.key }),
-        })
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`)
-        }
-
-        const data = await response.json()
-        console.log('Model updated successfully:', data)
-
-    } catch (error) {
-        console.error('Error updating model:', error)
-        // Handle the error (e.g., show an error message to the user)
-    }
+  } catch (error) {
+    console.error('Error updating model:', error)
+    // Handle the error (e.g., show an error message to the user)
   }
+}
 
   const handleKnowledgeBaseChange = async (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
     if (!option) {
