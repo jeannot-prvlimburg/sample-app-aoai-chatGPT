@@ -45,6 +45,7 @@ export type Action =
       payload: { answerId: string; feedback: Feedback.Positive | Feedback.Negative | Feedback.Neutral }
     }
   | { type: 'GET_FEEDBACK_STATE'; payload: string }
+  | { type: 'UPDATE_CURRENT_MODEL'; payload: string }
 
 const initialState: AppState = {
   isChatHistoryOpen: false,
@@ -57,7 +58,8 @@ const initialState: AppState = {
     status: CosmosDBStatus.NotConfigured
   },
   frontendSettings: null,
-  feedbackState: {}
+  feedbackState: {},
+  currentModel: 'gpt-35-turbo'
 }
 
 export const AppStateContext = createContext<
