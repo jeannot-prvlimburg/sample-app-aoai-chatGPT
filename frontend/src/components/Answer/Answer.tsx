@@ -19,7 +19,7 @@ import styles from './Answer.module.css'
 
 interface Props {
   answer: AskResponse;
-  modelInfo?: string;  
+  {/* modelInfo?: string; */}
   onCitationClicked: (citedDocument: Citation) => void;
   onExectResultClicked: () => void;
 }
