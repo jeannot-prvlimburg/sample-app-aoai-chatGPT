@@ -172,7 +172,8 @@ const Chat = () => {
       role: 'user',
       content: question,
       date: new Date().toISOString(),
-      model: appStateContext?.state.selectedModel
+      model: appStateContext?.state.selectedModel,
+      knowledgeBase: appStateContext?.state.selectedKnowledgeBase
     }
 
     let conversation: Conversation | null | undefined
@@ -298,7 +299,8 @@ const Chat = () => {
       role: 'user',
       content: question,
       date: new Date().toISOString(),
-      model: appStateContext?.state.selectedModel
+      model: appStateContext?.state.selectedModel,
+      knowledgeBase: appStateContext?.state.selectedKnowledgeBase
     }
 
     //api call params set here (generate)
