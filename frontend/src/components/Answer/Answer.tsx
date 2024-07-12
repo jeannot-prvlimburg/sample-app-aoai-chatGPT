@@ -18,7 +18,8 @@ import { parseAnswer } from './AnswerParser'
 import styles from './Answer.module.css'
 
 interface Props {
-  answer: AskResponse & { modelInfo?: string };  
+  answer: AskResponse;
+  modelInfo?: string;  
   onCitationClicked: (citedDocument: Citation) => void;
   onExectResultClicked: () => void;
 }
