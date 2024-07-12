@@ -80,6 +80,7 @@ const Chat = () => {
 
   const [ASSISTANT, TOOL, ERROR] = ['assistant', 'tool', 'error']
   const NO_CONTENT_ERROR = 'No content in messages object.'
+  const [currentModel, setCurrentModel] = useState<string>("Unknown model");
 
   useEffect(() => {
     if (
@@ -135,6 +136,7 @@ const Chat = () => {
       assistantContent += resultMessage.content
       assistantMessage = resultMessage
       assistantMessage.content = assistantContent
+      assistantMessage.model = resultMessage.model
 
       if (resultMessage.context) {
         toolMessage = {
@@ -169,7 +171,8 @@ const Chat = () => {
       id: uuid(),
       role: 'user',
       content: question,
-      date: new Date().toISOString()
+      date: new Date().toISOString(),
+      model: appStateContext?.state.currentModel
     }
 
     let conversation: Conversation | null | undefined
