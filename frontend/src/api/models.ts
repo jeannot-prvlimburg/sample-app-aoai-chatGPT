@@ -53,6 +53,7 @@ export type ChatMessage = {
   date: string
   feedback?: Feedback
   context?: string
+  model?: string
 }
 
 export type ExecResults = {
