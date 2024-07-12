@@ -78,7 +78,7 @@ const handleModelChange = async (event: React.FormEvent<HTMLDivElement>, option?
     const data = await response.json()
 
     setSelectedModel(newModel);
-    appStateContext?.dispatch({ type: 'UPDATE_CURRENT_MODEL', payload: newModel });
+    appStateContext?.dispatch({ type: 'UPDATE_SELECTED_MODEL', payload: newModel });
     
     console.log('Model updated successfully:', data)
 
