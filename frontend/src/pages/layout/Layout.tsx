@@ -61,7 +61,7 @@ const Layout = () => {
     }
 
     setSelectedModel(newModel);
-    appStateContext?.dispatch({ type: 'UPDATE_CURRENT_MODEL', payload: newModel });
+    appStateContext?.dispatch({ type: 'UPDATE_SELECTED_MODEL', payload: newModel });
 
     try {
         const response = await fetch('/api/set_model', {
@@ -147,10 +147,10 @@ const Layout = () => {
   }, [copyClicked])
 
   useEffect(() => {
-  if (appStateContext?.state.currentModel) {
-    setSelectedModel(appStateContext.state.currentModel);
+  if (appStateContext?.state.selectedModel) {
+    setSelectedModel(appStateContext.state.selectedModel);
   }
-  }, [appStateContext?.state.currentModel]);
+  }, [appStateContext?.state.selectedModel]);
 
   useEffect(() => {}, [appStateContext?.state.isCosmosDBAvailable.status])
 
