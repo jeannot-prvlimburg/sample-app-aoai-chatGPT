@@ -784,18 +784,18 @@ const Chat = () => {
                     ) : answer.role === 'assistant' ? (
                       <div className={styles.chatMessageGpt}>
                         <Answer
-                          answer={{
-                            answer: answer.content,
-                            citations: parseCitationFromMessage(messages[index - 1]),
-                            plotly_data: parsePlotFromMessage(messages[index - 1]),
-                            message_id: answer.id,
-                            feedback: answer.feedback,
-                            exec_results: execResults,
-                            modelInfo: answer.model
-                          }}
-                          onCitationClicked={c => onShowCitation(c)}
-                          onExectResultClicked={() => onShowExecResult()}
-                        />
+                        answer={{
+                          answer: answer.content,
+                          citations: parseCitationFromMessage(messages[index - 1]),
+                          plotly_data: parsePlotFromMessage(messages[index - 1]),
+                          message_id: answer.id,
+                          feedback: answer.feedback,
+                          exec_results: execResults,
+                          modelInfo: answer.model || selectedModel || 'Unknown model'
+                        }}
+                        onCitationClicked={c => onShowCitation(c)}
+                        onExectResultClicked={() => onShowExecResult()}
+                      />
                       </div>
                     ) : answer.role === ERROR ? (
                       <div className={styles.chatMessageError}>
