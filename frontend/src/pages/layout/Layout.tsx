@@ -88,35 +88,39 @@ const handleModelChange = async (event: React.FormEvent<HTMLDivElement>, option?
   }
 }
 
-  const handleKnowledgeBaseChange = async (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
-    if (!option) {
-      console.error('No option selected')
-      return
-    }
+const handleKnowledgeBaseChange = async (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
+     if (!option) {
+       console.error('No option selected')
+       return
+     }
 
-    setSelectedKnowledgeBase(option.key as string)
+     const newKnowledgeBase = option.key as string;
 
-    try {
-      const response = await fetch('/api/set_knowledge_base', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ knowledgeBase: option.key }),
-      })
+     try {
+       const response = await fetch('/api/set_knowledge_base', {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json',
+         },
+         body: JSON.stringify({ knowledgeBase: newKnowledgeBase }),
+       })
 
-      if (!response.ok) {
-        console.log('Error changing knowledge base:', response)
-      }
+       if (!response.ok) {
+         throw new Error(`HTTP error! status: ${response.status}`)
+       }
 
-      const data = await response.json()
-      console.log('Knowledge base updated successfully:', data)
+       const data = await response.json()
 
-    } catch (error) {
-      console.error('Error updating knowledge base:', error)
-      // Handle the error (e.g., show an error message to the user)
-    }
-  }
+       setSelectedKnowledgeBase(newKnowledgeBase);
+       appStateContext?.dispatch({ type: 'UPDATE_SELECTED_KNOWLEDGE_BASE', payload: newKnowledgeBase });
+       
+       console.log('Knowledge base updated successfully:', data)
+
+     } catch (error) {
+       console.error('Error updating knowledge base:', error)
+       // Handle the error (e.g., show an error message to the user)
+     }
+   }
 
   const handleTemperatureChange = async (value: number) => {
     setTemperature(value)
