@@ -74,10 +74,10 @@ export const appStateReducer = (state: AppState, action: Action): AppState => {
           [action.payload.answerId]: action.payload.feedback
         }
       }
-    case 'UPDATE_CURRENT_MODEL':
+    case 'UPDATE_SELECTED_MODEL':
       return {
       ...state,
-      currentModel: action.payload
+      selectedModel: action.payload
     }
     default:
       return state
