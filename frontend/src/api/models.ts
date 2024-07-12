@@ -54,6 +54,7 @@ export type ChatMessage = {
   feedback?: Feedback
   context?: string
   model?: string
+  knowledgeBase?: string
 }
 
 export type ExecResults = {
