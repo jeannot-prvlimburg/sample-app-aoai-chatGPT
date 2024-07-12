@@ -137,6 +137,7 @@ const Chat = () => {
       assistantMessage = resultMessage
       assistantMessage.content = assistantContent
       assistantMessage.model = resultMessage.model || appStateContext?.state.selectedModel
+      assistantMessage.knowledgeBase = resultMessage.knowledgeBase || appStateContext?.state.selectedKnowledgeBase
 
       if (resultMessage.context) {
         toolMessage = {
@@ -795,7 +796,8 @@ const Chat = () => {
                           message_id: answer.id,
                           feedback: answer.feedback,
                           exec_results: execResults,
-                          modelInfo: answer.model || 'Unknown model'
+                          modelInfo: answer.model || 'Unknown model',
+                          knowledgeBaseInfo: answer.knowledgeBase || 'Unknown knowledge base'
                         }}
                         onCitationClicked={c => onShowCitation(c)}
                         onExectResultClicked={() => onShowExecResult()}
