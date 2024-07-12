@@ -24,7 +24,7 @@ export interface AppState {
   currentChat: Conversation | null
   frontendSettings: FrontendSettings | null
   feedbackState: { [answerId: string]: Feedback.Neutral | Feedback.Positive | Feedback.Negative }
-  currentModel: string
+  selectedModel: string
 }
 
 export type Action =
@@ -45,7 +45,7 @@ export type Action =
       payload: { answerId: string; feedback: Feedback.Positive | Feedback.Negative | Feedback.Neutral }
     }
   | { type: 'GET_FEEDBACK_STATE'; payload: string }
-  | { type: 'UPDATE_CURRENT_MODEL'; payload: string }
+  | { type: 'UPDATE_SELECTED_MODEL'; payload: string }
 
 const initialState: AppState = {
   isChatHistoryOpen: false,
@@ -59,7 +59,7 @@ const initialState: AppState = {
   },
   frontendSettings: null,
   feedbackState: {},
-  currentModel: 'gpt-35-turbo'
+  selectedModel: 'gpt-35-turbo'
 }
 
 export const AppStateContext = createContext<
