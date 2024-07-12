@@ -80,7 +80,7 @@ const Chat = () => {
 
   const [ASSISTANT, TOOL, ERROR] = ['assistant', 'tool', 'error']
   const NO_CONTENT_ERROR = 'No content in messages object.'
-  const [currentModel, setCurrentModel] = useState<string>("Unknown model");
+  const currentModel = appStateContext?.state.currentModel
 
   useEffect(() => {
     if (
