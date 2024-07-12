@@ -372,6 +372,7 @@ async def conversation_internal(request_body, request_headers):
             return jsonify({"error": str(ex)}), 500
 
 
+# In de route voor het instellen van het model
 @bp.route("/api/set_model", methods=['POST'])
 async def set_model():
     if not request.is_json:
@@ -386,15 +387,11 @@ async def set_model():
     try:
         # Update the model name in app settings
         app_settings.azure_openai.model = new_model
-
-        global azure_openai_client
-        azure_openai_client = init_openai_client()  # Re-initialize the client
         
         return jsonify({"success": True, "message": f"Model updated to {new_model}"}), 200
     except Exception as e:
         logging.exception(f"Error updating model to {new_model}")
         return jsonify({"success": False, "message": f"Error updating model: {str(e)}"}), 500
-
 
 
 @bp.route('/api/set_knowledge_base', methods=['POST'])
