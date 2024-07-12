@@ -20,7 +20,7 @@ const Layout = () => {
   const appStateContext = useContext(AppStateContext)
   const ui = appStateContext?.state.frontendSettings?.ui
 
-  const [selectedModel, setSelectedModel] = useState<string>('gpt-35-turbo')
+  const [currentModel, setCurrentModel] = useState<string>('gpt-35-turbo')
   const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<string>('none')
   const [temperature, setTemperature] = useState<number>(0.5)
 
@@ -60,7 +60,7 @@ const Layout = () => {
         return
     }
 
-    setSelectedModel(option.key as string)
+    setCurrentModel(option.key as string)
 
     try {
         const response = await fetch('/api/set_model', {
