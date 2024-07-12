@@ -788,7 +788,7 @@ const Chat = () => {
                             message_id: answer.id,
                             feedback: answer.feedback,
                             exec_results: execResults,
-                            modelInfo: answer.model
+                            modelInfo= answer.model || "Unknown model"
                           }}
                           onCitationClicked={c => onShowCitation(c)}
                           onExectResultClicked={() => onShowExecResult()}
