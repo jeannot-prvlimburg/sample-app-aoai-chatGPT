@@ -136,7 +136,7 @@ const Chat = () => {
       assistantContent += resultMessage.content
       assistantMessage = resultMessage
       assistantMessage.content = assistantContent
-      assistantMessage.model = resultMessage.model
+      assistantMessage.model = resultMessage.model || appStateContext?.state.selectedModel
 
       if (resultMessage.context) {
         toolMessage = {
@@ -226,6 +226,7 @@ const Chat = () => {
                   result.choices[0].messages.forEach(msg => {
                     msg.id = result.id
                     msg.date = new Date().toISOString()
+                    msg.model = result.model || appStateContext?.state.selectedModel
                   })
                   if (result.choices[0].messages?.some(m => m.role === ASSISTANT)) {
                     setShowLoadingMessage(false)
@@ -296,7 +297,8 @@ const Chat = () => {
       id: uuid(),
       role: 'user',
       content: question,
-      date: new Date().toISOString()
+      date: new Date().toISOString(),
+      model: appStateContext?.state.selectedModel
     }
 
     //api call params set here (generate)
