@@ -20,7 +20,7 @@ const Layout = () => {
   const appStateContext = useContext(AppStateContext)
   const ui = appStateContext?.state.frontendSettings?.ui
 
-  const [selectedModel, setSelectedModel] = useState<string>('gpt-35-turbo')
+  const [selectedModel, setSelectedModel] = useState(appStateContext?.state.currentModel);
   const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<string>('none')
   const [temperature, setTemperature] = useState<number>(0.5)
 
@@ -60,7 +60,8 @@ const Layout = () => {
         return
     }
 
-    setCurrentModel(option.key as string)
+    setSelectedModel(newModel);
+    appStateContext?.dispatch({ type: 'UPDATE_CURRENT_MODEL', payload: newModel });
 
     try {
         const response = await fetch('/api/set_model', {
@@ -144,6 +145,12 @@ const Layout = () => {
       setCopyText('Copied URL')
     }
   }, [copyClicked])
+
+  useEffect(() => {
+  if (appStateContext?.state.currentModel) {
+    setSelectedModel(appStateContext.state.currentModel);
+  }
+  }, [appStateContext?.state.currentModel]);
 
   useEffect(() => {}, [appStateContext?.state.isCosmosDBAvailable.status])
 
