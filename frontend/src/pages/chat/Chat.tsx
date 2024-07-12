@@ -80,7 +80,7 @@ const Chat = () => {
 
   const [ASSISTANT, TOOL, ERROR] = ['assistant', 'tool', 'error']
   const NO_CONTENT_ERROR = 'No content in messages object.'
-  const currentModel = appStateContext?.state.currentModel
+  const selectedModel = appStateContext?.state.selectedModel
 
   useEffect(() => {
     if (
@@ -172,7 +172,7 @@ const Chat = () => {
       role: 'user',
       content: question,
       date: new Date().toISOString(),
-      model: appStateContext?.state.currentModel
+      model: appStateContext?.state.selectedModel
     }
 
     let conversation: Conversation | null | undefined
