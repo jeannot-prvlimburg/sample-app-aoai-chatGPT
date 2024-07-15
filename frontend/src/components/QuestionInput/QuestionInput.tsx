@@ -5,6 +5,7 @@ import { SendRegular } from '@fluentui/react-icons'
 import Send from '../../assets/Send.svg'
 
 import styles from './QuestionInput.module.css'
+import { AppStateContext } from '../../state/AppProvider'
 
 interface Props {
   onSend: (question: string, id?: string) => void
@@ -16,6 +17,7 @@ interface Props {
 
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conversationId }: Props) => {
   const [question, setQuestion] = useState<string>('')
+  const appStateContext = useContext(AppStateContext)
 
   const sendQuestion = () => {
     if (disabled || !question.trim()) {
@@ -24,7 +26,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
   
     const messageWithKnowledgeBase = {
       content: question,
-      knowledgeBase: appStateContext?.state.selectedKnowledgeBase
+      knowledgeBase: appStateContext?.state.selectedKnowledgeBase?.name
     }
   
     if (conversationId) {
