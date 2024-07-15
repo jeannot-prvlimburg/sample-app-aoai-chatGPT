@@ -174,7 +174,7 @@ const Chat = () => {
       content: question,
       date: new Date().toISOString(),
       model: appStateContext?.state.selectedModel,
-      knowledgeBase: knowledgeBase: question.knowledgeBase || appStateContext?.state.selectedKnowledgeBase?.name
+      knowledgeBase: question.knowledgeBase || appStateContext?.state.selectedKnowledgeBase?.name
     }
 
     let conversation: Conversation | null | undefined
