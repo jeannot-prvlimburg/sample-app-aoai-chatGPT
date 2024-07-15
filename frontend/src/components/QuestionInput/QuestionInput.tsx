@@ -21,13 +21,18 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
     if (disabled || !question.trim()) {
       return
     }
-
-    if (conversationId) {
-      onSend(question, conversationId)
-    } else {
-      onSend(question)
+  
+    const messageWithKnowledgeBase = {
+      content: question,
+      knowledgeBase: appStateContext?.state.selectedKnowledgeBase
     }
-
+  
+    if (conversationId) {
+      onSend(messageWithKnowledgeBase, conversationId)
+    } else {
+      onSend(messageWithKnowledgeBase)
+    }
+  
     if (clearOnSend) {
       setQuestion('')
     }
