@@ -797,7 +797,7 @@ const Chat = () => {
                           feedback: answer.feedback,
                           exec_results: execResults,
                           modelInfo: answer.model || 'Unknown model',
-                          knowledgeBaseInfo: answer.knowledgeBase || 'Unknown knowledge base'
+                          knowledgeBaseInfo: answer.knowledgeBase || 'Unknown knowledge base',
                         }}
                         onCitationClicked={c => onShowCitation(c)}
                         onExectResultClicked={() => onShowExecResult()}
