@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useContext } from 'react'
 import { Stack, TextField } from '@fluentui/react'
 import { SendRegular } from '@fluentui/react-icons'
 
@@ -20,25 +20,25 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
   const appStateContext = useContext(AppStateContext)
 
   const sendQuestion = () => {
-    if (disabled || !question.trim()) {
-      return
-    }
-  
-    const messageWithKnowledgeBase = {
-      content: question,
-      knowledgeBase: appStateContext?.state.selectedKnowledgeBase?.name
-    }
-  
-    if (conversationId) {
-      onSend(messageWithKnowledgeBase, conversationId)
-    } else {
-      onSend(messageWithKnowledgeBase)
-    }
-  
-    if (clearOnSend) {
-      setQuestion('')
-    }
-  }
+     if (disabled || !question.trim()) {
+       return
+     }
+   
+     const messageWithKnowledgeBase = {
+       content: question,
+       knowledgeBase: appStateContext?.state.selectedKnowledgeBase?.name
+     }
+   
+     if (conversationId) {
+       onSend(messageWithKnowledgeBase, conversationId)
+     } else {
+       onSend(messageWithKnowledgeBase)
+     }
+   
+     if (clearOnSend) {
+       setQuestion('')
+     }
+   }
 
   const onEnterPress = (ev: React.KeyboardEvent<Element>) => {
     if (ev.key === 'Enter' && !ev.shiftKey && !(ev.nativeEvent?.isComposing === true)) {
