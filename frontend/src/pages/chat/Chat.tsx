@@ -137,7 +137,7 @@ const Chat = () => {
       assistantMessage = resultMessage
       assistantMessage.content = assistantContent
       assistantMessage.model = resultMessage.model || appStateContext?.state.selectedModel
-      assistantMessage.knowledgeBase = resultMessage.knowledgeBase || appStateContext?.state.selectedKnowledgeBase
+      assistantMessage.knowledgeBase = resultMessage.knowledgeBase || appStateContext?.state.selectedKnowledgeBase?.name
 
       if (resultMessage.context) {
         toolMessage = {
@@ -169,12 +169,12 @@ const Chat = () => {
     abortFuncs.current.unshift(abortController)
 
     const userMessage: ChatMessage = {
-      id: uuid(),
-      role: 'user',
-      content: question,
-      date: new Date().toISOString(),
-      model: appStateContext?.state.selectedModel,
-      knowledgeBase: question.knowledgeBase || appStateContext?.state.selectedKnowledgeBase?.name
+       id: uuid(),
+       role: 'user',
+       content: question.content, // .content
+       date: new Date().toISOString(),
+       model: appStateContext?.state.selectedModel,
+       knowledgeBase: question.knowledgeBase || appStateContext?.state.selectedKnowledgeBase?.name
     }
 
     let conversation: Conversation | null | undefined
@@ -296,12 +296,12 @@ const Chat = () => {
     abortFuncs.current.unshift(abortController)
 
     const userMessage: ChatMessage = {
-      id: uuid(),
-      role: 'user',
-      content: question,
-      date: new Date().toISOString(),
-      model: appStateContext?.state.selectedModel,
-      knowledgeBase: question.knowledgeBase || appStateContext?.state.selectedKnowledgeBase?.name
+       id: uuid(),
+       role: 'user',
+       content: question.content,
+       date: new Date().toISOString(),
+       model: appStateContext?.state.selectedModel,
+       knowledgeBase: question.knowledgeBase || appStateContext?.state.selectedKnowledgeBase?.name
     }
 
     //api call params set here (generate)
