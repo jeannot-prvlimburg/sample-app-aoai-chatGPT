@@ -9,6 +9,7 @@ export type AskResponse = {
   feedback?: Feedback
   exec_results?: ExecResults[]
   modelInfo?: string
+  knowledgeBaseInfo?: string
 }
 
 export type Citation = {
