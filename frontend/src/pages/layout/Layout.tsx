@@ -21,7 +21,6 @@ const Layout = () => {
   const ui = appStateContext?.state.frontendSettings?.ui
 
   const [selectedModel, setSelectedModel] = useState(appStateContext?.state.selectedModel);
-  const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<string>('none')
   const [temperature, setTemperature] = useState<number>(0.5)
 
   const modelOptions: IDropdownOption[] = [
@@ -84,40 +83,6 @@ const handleModelChange = async (event: React.FormEvent<HTMLDivElement>, option?
 
   } catch (error) {
     console.error('Error updating model:', error)
-    // Handle the error (e.g., show an error message to the user)
-  }
-}
-
-const handleKnowledgeBaseChange = async (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
-  if (!option) {
-    console.error('No option selected')
-    return
-  }
-
-  const newKnowledgeBase = option.key as string;
-
-  try {
-    const response = await fetch('/api/set_knowledge_base', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ knowledgeBase: newKnowledgeBase }),
-    })
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    const data = await response.json()
-
-    setSelectedKnowledgeBase(newKnowledgeBase);
-    appStateContext?.dispatch({ type: 'UPDATE_SELECTED_KNOWLEDGE_BASE', payload: newKnowledgeBase });
-    
-    console.log('Knowledge base updated successfully:', data)
-
-  } catch (error) {
-    console.error('Error updating knowledge base:', error)
     // Handle the error (e.g., show an error message to the user)
   }
 }
