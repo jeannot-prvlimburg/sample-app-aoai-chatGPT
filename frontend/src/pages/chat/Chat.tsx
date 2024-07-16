@@ -137,7 +137,6 @@ const Chat = () => {
       assistantMessage = resultMessage
       assistantMessage.content = assistantContent
       assistantMessage.model = resultMessage.model || appStateContext?.state.selectedModel
-      assistantMessage.knowledgeBase = resultMessage.knowledgeBase || appStateContext?.state.selectedKnowledgeBase?.name
 
       if (resultMessage.context) {
         toolMessage = {
@@ -174,7 +173,6 @@ const Chat = () => {
        content: question.content, // .content
        date: new Date().toISOString(),
        model: appStateContext?.state.selectedModel,
-       knowledgeBase: question.knowledgeBase || appStateContext?.state.selectedKnowledgeBase?.name
     }
 
     let conversation: Conversation | null | undefined
@@ -301,7 +299,6 @@ const Chat = () => {
        content: question.content,
        date: new Date().toISOString(),
        model: appStateContext?.state.selectedModel,
-       knowledgeBase: question.knowledgeBase || appStateContext?.state.selectedKnowledgeBase?.name
     }
 
     //api call params set here (generate)
@@ -797,7 +794,6 @@ const Chat = () => {
                           feedback: answer.feedback,
                           exec_results: execResults,
                           modelInfo: answer.model || 'Unknown model',
-                          knowledgeBaseInfo: answer.knowledgeBase || 'Unknown knowledge base',
                         }}
                         onCitationClicked={c => onShowCitation(c)}
                         onExectResultClicked={() => onShowExecResult()}
