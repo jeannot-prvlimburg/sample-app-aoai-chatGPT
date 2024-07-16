@@ -406,24 +406,34 @@ async def set_model():
 async def set_knowledge_base():
     if not request.is_json:
         return jsonify({"success": False, "message": "Request must be JSON"}), 400
-    try: 
-        data = await request.get_json()
-        new_knowledge_base = data.get('knowledgeBase')
-        if not new_knowledge_base:
-            return jsonify({"success": False, "message": "Request must include knowledgeBase"}), 400
-    except:
-        return jsonify({"success": False, "message": "Invalid JSON in request"}), 400
-
-    try:
-        # In plaats van de globale instelling te updaten, geven we alleen een succesbericht terug
-        # De daadwerkelijke knowledgebase zal per bericht worden gebruikt
-        return jsonify({"success": True, "message": f"Knowledge base '{new_knowledge_base}' will be used for the next message."}), 200
-    except Exception as e:
-        return jsonify({"success": False, "message": f"Error processing knowledge base: {str(e)}"}), 500
-        
     
+    data = await request.get_json()
+    new_knowledge_base = data.get('knowledgeBase')
+    
+    if not new_knowledge_base or new_knowledge_base == 'none':
+        # Reset naar default waarden
+        os.environ['AZURE_SEARCH_INDEX'] = ''
+        os.environ['AZURE_SEARCH_SERVICE'] = ''
+        os.environ['AZURE_SEARCH_KEY'] = ''
+        # Voeg hier andere relevante omgevingsvariabelen toe die gereset moeten worden
+    elif new_knowledge_base == 'stikstof-24042024':
+        os.environ['AZURE_SEARCH_INDEX'] = 'stikstof-24042024'
+        os.environ['AZURE_SEARCH_SERVICE'] = 'https://ai-search-v2-0.search.windows.net'
+        os.environ['AZURE_SEARCH_KEY'] = 'fnwvwCuSUfVpx2p9R4lPb6S8y2W8RqvyZhqNwSOxDJAzSeDAnSBi'
+        # Voeg hier andere relevante omgevingsvariabelen toe voor de stikstof kennisbank
+    elif new_knowledge_base == 'griffie-06062024':
+        os.environ['AZURE_SEARCH_INDEX'] = 'griffie-06062024'
+        os.environ['AZURE_SEARCH_SERVICE'] = 'https://ai-search-v2-0.search.windows.net'
+        os.environ['AZURE_SEARCH_KEY'] = 'fnwvwCuSUfVpx2p9R4lPb6S8y2W8RqvyZhqNwSOxDJAzSeDAnSBi'
+        # Voeg hier andere relevante omgevingsvariabelen toe voor de griffie kennisbank
+    else:
+        return jsonify({"success": False, "message": "Invalid knowledge base selected"}), 400
 
+    # Herlaad de app_settings om de nieuwe omgevingsvariabelen te gebruiken
+    global app_settings
+    app_settings = _AppSettings()
 
+    return jsonify({"success": True, "message": f"Knowledge base updated to {new_knowledge_base}"}), 200
 
 @bp.route("/api/set_temperature", methods=['POST'])
 async def set_temperature():
