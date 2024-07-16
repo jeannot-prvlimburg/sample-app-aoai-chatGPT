@@ -79,12 +79,5 @@ export const appStateReducer = (state: AppState, action: Action): AppState => {
       ...state,
       selectedModel: action.payload
     }
-    case 'UPDATE_SELECTED_KNOWLEDGE_BASE':
-     return {
-       ...state,
-       selectedKnowledgeBase: action.payload
-     }
-    default:
-      return state
   }
 }
