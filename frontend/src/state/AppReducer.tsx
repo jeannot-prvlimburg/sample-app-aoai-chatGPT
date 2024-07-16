@@ -79,5 +79,7 @@ export const appStateReducer = (state: AppState, action: Action): AppState => {
       ...state,
       selectedModel: action.payload
     }
+    default:
+      return state; 
   }
 }
