@@ -21,6 +21,7 @@ const Layout = () => {
   const ui = appStateContext?.state.frontendSettings?.ui
 
   const [selectedModel, setSelectedModel] = useState(appStateContext?.state.selectedModel);
+  const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<string | null>(null)
   const [temperature, setTemperature] = useState<number>(0.5)
 
   const modelOptions: IDropdownOption[] = [
@@ -86,6 +87,36 @@ const handleModelChange = async (event: React.FormEvent<HTMLDivElement>, option?
     // Handle the error (e.g., show an error message to the user)
   }
 }
+
+  const handleKnowledgeBaseChange = async (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
+    if (!option) return;
+    
+    const newKnowledgeBase = option.key as string;
+    setSelectedKnowledgeBase(newKnowledgeBase);
+    
+    try {
+      const response = await fetch('/api/set_knowledge_base', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ knowledgeBase: newKnowledgeBase }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Knowledge base updated successfully:', data);
+
+      // Start een nieuwe chat
+      appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: null });
+
+    } catch (error) {
+      console.error('Error updating knowledge base:', error);
+    }
+  }
 
   const handleTemperatureChange = async (value: number) => {
     setTemperature(value)
