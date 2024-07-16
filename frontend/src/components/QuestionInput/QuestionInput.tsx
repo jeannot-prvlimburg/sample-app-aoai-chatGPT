@@ -20,25 +20,19 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, conv
   const appStateContext = useContext(AppStateContext)
 
   const sendQuestion = () => {
-     if (disabled || !question.trim()) {
-       return
-     }
+    if (disabled || !question.trim()) {
+      return
+    }
    
-     const messageWithKnowledgeBase = {
-       content: question,
-       knowledgeBase: appStateContext?.state.selectedKnowledgeBase?.name
-     }
-   
-     if (conversationId) {
-       onSend(messageWithKnowledgeBase, conversationId)
-     } else {
-       onSend(messageWithKnowledgeBase)
-     }
-   
-     if (clearOnSend) {
-       setQuestion('')
-     }
-   }
+    if (conversationId) {
+      onSend(question, conversationId)
+    } else {
+      onSend(question)
+    }
+    
+    if (clearOnSend) {
+      setQuestion('')
+    }
 
   const onEnterPress = (ev: React.KeyboardEvent<Element>) => {
     if (ev.key === 'Enter' && !ev.shiftKey && !(ev.nativeEvent?.isComposing === true)) {
