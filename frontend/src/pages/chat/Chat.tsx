@@ -170,7 +170,7 @@ const Chat = () => {
     const userMessage: ChatMessage = {
        id: uuid(),
        role: 'user',
-       content: question.content, // .content
+       content: question,
        date: new Date().toISOString(),
        model: appStateContext?.state.selectedModel,
     }
@@ -296,7 +296,7 @@ const Chat = () => {
     const userMessage: ChatMessage = {
        id: uuid(),
        role: 'user',
-       content: question.content,
+       content: question,
        date: new Date().toISOString(),
        model: appStateContext?.state.selectedModel,
     }
