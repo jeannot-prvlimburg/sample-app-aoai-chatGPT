@@ -25,7 +25,6 @@ export interface AppState {
   frontendSettings: FrontendSettings | null
   feedbackState: { [answerId: string]: Feedback.Neutral | Feedback.Positive | Feedback.Negative }
   selectedModel: string
-  selectedKnowledgeBase: string
 }
 
 export type Action =
@@ -47,7 +46,6 @@ export type Action =
     }
   | { type: 'GET_FEEDBACK_STATE'; payload: string }
   | { type: 'UPDATE_SELECTED_MODEL'; payload: string }
-  | { type: 'UPDATE_SELECTED_KNOWLEDGE_BASE'; payload: string }
 
 const initialState: AppState = {
   isChatHistoryOpen: false,
@@ -62,7 +60,6 @@ const initialState: AppState = {
   frontendSettings: null,
   feedbackState: {},
   selectedModel: 'gpt-35-turbo',
-  selectedKnowledgeBase: 'none'
 }
 
 export const AppStateContext = createContext<
