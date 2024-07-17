@@ -102,19 +102,21 @@ const handleModelChange = async (event: React.FormEvent<HTMLDivElement>, option?
         },
         body: JSON.stringify({ knowledgeBase: newKnowledgeBase }),
       });
-
+  
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
+  
       const data = await response.json();
       console.log('Knowledge base updated successfully:', data);
-
-      // Start een nieuwe chat
+  
+      // Start a new chat
       appStateContext?.dispatch({ type: 'UPDATE_CURRENT_CHAT', payload: null });
-
+  
     } catch (error) {
       console.error('Error updating knowledge base:', error);
+      // Show an error message to the user
+      alert(`Error updating knowledge base: ${error}`);
     }
   }
 
