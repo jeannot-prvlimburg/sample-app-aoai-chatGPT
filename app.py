@@ -24,7 +24,6 @@ from backend.security.ms_defender_utils import get_msdefender_user_json
 from backend.history.cosmosdbservice import CosmosConversationClient
 from backend.settings import (
     app_settings,
-    _AppSettings,
     MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
 )
 from backend.utils import (
@@ -407,6 +406,13 @@ async def set_model():
 async def set_knowledge_base():
     if not request.is_json:
         return jsonify({"success": False, "message": "Request must be JSON"}), 400
+
+    try:
+        from backend.settings import _AppSettings
+        return jsonify({"success": True, "message": f"App settings imported succesfully."}), 200
+    except:
+        return jsonify({"success": False, "message": "App settings import failed."}), 400
+        
     
     try:
         data = await request.get_json()
