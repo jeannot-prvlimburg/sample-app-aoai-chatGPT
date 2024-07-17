@@ -116,8 +116,13 @@ const handleModelChange = async (event: React.FormEvent<HTMLDivElement>, option?
   
     } catch (error) {
       console.error('Error updating knowledge base:', error);
-      // Show an error message to the user
-      alert(`Error updating knowledge base: ${error}`);
+      // Show a more detailed error message to the user
+      let errorMessage = 'An unexpected error occurred while updating the knowledge base.';
+      if (error instanceof Error) {
+        errorMessage = `Error updating knowledge base: ${error.message}`;
+      }
+      
+      alert(errorMessage);
     }
   }
 
