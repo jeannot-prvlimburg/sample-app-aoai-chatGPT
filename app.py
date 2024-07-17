@@ -404,52 +404,47 @@ async def set_model():
 
 @bp.route('/api/set_knowledge_base', methods=['POST'])
 async def set_knowledge_base():
-    if not request.is_json:
-        return jsonify({"success": False, "message": "Request must be JSON"}), 400
+    try:
+        if not request.is_json:
+            return jsonify({"success": False, "message": "Request must be JSON"}), 400
 
-    try:
-        from backend.settings import _AppSettings
-        return jsonify({"success": True, "message": f"App settings imported succesfully."}), 200
-    except:
-        return jsonify({"success": False, "message": "App settings import failed."}), 400
-        
-    
-    try:
+        try:
+            from backend.settings import _AppSettings
+        except ImportError:
+            return jsonify({"success": False, "message": "App settings import failed."}), 400
+
         data = await request.get_json()
         new_knowledge_base = data.get('knowledgeBase')
         
         if not new_knowledge_base:
             return jsonify({"success": False, "message": "New knowledge base is required"}), 400
 
+        global app_settings
+        
         if app_settings.datasource is None:
             app_settings.datasource = DataSourceSettings()
 
         if new_knowledge_base == 'none':
-            # Reset to default values
             app_settings.datasource = None
         elif new_knowledge_base == 'stikstof-24042024':
-            # Set values for stikstof knowledge base
             app_settings.datasource.index = 'stikstof-24042024'
             app_settings.datasource.endpoint = 'https://ai-search-v2-0.search.windows.net'
             app_settings.datasource.key = 'fnwvwCuSUfVpx2p9R4lPb6S8y2W8RqvyZhqNwSOxDJAzSeDAnSBi'
         elif new_knowledge_base == 'griffie-06062024':
-            # Set values for griffie knowledge base
             app_settings.datasource.index = 'griffie-06062024'
             app_settings.datasource.endpoint = 'https://ai-search-v2-0.search.windows.net'
             app_settings.datasource.key = 'fnwvwCuSUfVpx2p9R4lPb6S8y2W8RqvyZhqNwSOxDJAzSeDAnSBi'
         else:
             return jsonify({"success": False, "message": "Invalid knowledge base selected"}), 400
 
+        # Herlaad de app_settings om de nieuwe omgevingsvariabelen te gebruiken
+        app_settings = _AppSettings()  # Reload
+
         return jsonify({"success": True, "message": f"Knowledge base updated to {new_knowledge_base}"}), 200
+
     except Exception as e:
-        logging.exception(f"Error updating knowledge base to {new_knowledge_base}")
-        return jsonify({"success": False, "message": f"Error updating knowledge base: {str(e)}"}), 500
-
-    # Herlaad de app_settings om de nieuwe omgevingsvariabelen te gebruiken
-    global app_settings
-    app_settings = _AppSettings() # Reload
-
-    return jsonify({"success": True, "message": f"Knowledge base updated to {new_knowledge_base}"}), 200
+        logging.exception(f"Error in set_knowledge_base: {str(e)}")
+        return jsonify({"success": False, "message": f"An unexpected error occurred: {str(e)}"}), 500
 
 @bp.route("/api/set_temperature", methods=['POST'])
 async def set_temperature():
