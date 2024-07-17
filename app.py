@@ -24,6 +24,7 @@ from backend.security.ms_defender_utils import get_msdefender_user_json
 from backend.history.cosmosdbservice import CosmosConversationClient
 from backend.settings import (
     app_settings,
+    _AppSettings,
     MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
 )
 from backend.utils import (
@@ -414,6 +415,9 @@ async def set_knowledge_base():
         if not new_knowledge_base:
             return jsonify({"success": False, "message": "New knowledge base is required"}), 400
 
+        if app_settings.datasource is None:
+            app_settings.datasource = DataSourceSettings()
+
         if new_knowledge_base == 'none':
             # Reset to default values
             app_settings.datasource = None
@@ -437,7 +441,7 @@ async def set_knowledge_base():
 
     # Herlaad de app_settings om de nieuwe omgevingsvariabelen te gebruiken
     global app_settings
-    app_settings = _AppSettings()
+    app_settings = _AppSettings() # Reload
 
     return jsonify({"success": True, "message": f"Knowledge base updated to {new_knowledge_base}"}), 200
 
