@@ -102,12 +102,13 @@ const handleModelChange = async (event: React.FormEvent<HTMLDivElement>, option?
         },
         body: JSON.stringify({ knowledgeBase: newKnowledgeBase }),
       });
+
+      const data = await response.json();
   
       if (!response.ok) {
-        throw new Error(`Error: ${response.status} - ${response.statusText}`);
+        throw new Error(`${data.message || response.statusText}`);
       }
   
-      const data = await response.json();
       console.log('Knowledge base updated successfully:', data);
   
       // Start a new chat
