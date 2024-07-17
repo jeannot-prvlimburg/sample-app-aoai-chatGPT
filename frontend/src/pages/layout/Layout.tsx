@@ -104,7 +104,7 @@ const handleModelChange = async (event: React.FormEvent<HTMLDivElement>, option?
       });
   
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`Error! {response}`);
       }
   
       const data = await response.json();
