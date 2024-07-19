@@ -416,9 +416,15 @@ async def set_knowledge_base():
         if new_knowledge_base == 'none':
             app_settings.datasource = None
         elif new_knowledge_base in ['stikstof-24042024', 'griffie-06062024']:
+            # Set embedding settings
+            app_settings.azure_openai.embedding_endpoint = "https://laica-v1-0.openai.azure.com/"
+            app_settings.azure_openai.embedding_key = "3d7834068e6f4f34b62d6db087af8f27"
+            app_settings.azure_openai.embedding_name = "text-embeddings-ada-002"
+
+            # Set datasource settings
             app_settings.datasource = _AzureSearchSettings(
                 settings=app_settings,
-                service="ai-search-v2-0",  # De naam van de Azure Search service
+                service="ai-search-v2-0", 
                 index=new_knowledge_base,
                 key="fnwvwCuSUfVpx2p9R4lPb6S8y2W8RqvyZhqNwSOxDJAzSeDAnSBi",
                 endpoint="https://ai-search-v2-0.search.windows.net",
