@@ -424,7 +424,7 @@ async def set_knowledge_base():
         if new_knowledge_base == 'none':
             app_settings.datasource = None
         elif new_knowledge_base in ['stikstof-24042024', 'griffie-06062024']:
-            if not isinstance(app_settings.datasource, _AzureSearchSettings):
+            if not app_settings.datasource:
                 app_settings.datasource = _AzureSearchSettings(settings=app_settings)
             
             app_settings.datasource.index = new_knowledge_base
