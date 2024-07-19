@@ -24,9 +24,7 @@ from backend.security.ms_defender_utils import get_msdefender_user_json
 from backend.history.cosmosdbservice import CosmosConversationClient
 from backend.settings import (
     app_settings,
-    MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION,
-    _AppSettings,
-    _AzureSearchSettings
+    MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
 )
 from backend.utils import (
     format_as_ndjson,
@@ -411,7 +409,7 @@ async def set_knowledge_base():
             return jsonify({"success": False, "message": "Request must be JSON"}), 400
 
         try:
-            from backend.settings import _AppSettings
+            from backend.settings import _AppSettings, _AzureSearchSettings
         except ImportError:
             return jsonify({"success": False, "message": "App settings import failed."}), 400
 
@@ -425,20 +423,17 @@ async def set_knowledge_base():
 
         if new_knowledge_base == 'none':
             app_settings.datasource = None
-        elif new_knowledge_base == 'stikstof-24042024':
-            app_settings.datasource.index = 'stikstof-24042024'
-            app_settings.datasource.endpoint = 'https://ai-search-v2-0.search.windows.net'
-            app_settings.datasource.key = 'fnwvwCuSUfVpx2p9R4lPb6S8y2W8RqvyZhqNwSOxDJAzSeDAnSBi'
-        elif new_knowledge_base == 'griffie-06062024':
-            app_settings.datasource.index = 'griffie-06062024'
+        elif new_knowledge_base in ['stikstof-24042024', 'griffie-06062024']:
+            if not isinstance(app_settings.datasource, _AzureSearchSettings):
+                app_settings.datasource = _AzureSearchSettings(settings=app_settings)
+            
+            app_settings.datasource.index = new_knowledge_base
             app_settings.datasource.endpoint = 'https://ai-search-v2-0.search.windows.net'
             app_settings.datasource.key = 'fnwvwCuSUfVpx2p9R4lPb6S8y2W8RqvyZhqNwSOxDJAzSeDAnSBi'
         else:
             return jsonify({"success": False, "message": "Invalid knowledge base selected"}), 400
 
-        # Herlaad de app_settings om de nieuwe omgevingsvariabelen te gebruiken
-        from backend.settings import _AppSettings
-        app_settings = _AppSettings()  # Reload
+        return jsonify({"success": True, "message": f"Knowledge base updated to {new_knowledge_base}"}), 200
 
     except Exception as e:
         logging.exception(f"Error in set_knowledge_base: {str(e)}")
