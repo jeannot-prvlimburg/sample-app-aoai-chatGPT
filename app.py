@@ -420,9 +420,6 @@ async def set_knowledge_base():
             return jsonify({"success": False, "message": "New knowledge base is required"}), 400
 
         global app_settings
-        
-        if app_settings.datasource is None:
-            app_settings.datasource = DataSourceSettings()
 
         if new_knowledge_base == 'none':
             app_settings.datasource = None
@@ -438,9 +435,8 @@ async def set_knowledge_base():
             return jsonify({"success": False, "message": "Invalid knowledge base selected"}), 400
 
         # Herlaad de app_settings om de nieuwe omgevingsvariabelen te gebruiken
+        from backend.settings import _AppSettings
         app_settings = _AppSettings()  # Reload
-
-        return jsonify({"success": True, "message": f"Knowledge base updated to {new_knowledge_base}"}), 200
 
     except Exception as e:
         logging.exception(f"Error in set_knowledge_base: {str(e)}")
