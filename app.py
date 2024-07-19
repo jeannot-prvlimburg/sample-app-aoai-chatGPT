@@ -204,10 +204,6 @@ def prepare_model_args(request_body, request_headers):
                 }
             )
 
-    # Gebruik de knowledgebase van het laatste gebruikersbericht
-    last_user_message = next((msg for msg in reversed(request_messages) if msg["role"] == "user"), None)
-    knowledge_base = last_user_message.get("knowledgeBase") if last_user_message else None
-
     user_json = None
     if (MS_DEFENDER_ENABLED):
         authenticated_user_details = get_authenticated_user_details(request_headers)
@@ -225,14 +221,10 @@ def prepare_model_args(request_body, request_headers):
         "user": user_json
     }
 
-    if app_settings.datasource and knowledge_base:
-        # Maak een kopie van de datasource instellingen en pas de index aan
-        datasource_config = copy.deepcopy(app_settings.datasource)
-        datasource_config.index = knowledge_base
-        
+    if app_settings.datasource:
         model_args["extra_body"] = {
             "data_sources": [
-                datasource_config.construct_payload_configuration(
+                app_settings.datasource.construct_payload_configuration(
                     request=request
                 )
             ]
