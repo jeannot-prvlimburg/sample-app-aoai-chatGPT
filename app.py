@@ -424,12 +424,24 @@ async def set_knowledge_base():
         if new_knowledge_base == 'none':
             app_settings.datasource = None
         elif new_knowledge_base in ['stikstof-24042024', 'griffie-06062024']:
-            if not app_settings.datasource:
-                app_settings.datasource = _AzureSearchSettings(settings=app_settings)
-            
-            app_settings.datasource.index = new_knowledge_base
-            app_settings.datasource.endpoint = 'https://ai-search-v2-0.search.windows.net'
-            app_settings.datasource.key = 'fnwvwCuSUfVpx2p9R4lPb6S8y2W8RqvyZhqNwSOxDJAzSeDAnSBi'
+            app_settings.datasource = _AzureSearchSettings(
+                settings=app_settings,
+                service="ai-search-v2-0",  # De naam van de Azure Search service
+                index=new_knowledge_base,
+                key="fnwvwCuSUfVpx2p9R4lPb6S8y2W8RqvyZhqNwSOxDJAzSeDAnSBi",
+                endpoint="https://ai-search-v2-0.search.windows.net",
+                top_k=5,
+                strictness=3,
+                enable_in_domain=False,
+                query_type="vectorSimpleHybrid",
+                use_semantic_search=True,
+                semantic_search_config="default",
+                content_columns="chunk",
+                vector_columns="vector",
+                title_column="llm_title",
+                url_column=None,
+                filename_column="doc_title"
+            )
         else:
             return jsonify({"success": False, "message": "Invalid knowledge base selected"}), 400
 
