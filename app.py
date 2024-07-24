@@ -446,6 +446,10 @@ async def set_knowledge_base():
             #app_settings.datasource.set_authentication()
             #app_settings.datasource.set_fields_mapping()
             #app_settings.datasource.set_endpoint()
+
+            # Daarna proberen:
+            # Validate the settings
+            #app_settings = _AppSettings(**app_settings.dict())
         else:
             return jsonify({"success": False, "message": "Invalid knowledge base selected"}), 400
 
