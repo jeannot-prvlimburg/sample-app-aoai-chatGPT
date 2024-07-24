@@ -440,6 +440,12 @@ async def set_knowledge_base():
 
             # Use construct_payload_configuration to ensure the datasource is properly configured
             app_settings.datasource.construct_payload_configuration(request=request)
+            
+            # Vervang door
+            # Ensure the datasource is properly set up
+            #app_settings.datasource.set_authentication()
+            #app_settings.datasource.set_fields_mapping()
+            #app_settings.datasource.set_endpoint()
         else:
             return jsonify({"success": False, "message": "Invalid knowledge base selected"}), 400
 
