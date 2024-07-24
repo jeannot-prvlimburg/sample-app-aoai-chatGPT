@@ -400,10 +400,7 @@ async def set_knowledge_base():
         if not request.is_json:
             return jsonify({"success": False, "message": "Request must be JSON"}), 400
 
-        try:
-            from backend.settings import _AppSettings, _AzureSearchSettings
-        except ImportError:
-            return jsonify({"success": False, "message": "App settings import failed."}), 400
+        from backend.settings import _AppSettings, _AzureSearchSettings
 
         data = await request.get_json()
         new_knowledge_base = data.get('knowledgeBase')
@@ -440,6 +437,9 @@ async def set_knowledge_base():
                 url_column=None,
                 filename_column="doc_title"
             )
+
+            # Use construct_payload_configuration to ensure the datasource is properly configured
+            app_settings.datasource.construct_payload_configuration(request=request)
         else:
             return jsonify({"success": False, "message": "Invalid knowledge base selected"}), 400
 
