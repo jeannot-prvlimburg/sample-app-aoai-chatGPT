@@ -3,7 +3,7 @@ import { Dropdown, IDropdownOption, IconButton, Panel } from '@fluentui/react'
 
 const knowledgeBases: IDropdownOption[] = [
   { key: 'none', text: 'Geen Kennisbank' },
-  { key: 'stikstof', text: 'Stikstof' },
+  { key: 'stikstof', text: 'Stikstof123' },
 ]
 
 const KnowledgeBaseSelector: React.FC<{ onSelect: (kb: string) => void }> = ({ onSelect }) => {
