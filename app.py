@@ -14,6 +14,7 @@ from quart import (
     send_from_directory,
     render_template,
     current_app,
+    g,
 )
 
 from openai import AsyncAzureOpenAI
@@ -40,11 +41,24 @@ bp = Blueprint("routes", __name__, static_folder="static", template_folder="stat
 
 cosmos_db_ready = asyncio.Event()
 
+KNOWLEDGE_BASES = os.environ.get("AZURE_SEARCH_INDEX", "none").split(",")
+
+KNOWLEDGE_BASES = {
+    "none": {},
+    "stikstof": {
+        "index_name": "stikstof-24042024",
+        "semantic_configuration_name": "default",
+        "top_k": 5,
+        "vector_fields": ["vector"],
+        "text_fields": ["chunk"]
+    }
+}
 
 def create_app():
     app = Quart(__name__)
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
+    app.register_blueprint(bp)
     
     @app.before_serving
     async def init():
@@ -53,7 +67,6 @@ def create_app():
             cosmos_db_ready.set()
         except Exception as e:
             logging.exception("Failed to initialize CosmosDB client")
-            app.cosmos_conversation_client = None
             raise e
     
     return app
@@ -104,6 +117,7 @@ frontend_settings = {
     },
     "sanitize_answer": app_settings.base_settings.sanitize_answer,
     "oyd_enabled": app_settings.base_settings.datasource_type,
+    "knowledge_bases": KNOWLEDGE_BASES
 }
 
 
@@ -253,11 +267,14 @@ def prepare_model_args(request_body, request_headers):
         "user": user_json
     }
 
+    selected_kb = getattr(g, 'selected_knowledge_base', 'none')
+    kb_settings = KNOWLEDGE_BASES.get(selected_kb, {})
     if app_settings.datasource:
         model_args["extra_body"] = {
             "data_sources": [
                 app_settings.datasource.construct_payload_configuration(
-                    request=request
+                request=request,
+                **kb_settings
                 )
             ]
         }
@@ -385,6 +402,12 @@ async def stream_chat_request(request_body, request_headers):
 
 async def conversation_internal(request_body, request_headers):
     try:
+        # Get the selected knowledge base from the application context
+        selected_kb = getattr(g, 'selected_knowledge_base', 'none')
+        
+        if selected_kb not in KNOWLEDGE_BASES:
+            return jsonify({"error": "Invalid knowledge base selected"}), 400
+        
         if app_settings.azure_openai.stream and not app_settings.base_settings.use_promptflow:
             result = await stream_chat_request(request_body, request_headers)
             response = await make_response(format_as_ndjson(result))
@@ -402,6 +425,21 @@ async def conversation_internal(request_body, request_headers):
         else:
             return jsonify({"error": str(ex)}), 500
 
+@bp.route("/set_knowledge_base", methods=["POST"])
+async def set_knowledge_base():
+    request_json = await request.get_json()
+    selected_kb = request_json.get("knowledge_base")
+    
+    if selected_kb not in KNOWLEDGE_BASES:
+        return jsonify({"error": "Invalid knowledge base selected"}), 400
+    
+    # Store the selected knowledge base in the application context
+    g.selected_knowledge_base = selected_kb
+    
+    # Update the Azure Search index in the app settings
+    app_settings.search.index_name = selected_kb
+    
+    return jsonify({"message": f"Knowledge base set to {selected_kb}"}), 200
 
 @bp.route("/conversation", methods=["POST"])
 async def conversation():

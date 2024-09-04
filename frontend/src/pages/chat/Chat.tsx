@@ -38,6 +38,9 @@ import { QuestionInput } from "../../components/QuestionInput";
 import { ChatHistoryPanel } from "../../components/ChatHistory/ChatHistoryPanel";
 import { AppStateContext } from "../../state/AppProvider";
 import { useBoolean } from "@fluentui/react-hooks";
+import KnowledgeBaseSelector from '../../components/KnowledgeBaseSelector/KnowledgeBaseSelector';
+
+import ReactMarkdown from 'react-markdown'
 
 const enum messageStatus {
   NotRunning = 'Not Running',
@@ -65,6 +68,7 @@ const Chat = () => {
   const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>()
   const [logo, setLogo] = useState('')
   const [answerId, setAnswerId] = useState<string>('')
+  const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<string>("none");
 
   const errorDialogContentProps = {
     type: DialogType.close,
@@ -220,7 +224,8 @@ const Chat = () => {
     setMessages(conversation.messages)
 
     const request: ConversationRequest = {
-      messages: [...conversation.messages.filter(answer => answer.role !== ERROR)]
+      messages: [...conversation.messages.filter(answer => answer.role !== ERROR)],
+      knowledge_base: selectedKnowledgeBase
     }
 
     let result = {} as ChatResponse
@@ -334,12 +339,14 @@ const Chat = () => {
       } else {
         conversation.messages.push(userMessage)
         request = {
-          messages: [...conversation.messages.filter(answer => answer.role !== ERROR)]
+          messages: [...conversation.messages.filter(answer => answer.role !== ERROR)],
+          knowledge_base: selectedKnowledgeBase
         }
       }
     } else {
       request = {
-        messages: [userMessage].filter(answer => answer.role !== ERROR)
+        messages: [userMessage].filter(answer => answer.role !== ERROR),
+        knowledge_base: selectedKnowledgeBase
       }
       setMessages(request.messages)
     }
@@ -832,24 +839,21 @@ const Chat = () => {
                   </>
                 ))}
                 {showLoadingMessage && (
-                  <>
-                    <div className={styles.chatMessageGpt}>
-                      <Answer
-                        answer={{
-                          answer: "Generating answer...",
-                          citations: [],
-                          generated_chart: null
-                        }}
-                        onCitationClicked={() => null}
-                        onExectResultClicked={() => null}
-                      />
-                    </div>
-                  </>
+                  <div className={styles.chatMessageGpt}>
+                    <Answer
+                      answer={{
+                        answer: "Generating answer...",
+                        citations: [],
+                        generated_chart: null
+                      }}
+                      onCitationClicked={() => null}
+                      onExectResultClicked={() => null}
+                    />
+                  </div>
                 )}
                 <div ref={chatMessageStreamEnd} />
               </div>
             )}
-
             <Stack horizontal className={styles.chatInput}>
               {isLoading && messages.length > 0 && (
                 <Stack
@@ -859,32 +863,27 @@ const Chat = () => {
                   aria-label="Stop generating"
                   tabIndex={0}
                   onClick={stopGenerating}
-                  onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? stopGenerating() : null)}>
+                  onKeyDown={e => (e.key === 'Enter' || e.key === ' ' ? stopGenerating() : null)}
+                >
                   <SquareRegular className={styles.stopGeneratingIcon} aria-hidden="true" />
                   <span className={styles.stopGeneratingText} aria-hidden="true">
                     Stop generating
                   </span>
                 </Stack>
               )}
-              <Stack>
+              <Stack horizontal>
+                <KnowledgeBaseSelector onSelect={setSelectedKnowledgeBase} />
                 {appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && (
                   <CommandBarButton
                     role="button"
                     styles={{
-                      icon: {
-                        color: '#FFFFFF'
-                      },
-                      iconDisabled: {
-                        color: '#BDBDBD !important'
-                      },
+                      icon: { color: '#FFFFFF' },
+                      iconDisabled: { color: '#BDBDBD !important' },
                       root: {
                         color: '#FFFFFF',
-                        background:
-                          'radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)'
+                        background: 'radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)'
                       },
-                      rootDisabled: {
-                        background: '#F0F0F0'
-                      }
+                      rootDisabled: { background: '#F0F0F0' }
                     }}
                     className={styles.newChatIcon}
                     iconProps={{ iconName: 'Add' }}
@@ -896,20 +895,13 @@ const Chat = () => {
                 <CommandBarButton
                   role="button"
                   styles={{
-                    icon: {
-                      color: '#FFFFFF'
-                    },
-                    iconDisabled: {
-                      color: '#BDBDBD !important'
-                    },
+                    icon: { color: '#FFFFFF' },
+                    iconDisabled: { color: '#BDBDBD !important' },
                     root: {
                       color: '#FFFFFF',
-                      background:
-                        'radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)'
+                      background: 'radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)'
                     },
-                    rootDisabled: {
-                      background: '#F0F0F0'
-                    }
+                    rootDisabled: { background: '#F0F0F0' }
                   }}
                   className={
                     appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured
@@ -925,12 +917,13 @@ const Chat = () => {
                   disabled={disabledButton()}
                   aria-label="clear chat button"
                 />
-                <Dialog
-                  hidden={hideErrorDialog}
-                  onDismiss={handleErrorDialogClose}
-                  dialogContentProps={errorDialogContentProps}
-                  modalProps={modalProps}></Dialog>
               </Stack>
+              <Dialog
+                hidden={hideErrorDialog}
+                onDismiss={handleErrorDialogClose}
+                dialogContentProps={errorDialogContentProps}
+                modalProps={modalProps}
+              />
               <QuestionInput
                 clearOnSend
                 placeholder="Type a new question..."

@@ -9,6 +9,7 @@ import { HistoryButton, ShareButton } from '../../components/common/Button'
 import { AppStateContext } from '../../state/AppProvider'
 
 import styles from './Layout.module.css'
+import KnowledgeBaseSelector from '../../components/KnowledgeBaseSelector/KnowledgeBaseSelector'
 
 const Layout = () => {
   const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false)
@@ -132,6 +133,7 @@ const Layout = () => {
           </div>
         </Stack>
       </Dialog>
+      <KnowledgeBaseSelector />
     </div>
   )
 }
