@@ -6,7 +6,7 @@ const knowledgeBases: IDropdownOption[] = [
   { key: 'stikstof', text: 'Stikstof456' },
 ]
 
-const KnowledgeBaseSelector: React.FC<{ onSelect: (kb: string) => void }> = ({ onSelect }) => {
+const KnowledgeBaseSelector: React.FC<{ onSelect: (kb: string) => void, isOpen: boolean, onDismiss: () => void }> = ({ onSelect, isOpen, onDismiss }) => {
     const [isOpen, setIsOpen] = useState(false)
     const [selectedKB, setSelectedKB] = useState<IDropdownOption>(knowledgeBases[0])
   
@@ -35,17 +35,17 @@ const KnowledgeBaseSelector: React.FC<{ onSelect: (kb: string) => void }> = ({ o
 
   return (
     <>
-      <IconButton
-        iconProps={{ iconName: 'Database' }}
-        title="Selecteer Kennisbank"
-        onClick={togglePanel}
-      />
-      <Panel
+        <IconButton
+            iconProps={{ iconName: 'Database' }}
+            title="Selecteer Kennisbank"
+            onClick={togglePanel}
+        />
+        <Panel
         isOpen={isOpen}
-        onDismiss={togglePanel}
+        onDismiss={onDismiss}
         headerText="Selecteer Kennisbank"
         closeButtonAriaLabel="Sluiten"
-      >
+        >
         <Dropdown
           label="Kies een kennisbank"
           selectedKey={selectedKB.key}
