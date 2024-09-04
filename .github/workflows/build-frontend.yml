@@ -1,0 +1,45 @@
+name: Build Frontend
+
+on:
+  push:
+    paths:
+      - 'frontend/**'  # Trigger this workflow only when something in the frontend folder changes
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'  # Specify the Node.js version you want to use
+
+    - name: Install dependencies
+      run: |
+        cd frontend
+        npm install --legacy-peer-deps
+
+    - name: Build frontend
+      run: |
+        cd frontend
+        NODE_OPTIONS="--max-old-space-size=8192" npm run build
+      env:
+        CI: true  # Ensure that CI environment variables are set correctly
+
+    - name: List files in static directory
+      run: |
+        ls -la static
+
+    - name: Commit and push changes
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git add static
+        git commit -m "Update static files"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
