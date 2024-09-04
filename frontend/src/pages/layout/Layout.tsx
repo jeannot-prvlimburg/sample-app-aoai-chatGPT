@@ -7,21 +7,9 @@ import { CosmosDBStatus } from '../../api'
 import Contoso from '../../assets/Contoso.svg'
 import { HistoryButton, ShareButton } from '../../components/common/Button'
 import { AppStateContext } from '../../state/AppProvider'
-
-import styles from './Layout.module.css'
 import KnowledgeBaseSelector from '../../components/KnowledgeBaseSelector/KnowledgeBaseSelector'
 
-import { useState, useContext, useEffect } from 'react'
-import { Stack, TextField, Dialog } from '@fluentui/react'
-import { CopyRegular } from '@fluentui/react-icons'
-import { Link, Outlet } from 'react-router-dom'
-
 import styles from './Layout.module.css'
-import { HistoryButton, ShareButton } from '../../components/common/Button'
-import { AppStateContext } from '../../state/AppProvider'
-import { CosmosDBStatus } from '../../api'
-import Contoso from '../../assets/contoso.svg'
-import KnowledgeBaseSelector from '../../components/KnowledgeBaseSelector/KnowledgeBaseSelector'
 
 const Layout = () => {
   const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false)
