@@ -66,7 +66,8 @@ const Chat = () => {
   const [errorMsg, setErrorMsg] = useState<ErrorMessage | null>()
   const [logo, setLogo] = useState('')
   const [answerId, setAnswerId] = useState<string>('')
-  const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<string>("none");
+  const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<string>("none")
+  const [isKnowledgeBaseSelectorOpen, setIsKnowledgeBaseSelectorOpen] = useState(false)
 
   const errorDialogContentProps = {
     type: DialogType.close,
@@ -870,27 +871,26 @@ const Chat = () => {
                 </Stack>
               )}
               <Stack horizontal>
-                <KnowledgeBaseSelector onSelect={setSelectedKnowledgeBase} />
+                <KnowledgeBaseSelector 
+                  onSelect={(kb: string) => setSelectedKnowledgeBase(kb)}
+                  isOpen={isKnowledgeBaseSelectorOpen}
+                  onDismiss={() => setIsKnowledgeBaseSelectorOpen(false)}
+                />
+                <CommandBarButton
+                  role="button"
+                  styles={{
+                    icon: { color: '#FFFFFF' },
+                    root: {
+                      color: '#FFFFFF',
+                      background: 'radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)'
+                    },
+                  }}
+                  iconProps={{ iconName: 'Database' }}
+                  onClick={() => setIsKnowledgeBaseSelectorOpen(true)}
+                  aria-label="Select knowledge base"
+                />
                 {appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && (
                   <CommandBarButton
-                    role="button"
-                    styles={{
-                      icon: { color: '#FFFFFF' },
-                      iconDisabled: { color: '#BDBDBD !important' },
-                      root: {
-                        color: '#FFFFFF',
-                        background: 'radial-gradient(109.81% 107.82% at 100.1% 90.19%, #0F6CBD 33.63%, #2D87C3 70.31%, #8DDDD8 100%)'
-                      },
-                      rootDisabled: { background: '#F0F0F0' }
-                    }}
-                    className={styles.newChatIcon}
-                    iconProps={{ iconName: 'Add' }}
-                    onClick={newChat}
-                    disabled={disabledButton()}
-                    aria-label="start a new chat button"
-                  />
-                )}
-                <CommandBarButton
                   role="button"
                   styles={{
                     icon: { color: '#FFFFFF' },
