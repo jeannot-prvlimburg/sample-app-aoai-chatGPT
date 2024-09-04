@@ -84,8 +84,9 @@ export type ChatResponse = {
   error?: any
 }
 
-export type ConversationRequest = {
-  messages: ChatMessage[]
+export interface ConversationRequest {
+  messages: ChatMessage[];
+  knowledge_base: string;
 }
 
 export type UserInfo = {
