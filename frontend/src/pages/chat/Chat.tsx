@@ -40,8 +40,6 @@ import { AppStateContext } from "../../state/AppProvider";
 import { useBoolean } from "@fluentui/react-hooks";
 import KnowledgeBaseSelector from '../../components/KnowledgeBaseSelector/KnowledgeBaseSelector';
 
-import ReactMarkdown from 'react-markdown'
-
 const enum messageStatus {
   NotRunning = 'Not Running',
   Processing = 'Processing',
