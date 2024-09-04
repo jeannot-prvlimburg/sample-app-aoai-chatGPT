@@ -5,9 +5,6 @@
 name: Build and deploy Python app to Azure Web App - webapp-development-prv-limburg
 
 on:
-  push:
-    branches:
-      - sync
   workflow_dispatch:
 
 jobs:
