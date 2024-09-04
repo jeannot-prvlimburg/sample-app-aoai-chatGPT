@@ -1,6 +1,6 @@
-import { useContext, useEffect, useState } from 'react'
+import { useState, useContext, useEffect } from 'react'
 import { Link, Outlet } from 'react-router-dom'
-import { Dialog, Stack, TextField } from '@fluentui/react'
+import { Stack, TextField, Dialog, CommandBarButton } from '@fluentui/react'
 import { CopyRegular } from '@fluentui/react-icons'
 
 import { CosmosDBStatus } from '../../api'
@@ -26,9 +26,9 @@ const Layout = () => {
   const [isKnowledgeBaseSelectorOpen, setIsKnowledgeBaseSelectorOpen] = useState(false);
 
   const handleKnowledgeBaseSelect = (kb: string) => {
-  setSelectedKnowledgeBase(kb);
-  // You might want to add additional logic here, such as updating the app state or making an API call
-  console.log('Selected knowledge base:', kb);
+    setSelectedKnowledgeBase(kb);
+    // You might want to add additional logic here, such as updating the app state or making an API call
+    console.log('Selected knowledge base:', kb);
   };
 
   const handleShareClick = () => {
@@ -86,50 +86,50 @@ const Layout = () => {
   return (
     <div className={styles.layout}>
       <header className={styles.header} role={'banner'}>
-        <Stack horizontal verticalAlign="center" horizontalAlign="space-between">
-          <Stack horizontal verticalAlign="center">
-            <img src={logo} className={styles.headerIcon} aria-hidden="true" alt="" />
-            <Link to="/" className={styles.headerTitleContainer}>
-              <h1 className={styles.headerTitle}>{ui?.title}</h1>
-            </Link>
-          </Stack>
-          <CommandBarButton
-            iconProps={{ iconName: 'Database' }}
-            text="Selecteer Kennisbank"
-            onClick={() => setIsKnowledgeBaseSelectorOpen(true)}
+        <Stack horizontal verticalAlign="center">
+          <img
+            src={logo}
+            className={styles.headerIcon}
+            alt="Contoso Logo"
           />
-          <KnowledgeBaseSelector
-            isOpen={isKnowledgeBaseSelectorOpen}
-            onDismiss={() => setIsKnowledgeBaseSelectorOpen(false)}
-            onSelect={handleKnowledgeBaseSelect}
-          />
+          <Stack.Item className={styles.headerTitleContainer}>
+            <h1 className={styles.headerTitle}>{ui?.title ?? 'Contoso'}</h1>
+          </Stack.Item>
+          <Stack horizontal tokens={{ childrenGap: 4 }} className={styles.shareButtonContainer}>
+            {appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && ui?.show_chat_history_button !== false && (
+              <HistoryButton
+                onClick={handleHistoryClick}
+                text={appStateContext?.state?.isChatHistoryOpen ? hideHistoryLabel : showHistoryLabel}
+              />
+            )}
+            <CommandBarButton
+              iconProps={{ iconName: 'Database' }}
+              text="Selecteer Kennisbank"
+              onClick={() => setIsKnowledgeBaseSelectorOpen(true)}
+            />
+            {ui?.show_share_button && <ShareButton onClick={handleShareClick} text={shareLabel} />}
           </Stack>
         </Stack>
       </header>
+      <KnowledgeBaseSelector
+        isOpen={isKnowledgeBaseSelectorOpen}
+        onDismiss={() => setIsKnowledgeBaseSelectorOpen(false)}
+        onSelect={handleKnowledgeBaseSelect}
+      />
+      <div className={styles.headerBottomBorder} />
       <Outlet />
       <Dialog
-        onDismiss={handleSharePanelDismiss}
         hidden={!isSharePanelOpen}
-        styles={{
-          main: [
-            {
-              selectors: {
-                ['@media (min-width: 480px)']: {
-                  maxWidth: '600px',
-                  background: '#FFFFFF',
-                  boxShadow: '0px 14px 28.8px rgba(0, 0, 0, 0.24), 0px 0px 8px rgba(0, 0, 0, 0.2)',
-                  borderRadius: '8px',
-                  maxHeight: '200px',
-                  minHeight: '100px'
-                }
-              }
-            }
-          ]
-        }}
+        onDismiss={handleSharePanelDismiss}
         dialogContentProps={{
           title: 'Share the web app',
-          showCloseButton: true
-        }}>
+          subText: 'Send this link to grant access to this web app'
+        }}
+        modalProps={{
+          isBlocking: false,
+          styles: { main: { maxWidth: 450 } }
+        }}
+      >
         <Stack horizontal verticalAlign="center" style={{ gap: '8px' }}>
           <TextField className={styles.urlTextBox} defaultValue={window.location.href} readOnly />
           <div
@@ -145,7 +145,7 @@ const Layout = () => {
         </Stack>
       </Dialog>
     </div>
-  )
-}
+  );
+};
 
-export default Layout
+export default Layout;
