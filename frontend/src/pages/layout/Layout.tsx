@@ -11,6 +11,18 @@ import { AppStateContext } from '../../state/AppProvider'
 import styles from './Layout.module.css'
 import KnowledgeBaseSelector from '../../components/KnowledgeBaseSelector/KnowledgeBaseSelector'
 
+import { useState, useContext, useEffect } from 'react'
+import { Stack, TextField, Dialog } from '@fluentui/react'
+import { CopyRegular } from '@fluentui/react-icons'
+import { Link, Outlet } from 'react-router-dom'
+
+import styles from './Layout.module.css'
+import { HistoryButton, ShareButton } from '../../components/common/Button'
+import { AppStateContext } from '../../state/AppProvider'
+import { CosmosDBStatus } from '../../api'
+import Contoso from '../../assets/contoso.svg'
+import KnowledgeBaseSelector from '../../components/KnowledgeBaseSelector/KnowledgeBaseSelector'
+
 const Layout = () => {
   const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false)
   const [copyClicked, setCopyClicked] = useState<boolean>(false)
@@ -21,6 +33,14 @@ const Layout = () => {
   const [logo, setLogo] = useState('')
   const appStateContext = useContext(AppStateContext)
   const ui = appStateContext?.state.frontendSettings?.ui
+
+  const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<string>("none");
+
+  const handleKnowledgeBaseSelect = (kb: string) => {
+  setSelectedKnowledgeBase(kb);
+  // You might want to add additional logic here, such as updating the app state or making an API call
+  console.log('Selected knowledge base:', kb);
+  };
 
   const handleShareClick = () => {
     setIsSharePanelOpen(true)
@@ -91,6 +111,7 @@ const Layout = () => {
                 text={appStateContext?.state?.isChatHistoryOpen ? hideHistoryLabel : showHistoryLabel}
               />
             )}
+            <KnowledgeBaseSelector onSelect={handleKnowledgeBaseSelect} />
             {ui?.show_share_button && <ShareButton onClick={handleShareClick} text={shareLabel} />}
           </Stack>
         </Stack>
@@ -133,7 +154,6 @@ const Layout = () => {
           </div>
         </Stack>
       </Dialog>
-      <KnowledgeBaseSelector />
     </div>
   )
 }
