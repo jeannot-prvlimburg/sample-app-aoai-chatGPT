@@ -32,7 +32,7 @@ export interface AppState {
   isLoading: boolean
   answerExecResult: { [answerId: string]: [] }
   selectedKnowledgeBase?: string
-  availableKnowledgeBases: IDropdownOption[];
+  availableKnowledgeBases?: IDropdownOption[]
 }
 
 export type Action =
@@ -71,6 +71,8 @@ const initialState: AppState = {
   feedbackState: {},
   isLoading: true,
   answerExecResult: {},
+  availableKnowledgeBases: [], 
+  selectedKnowledgeBase: undefined,
 }
 
 export const AppStateContext = createContext<

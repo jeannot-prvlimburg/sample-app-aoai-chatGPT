@@ -29,12 +29,16 @@ const KnowledgeBaseSelector: React.FC<KnowledgeBaseSelectorProps> = ({
       headerText="Selecteer Kennisbank"
       closeButtonAriaLabel="Sluiten"
     >
-      <Dropdown
-        label="Kies een kennisbank"
-        selectedKey={selectedKnowledgeBase}
-        options={knowledgeBases}
-        onChange={onKBChange}
-      />
+      {knowledgeBases.length > 0 ? (
+        <Dropdown
+          label="Kies een kennisbank"
+          selectedKey={selectedKnowledgeBase}
+          options={knowledgeBases}
+          onChange={onKBChange}
+        />
+      ) : (
+        <p>Geen kennisbanken beschikbaar</p>
+      )}
     </Panel>
   )
 }
