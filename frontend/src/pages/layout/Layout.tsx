@@ -143,11 +143,11 @@ const Layout = () => {
         </Stack>
       </header>
       <KnowledgeBaseSelector
-      isOpen={isKnowledgeBaseSelectorOpen}
-      onDismiss={() => setIsKnowledgeBaseSelectorOpen(false)}
-      onSelect={handleKnowledgeBaseSelect}
-      knowledgeBases={appStateContext?.state.availableKnowledgeBases || []}
-      selectedKnowledgeBase={selectedKnowledgeBase}
+        isOpen={isKnowledgeBaseSelectorOpen}
+        onDismiss={() => setIsKnowledgeBaseSelectorOpen(false)}
+        onSelect={handleKnowledgeBaseSelect}
+        knowledgeBases={appStateContext?.state.availableKnowledgeBases || []}
+        selectedKnowledgeBase={selectedKnowledgeBase || ''}
       />
       <div className={styles.headerBottomBorder} />
       <Outlet />
