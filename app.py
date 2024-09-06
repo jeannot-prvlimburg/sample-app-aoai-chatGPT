@@ -57,13 +57,12 @@ def create_app():
                 "top_k": 5
             },
         }
-        for index_name, config in index_configs.items():
-            app.settings.azure_search.set_index_config(index_name, config)
+        app.config['INDEX_CONFIGS'] = index_configs
         
         # Stel de eerste index in als standaard
         if index_configs:
             default_index = next(iter(index_configs))
-            app.settings.azure_search.index = default_index
+            app.config['DEFAULT_INDEX'] = default_index
     
     @app.before_serving
     async def init():
