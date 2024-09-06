@@ -7,12 +7,18 @@ import { useContext, useEffect, useState } from "react";
 import { HistoryButton, ShareButton } from "../../components/common/Button";
 import { AppStateContext } from "../../state/AppProvider";
 import { CosmosDBStatus } from "../../api";
+import KnowledgeBaseSelector from '../../components/KnowledgeBaseSelector/KnowledgeBaseSelector'
 
 const Layout = () => {
     const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false);
     const [copyClicked, setCopyClicked] = useState<boolean>(false);
     const [copyText, setCopyText] = useState<string>("Copy URL");
     const appStateContext = useContext(AppStateContext)
+
+    const handleKnowledgeBaseSelect = (kb: string) => {
+        setSelectedKnowledgeBase(kb);
+        console.log('Selected knowledge base:', kb);
+    };
 
     const handleShareClick = () => {
         setIsSharePanelOpen(true);
@@ -59,11 +65,21 @@ const Layout = () => {
                         {(appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured) &&
                             <HistoryButton onClick={handleHistoryClick} text={appStateContext?.state?.isChatHistoryOpen ? "Hide chat history" : "Show chat history!"} />
                         }
+                        <CommandBarButton
+                          iconProps={{ iconName: 'Database' }}
+                          text="Selecteer Kennisbank"
+                          onClick={() => setIsKnowledgeBaseSelectorOpen(true)}
+                        />
                         <ShareButton onClick={handleShareClick} />
                     </Stack>
 
                 </Stack>
             </header>
+            <KnowledgeBaseSelector
+                isOpen={isKnowledgeBaseSelectorOpen}
+                onDismiss={() => setIsKnowledgeBaseSelectorOpen(false)}
+                onSelect={handleKnowledgeBaseSelect}
+              />
             <Outlet />
             <Dialog
                 onDismiss={handleSharePanelDismiss}
