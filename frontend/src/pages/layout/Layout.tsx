@@ -146,8 +146,8 @@ const Layout = () => {
         isOpen={isKnowledgeBaseSelectorOpen}
         onDismiss={() => setIsKnowledgeBaseSelectorOpen(false)}
         onSelect={handleKnowledgeBaseSelect}
-        knowledgeBases={appStateContext?.state.availableKnowledgeBases || []}
-        selectedKnowledgeBase={selectedKnowledgeBase || ''}
+        options={appStateContext?.state.availableKnowledgeBases || []}
+        selectedOption={selectedKnowledgeBase || ''}
       />
       <div className={styles.headerBottomBorder} />
       <Outlet />

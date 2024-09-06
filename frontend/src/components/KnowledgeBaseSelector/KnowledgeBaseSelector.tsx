@@ -13,7 +13,8 @@ const KnowledgeBaseSelector: React.FC<KnowledgeBaseSelectorProps> = ({
   isOpen,
   onDismiss,
   onSelect,
-  selectedKnowledgeBase
+  selectedKnowledgeBase,
+  knowledgeBases
 }) => {
   const appStateContext = React.useContext(AppStateContext)
   const knowledgeBases = appStateContext?.state.availableKnowledgeBases || []
