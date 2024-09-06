@@ -82,6 +82,10 @@ export const appStateReducer = (state: AppState, action: Action): AppState => {
           [action.payload.answerId]: action.payload.exec_result
         }
       }
+    case 'SET_KNOWLEDGE_BASE':
+      return { ...state, selectedKnowledgeBase: action.payload };
+    case 'SET_AVAILABLE_KNOWLEDGE_BASES':
+      return { ...state, availableKnowledgeBases: action.payload };
     default:
       return state
   }

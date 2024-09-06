@@ -24,11 +24,43 @@ const Layout = () => {
   const ui = appStateContext?.state.frontendSettings?.ui
   const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<string>("none"); // Incorporate later into appStateContext
 
-  const handleKnowledgeBaseSelect = (kb: string) => {
+  const handleKnowledgeBaseSelect = async (kb: string) => {
     setSelectedKnowledgeBase(kb);
-    // You might want to add additional logic here, such as updating the app state or making an API call
-    console.log('Selected knowledge base:', kb);
-  };
+    try {
+      const response = await fetch('/api/set_knowledge_base', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ knowledge_base: kb }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to set knowledge base');
+      }
+      // Optioneel: update de app state
+      appStateContext?.dispatch({ type: 'SET_KNOWLEDGE_BASE', payload: kb });
+    } catch (error) {
+      console.error('Error setting knowledge base:', error);
+      // Hier kun je een foutmelding tonen aan de gebruiker
+    }
+  }
+
+  useEffect(() => {
+    const fetchKnowledgeBases = async () => {
+      try {
+        const response = await fetch('/api/knowledgebases');
+        if (!response.ok) {
+          throw new Error('Failed to fetch knowledge bases');
+        }
+        const data = await response.json();
+        // Hier kun je de opgehaalde kennisbanken opslaan in de state of context
+        appStateContext?.dispatch({ type: 'SET_AVAILABLE_KNOWLEDGE_BASES', payload: data });
+      } catch (error) {
+        console.error('Error fetching knowledge bases:', error);
+      }
+    };
+    fetchKnowledgeBases();
+  }, []);
 
   const handleShareClick = () => {
     setIsSharePanelOpen(true)
@@ -111,9 +143,11 @@ const Layout = () => {
         </Stack>
       </header>
       <KnowledgeBaseSelector
-        isOpen={isKnowledgeBaseSelectorOpen}
-        onDismiss={() => setIsKnowledgeBaseSelectorOpen(false)}
-        onSelect={handleKnowledgeBaseSelect}
+      isOpen={isKnowledgeBaseSelectorOpen}
+      onDismiss={() => setIsKnowledgeBaseSelectorOpen(false)}
+      onSelect={handleKnowledgeBaseSelect}
+      knowledgeBases={appStateContext?.state.availableKnowledgeBases || []}
+      selectedKnowledgeBase={selectedKnowledgeBase}
       />
       <div className={styles.headerBottomBorder} />
       <Outlet />

@@ -45,16 +45,60 @@ def create_app():
     app = Quart(__name__)
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
+
+    async def load_index_configs():
+    # Laad de configuraties (mogelijk uit een externe bron)
+        index_configs = {
+            "index1": {
+                "index_name": "stikstof-24042024",
+                "content_columns": ["chunk"],
+                "vector_columns": ["vector"],
+                "semantic_configuration": "default",
+                "top_k": 5
+            },
+        }
+        for index_name, config in index_configs.items():
+            app.settings.azure_search.set_index_config(index_name, config)
+        
+        # Stel de eerste index in als standaard
+        if index_configs:
+            default_index = next(iter(index_configs))
+            app.settings.azure_search.index = default_index
     
     @app.before_serving
     async def init():
         try:
             app.cosmos_conversation_client = await init_cosmosdb_client()
+            await load_index_configs()
             cosmos_db_ready.set()
         except Exception as e:
             logging.exception("Failed to initialize CosmosDB client")
             app.cosmos_conversation_client = None
             raise e
+    
+    @app.route('/api/knowledgebases', methods=['GET'])
+    def get_knowledge_bases():
+        try:
+            knowledge_bases = []
+            for index_name in app.settings.azure_search.index_configs.keys():
+                knowledge_bases.append({"key": index_name, "text": index_name})
+            return jsonify(knowledge_bases)
+        except Exception as e:
+            logging.exception("Error fetching knowledge bases")
+            return jsonify({"error": "Failed to fetch knowledge bases"}), 500
+
+    @app.route('/api/set_knowledge_base', methods=['POST'])
+    def set_knowledge_base():
+        try:
+            data = request.json
+            knowledge_base = data.get('knowledge_base')
+            if knowledge_base in app.settings.azure_search.index_configs:
+                app.settings.azure_search.index = knowledge_base
+                return jsonify({"success": True})
+            return jsonify({"error": "Invalid knowledge base"}), 400
+        except Exception as e:
+            logging.exception("Error setting knowledge base")
+            return jsonify({"error": "Failed to set knowledge base"}), 500
     
     return app
 

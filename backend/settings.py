@@ -343,6 +343,14 @@ class _AzureSearchSettings(BaseSettings, DatasourcePayloadConstructor):
             self._settings.azure_openai.extract_embedding_dependency()
         parameters = self.model_dump(exclude_none=True, by_alias=True)
         parameters.update(self._settings.search.model_dump(exclude_none=True, by_alias=True))
+
+        # Use the provided index_name if available, otherwise use the default
+        index_name = kwargs.get('index_name', self.index)
+        if index_name in self.index_configs:
+            index_config = self.get_index_config(index_name)
+            parameters.update(index_config)
+        else:
+            raise ValueError(f"Invalid index name: {index_name}")
         
         return {
             "type": self._type,

@@ -18,6 +18,7 @@ import {
 } from '../api'
 
 import { appStateReducer } from './AppReducer'
+import { IDropdownOption } from '@fluentui/react'
 
 export interface AppState {
   isChatHistoryOpen: boolean
@@ -28,8 +29,10 @@ export interface AppState {
   currentChat: Conversation | null
   frontendSettings: FrontendSettings | null
   feedbackState: { [answerId: string]: Feedback.Neutral | Feedback.Positive | Feedback.Negative }
-  isLoading: boolean;
+  isLoading: boolean
   answerExecResult: { [answerId: string]: [] }
+  selectedKnowledgeBase?: string
+  availableKnowledgeBases: IDropdownOption[];
 }
 
 export type Action =
@@ -51,6 +54,8 @@ export type Action =
   }
   | { type: 'GET_FEEDBACK_STATE'; payload: string }
   | { type: 'SET_ANSWER_EXEC_RESULT'; payload: { answerId: string, exec_result: [] } }
+  | { type: 'SET_KNOWLEDGE_BASE'; payload: string }
+  | { type: 'SET_AVAILABLE_KNOWLEDGE_BASES'; payload: IDropdownOption[] }
 
 const initialState: AppState = {
   isChatHistoryOpen: false,
