@@ -6,12 +6,14 @@ import { CopyRegular } from '@fluentui/react-icons'
 import { CosmosDBStatus } from '../../api'
 import Contoso from '../../assets/Contoso.svg'
 import { HistoryButton, ShareButton } from '../../components/common/Button'
+import KnowledgeBaseSelector from '../../components/KnowledgeBaseSelector/KnowledgeBaseSelector'
 import { AppStateContext } from '../../state/AppProvider'
 
 import styles from './Layout.module.css'
 
 const Layout = () => {
   const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false)
+  const [isKnowledgeBaseSelectorOpen, setIsKnowledgeBaseSelectorOpen] = useState(false);
   const [copyClicked, setCopyClicked] = useState<boolean>(false)
   const [copyText, setCopyText] = useState<string>('Copy URL')
   const [shareLabel, setShareLabel] = useState<string | undefined>('Share')
@@ -20,6 +22,13 @@ const Layout = () => {
   const [logo, setLogo] = useState('')
   const appStateContext = useContext(AppStateContext)
   const ui = appStateContext?.state.frontendSettings?.ui
+  const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<string>("none"); // Incorporate later into appStateContext
+
+  const handleKnowledgeBaseSelect = (kb: string) => {
+    setSelectedKnowledgeBase(kb);
+    // You might want to add additional logic here, such as updating the app state or making an API call
+    console.log('Selected knowledge base:', kb);
+  };
 
   const handleShareClick = () => {
     setIsSharePanelOpen(true)
@@ -74,15 +83,17 @@ const Layout = () => {
   }, [])
 
   return (
-    <div className={styles.layout}>
+     <div className={styles.layout}>
       <header className={styles.header} role={'banner'}>
-        <Stack horizontal verticalAlign="center" horizontalAlign="space-between">
-          <Stack horizontal verticalAlign="center">
-            <img src={logo} className={styles.headerIcon} aria-hidden="true" alt="" />
-            <Link to="/" className={styles.headerTitleContainer}>
-              <h1 className={styles.headerTitle}>{ui?.title}</h1>
-            </Link>
-          </Stack>
+        <Stack horizontal verticalAlign="center">
+          <img
+            src={logo}
+            className={styles.headerIcon}
+            alt="Contoso Logo"
+          />
+          <Stack.Item className={styles.headerTitleContainer}>
+            <h1 className={styles.headerTitle}>{ui?.title ?? 'Contoso'}</h1>
+          </Stack.Item>
           <Stack horizontal tokens={{ childrenGap: 4 }} className={styles.shareButtonContainer}>
             {appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && ui?.show_chat_history_button !== false && (
               <HistoryButton
@@ -90,10 +101,21 @@ const Layout = () => {
                 text={appStateContext?.state?.isChatHistoryOpen ? hideHistoryLabel : showHistoryLabel}
               />
             )}
+            <CommandBarButton
+              iconProps={{ iconName: 'Database' }}
+              text="Selecteer Kennisbank"
+              onClick={() => setIsKnowledgeBaseSelectorOpen(true)}
+            />
             {ui?.show_share_button && <ShareButton onClick={handleShareClick} text={shareLabel} />}
           </Stack>
         </Stack>
       </header>
+      <KnowledgeBaseSelector
+        isOpen={isKnowledgeBaseSelectorOpen}
+        onDismiss={() => setIsKnowledgeBaseSelectorOpen(false)}
+        onSelect={handleKnowledgeBaseSelect}
+      />
+      <div className={styles.headerBottomBorder} />
       <Outlet />
       <Dialog
         onDismiss={handleSharePanelDismiss}
