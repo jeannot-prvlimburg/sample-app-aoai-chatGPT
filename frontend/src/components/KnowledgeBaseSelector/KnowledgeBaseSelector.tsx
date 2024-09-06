@@ -1,11 +1,11 @@
 import React from 'react'
 import { Dropdown, IDropdownOption, Panel } from '@fluentui/react'
+import { AppStateContext } from '../../state/AppProvider'
 
 interface KnowledgeBaseSelectorProps {
   isOpen: boolean;
   onDismiss: () => void;
   onSelect: (kb: string) => void;
-  knowledgeBases: IDropdownOption[];
   selectedKnowledgeBase: string;
 }
 
@@ -13,9 +13,11 @@ const KnowledgeBaseSelector: React.FC<KnowledgeBaseSelectorProps> = ({
   isOpen,
   onDismiss,
   onSelect,
-  knowledgeBases,
   selectedKnowledgeBase
 }) => {
+  const appStateContext = React.useContext(AppStateContext)
+  const knowledgeBases = appStateContext?.state.availableKnowledgeBases || []
+
   const onKBChange = (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
     if (option) {
       onSelect(option.key as string);

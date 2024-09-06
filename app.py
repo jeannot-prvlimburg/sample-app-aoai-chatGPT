@@ -5,6 +5,7 @@ import logging
 import uuid
 import httpx
 import asyncio
+from types import SimpleNamespace
 from quart import (
     Blueprint,
     Quart,
@@ -46,8 +47,12 @@ def create_app():
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
 
+    # Add these lines
+    app.settings = SimpleNamespace()
+    app.settings.azure_search = SimpleNamespace()
+    app.settings.azure_search.index_configs = app.config['INDEX_CONFIGS']
+
     async def load_index_configs():
-    # Laad de configuraties (mogelijk uit een externe bron)
         index_configs = {
             "index1": {
                 "index_name": "stikstof-24042024",
@@ -79,8 +84,8 @@ def create_app():
     def get_knowledge_bases():
         try:
             knowledge_bases = []
-            for index_name in app.settings.azure_search.index_configs.keys():
-                knowledge_bases.append({"key": index_name, "text": index_name})
+            for index_name, config in current_app.config['INDEX_CONFIGS'].items():
+                knowledge_bases.append({"key": index_name, "text": config['index_name']})
             return jsonify(knowledge_bases)
         except Exception as e:
             logging.exception("Error fetching knowledge bases")
