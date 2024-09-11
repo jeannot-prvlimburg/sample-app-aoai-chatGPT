@@ -22,9 +22,7 @@ const Layout = () => {
   const [logo, setLogo] = useState('')
   const appStateContext = useContext(AppStateContext)
   const ui = appStateContext?.state.frontendSettings?.ui
-  const setSelectedKnowledgeBase = (kb: string) => {
-    appStateContext?.dispatch({ type: 'SET_KNOWLEDGE_BASE', payload: kb === 'none' ? null : kb });
-  };
+  const selectedKnowledgeBase = appStateContext?.state.selectedKnowledgeBase || 'none'; // Standaard op 'none' als er geen kennisbank is geselecteerd
 
   const handleKnowledgeBaseSelect = async (kb: string) => {
     setSelectedKnowledgeBase(kb);
@@ -146,7 +144,7 @@ const Layout = () => {
         onDismiss={() => setIsKnowledgeBaseSelectorOpen(false)}
         onSelect={handleKnowledgeBaseSelect}
         selectedKnowledgeBase={selectedKnowledgeBase}
-        options={appStateContext?.state.availableKnowledgeBases || []} 
+        options={appStateContext?.state.availableKnowledgeBases || []}
       />
       <div className={styles.headerBottomBorder} />
       <Outlet />
