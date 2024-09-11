@@ -46,34 +46,11 @@ def create_app():
     app = Quart(__name__)
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
-
-    # Add these lines
-    app.settings = SimpleNamespace()
-    app.settings.azure_search = SimpleNamespace()
-    app.settings.azure_search.index_configs = app.config['INDEX_CONFIGS']
-
-    async def load_index_configs():
-        index_configs = {
-            "index1": {
-                "index_name": "stikstof-24042024",
-                "content_columns": ["chunk"],
-                "vector_columns": ["vector"],
-                "semantic_configuration": "default",
-                "top_k": 5
-            },
-        }
-        app.config['INDEX_CONFIGS'] = index_configs
-        
-        # Stel de eerste index in als standaard
-        if index_configs:
-            default_index = next(iter(index_configs))
-            app.config['DEFAULT_INDEX'] = default_index
     
     @app.before_serving
     async def init():
         try:
             app.cosmos_conversation_client = await init_cosmosdb_client()
-            await load_index_configs()
             cosmos_db_ready.set()
         except Exception as e:
             logging.exception("Failed to initialize CosmosDB client")
