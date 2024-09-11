@@ -26,9 +26,8 @@ from backend.auth.auth_utils import get_authenticated_user_details
 from backend.security.ms_defender_utils import get_msdefender_user_json
 from backend.history.cosmosdbservice import CosmosConversationClient
 from backend.settings import (
-    app_settings,
-    MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION,
-    _AzureSearchSettings
+        app_settings,
+        MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
 )
 from backend.utils import (
     format_as_ndjson,
@@ -134,6 +133,10 @@ async def set_knowledge_base():
         if knowledge_base_config:
             # Controleer of azure_search is geïnitialiseerd
             if not hasattr(app_settings, 'azure_search'):
+                try:
+                    from backend.utils import _AzureSearchSettings
+                except:
+                    pass
                 # Maak een nieuwe instantie van AzureSearchSettings aan
                 app_settings.azure_search = _AzureSearchSettings(
                     settings=app_settings, 
