@@ -19,6 +19,7 @@ import {
 
 import { appStateReducer } from './AppReducer'
 import { IDropdownOption } from '@fluentui/react'
+import { KnowledgeBases } from '../constants/KnowledgeBases'
 
 export interface AppState {
   isChatHistoryOpen: boolean
@@ -71,7 +72,7 @@ const initialState: AppState = {
   feedbackState: {},
   isLoading: true,
   answerExecResult: {},
-  availableKnowledgeBases: [], 
+  availableKnowledgeBases: KnowledgeBases, 
   selectedKnowledgeBase: undefined,
 }
 
