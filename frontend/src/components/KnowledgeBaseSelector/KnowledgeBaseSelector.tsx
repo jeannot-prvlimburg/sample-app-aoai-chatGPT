@@ -7,6 +7,7 @@ interface KnowledgeBaseSelectorProps {
   onDismiss: () => void;
   onSelect: (kb: string) => void;
   selectedKnowledgeBase: string;
+  options: IDropdownOption[];
 }
 
 const KnowledgeBaseSelector: React.FC<KnowledgeBaseSelectorProps> = ({
@@ -14,10 +15,9 @@ const KnowledgeBaseSelector: React.FC<KnowledgeBaseSelectorProps> = ({
   onDismiss,
   onSelect,
   selectedKnowledgeBase,
-  knowledgeBases
+  options,
 }) => {
   const appStateContext = React.useContext(AppStateContext)
-  const knowledgeBases = appStateContext?.state.availableKnowledgeBases || []
 
   const onKBChange = (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
     if (option) {
@@ -32,11 +32,11 @@ const KnowledgeBaseSelector: React.FC<KnowledgeBaseSelectorProps> = ({
       headerText="Selecteer Kennisbank"
       closeButtonAriaLabel="Sluiten"
     >
-      {knowledgeBases.length > 0 ? (
+      {options.length > 0 ? (
         <Dropdown
           label="Kies een kennisbank"
           selectedKey={selectedKnowledgeBase}
-          options={knowledgeBases}
+          options={options}
           onChange={onKBChange}
         />
       ) : (
