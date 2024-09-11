@@ -5,7 +5,7 @@ KnowledgeBases = [
     },
     {
         "key": "stikstof",
-        "text": "Stikstof10",
+        "text": "Stikstof11",
         "endpoint": "stikstof-v2.azurewebsites.net",
         "api_key": "fnwvwCuSUfVpx2p9R4lPb6S8y2W8RqvyZhqNwSOxDJAzSeDAnSBi",
         "index_name": "stikstof-24042024",

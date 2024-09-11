@@ -131,6 +131,10 @@ async def set_knowledge_base():
         )
 
         if knowledge_base_config:
+            # Controleer of azure_search is geïnitialiseerd
+            if not hasattr(app_settings, 'azure_search'):
+                return jsonify({"error": "Azure Search settings are not initialized"}), 500
+
             # Update de instellingen in app_settings
             app_settings.azure_search.endpoint = knowledge_base_config['endpoint']
             app_settings.azure_search.api_key = knowledge_base_config['api_key']
