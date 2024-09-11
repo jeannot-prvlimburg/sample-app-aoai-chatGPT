@@ -27,7 +27,6 @@ const Layout = () => {
     appStateContext?.dispatch({ type: 'SET_KNOWLEDGE_BASE', payload: kb === 'none' ? '' : kb }); // Gebruik een lege string in plaats van null
   };
 
-  // a random note
   const handleKnowledgeBaseSelect = async (kb: string) => {
     setSelectedKnowledgeBase(kb);
     try {
@@ -39,8 +38,9 @@ const Layout = () => {
             body: JSON.stringify({ knowledge_base: kb === 'none' ? null : kb }), // Stuur null als er geen kennisbank is geselecteerd
         });
         if (!response.ok) {
-            throw new Error('Failed to set knowledge base');
-        }
+          const errorData = await response.json(); // Lees de response body
+          throw new Error(`Failed to set knowledge base: ${errorData}`); // Voeg de error message toe
+      }
     } catch (error) {
         console.error('Error setting knowledge base:', error);
     }
