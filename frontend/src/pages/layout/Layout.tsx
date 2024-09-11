@@ -23,6 +23,9 @@ const Layout = () => {
   const appStateContext = useContext(AppStateContext)
   const ui = appStateContext?.state.frontendSettings?.ui
   const selectedKnowledgeBase = appStateContext?.state.selectedKnowledgeBase || 'none'; // Standaard op 'none' als er geen kennisbank is geselecteerd
+  const setSelectedKnowledgeBase = (kb: string) => {
+    appStateContext?.dispatch({ type: 'SET_KNOWLEDGE_BASE', payload: kb === 'none' ? null : kb });
+  };
 
   const handleKnowledgeBaseSelect = async (kb: string) => {
     setSelectedKnowledgeBase(kb);
