@@ -146,7 +146,7 @@ def set_knowledge_base():
         return jsonify({"error": "Invalid knowledge base"}), 400
     except Exception as e:
         logging.exception("Error setting knowledge base")
-        return jsonify({"error": "Failed to set knowledge base"}), 500
+        return jsonify({f"error": "Failed to set knowledge base: e"}), 500
 
 
 # Initialize Azure OpenAI Client

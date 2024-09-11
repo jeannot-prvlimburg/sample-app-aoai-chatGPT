@@ -5,7 +5,7 @@ export const KnowledgeBases = [
     },
     {
         key: 'stikstof',
-        text: 'Stikstof2',
+        text: 'Stikstof3',
         endpoint: 'stikstof-v2.azurewebsites.net', // Vul hier de endpoint in
         api_key: 'fnwvwCuSUfVpx2p9R4lPb6S8y2W8RqvyZhqNwSOxDJAzSeDAnSBi', // Vul hier de API key in
         index_name: 'stikstof-24042024', // Vul hier de index naam in
