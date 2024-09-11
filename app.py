@@ -27,7 +27,6 @@ from backend.security.ms_defender_utils import get_msdefender_user_json
 from backend.history.cosmosdbservice import CosmosConversationClient
 from backend.settings import (
         app_settings,
-        create_azure_search_settings,
         MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
 )
 
@@ -135,9 +134,10 @@ async def set_knowledge_base():
         if knowledge_base_config:
             # Controleer of azure_search is geïnitialiseerd
             if not hasattr(app_settings, 'azure_search'):
-                app_settings.azure_search = create_azure_search_settings(app_settings, knowledge_base_config)
+                # app_settings.azure_search = create_azure_search_settings(app_settings, knowledge_base_config)
                 # Roep de construct_payload_configuration aan om de instellingen te initialiseren
-                app_settings.azure_search.construct_payload_configuration()
+                # app_settings.azure_search.construct_payload_configuration()
+                pass
 
             # Update de instellingen in app_settings
             app_settings.azure_search.endpoint = knowledge_base_config['endpoint']
