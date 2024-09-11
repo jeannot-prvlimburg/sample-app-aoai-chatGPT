@@ -43,24 +43,7 @@ const Layout = () => {
     } catch (error) {
         console.error('Error setting knowledge base:', error);
     }
-}
-
-  useEffect(() => {
-    const fetchKnowledgeBases = async () => {
-      try {
-        const response = await fetch('/api/knowledgebases');
-        if (!response.ok) {
-          throw new Error('Failed to fetch knowledge bases');
-        }
-        const data = await response.json();
-        // Hier kun je de opgehaalde kennisbanken opslaan in de state of context
-        appStateContext?.dispatch({ type: 'SET_AVAILABLE_KNOWLEDGE_BASES', payload: data });
-      } catch (error) {
-        console.error('Error fetching knowledge bases:', error);
-      }
-    };
-    fetchKnowledgeBases();
-  }, []);
+  }
 
   const handleShareClick = () => {
     setIsSharePanelOpen(true)
