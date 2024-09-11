@@ -32,7 +32,7 @@ export interface AppState {
   feedbackState: { [answerId: string]: Feedback.Neutral | Feedback.Positive | Feedback.Negative }
   isLoading: boolean
   answerExecResult: { [answerId: string]: [] }
-  selectedKnowledgeBase?: string
+  selectedKnowledgeBase: string | null
   availableKnowledgeBases?: IDropdownOption[]
 }
 
