@@ -11,7 +11,6 @@ import { AppStateContext } from '../../state/AppProvider'
 
 import styles from './Layout.module.css'
 
-// a random comment
 const Layout = () => {
   const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false)
   const [isKnowledgeBaseSelectorOpen, setIsKnowledgeBaseSelectorOpen] = useState(false);
