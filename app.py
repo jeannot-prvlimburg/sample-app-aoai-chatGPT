@@ -136,7 +136,8 @@ async def set_knowledge_base():
             if not hasattr(app_settings, 'azure_search'):
                 # Maak een nieuwe instantie van AzureSearchSettings aan
                 app_settings.azure_search = _AzureSearchSettings(
-                    settings=app_settings,  # Voeg deze regel toe
+                    settings=app_settings, 
+                    service=knowledge_base_config['service'],  
                     endpoint=knowledge_base_config['endpoint'],
                     key=knowledge_base_config['api_key'],
                     index=knowledge_base_config['index_name'],
