@@ -73,7 +73,7 @@ const initialState: AppState = {
   isLoading: true,
   answerExecResult: {},
   availableKnowledgeBases: KnowledgeBases, 
-  selectedKnowledgeBase: undefined,
+  selectedKnowledgeBase: string | null; // Dit kan nu null zijn
 }
 
 export const AppStateContext = createContext<
