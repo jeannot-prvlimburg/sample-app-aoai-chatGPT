@@ -68,14 +68,34 @@ def create_app():
             logging.exception("Error fetching knowledge bases")
             return jsonify({"error": "Failed to fetch knowledge bases"}), 500
 
-    @app.route('/api/set_knowledge_base', methods=['POST'])
+    @bp.route('/api/set_knowledge_base', methods=['POST'])
     def set_knowledge_base():
         try:
             data = request.json
-            knowledge_base = data.get('knowledge_base')
-            if knowledge_base in app.settings.azure_search.index_configs:
-                app.settings.azure_search.index = knowledge_base
+            knowledge_base_key = data.get('knowledge_base')
+
+            # Zoek de kennisbank configuratie op basis van de key
+            knowledge_base_config = next(
+                (kb for kb in KnowledgeBases if kb['key'] == knowledge_base_key), None
+            )
+
+            if knowledge_base_config:
+                # Update de instellingen in app_settings
+                app_settings.azure_search.endpoint = knowledge_base_config['endpoint']
+                app_settings.azure_search.api_key = knowledge_base_config['api_key']
+                app_settings.azure_search.index = knowledge_base_config['index_name']
+                app_settings.azure_search.vector_column = knowledge_base_config['vector_column']
+                app_settings.azure_search.content_columns = knowledge_base_config['content_columns']
+                app_settings.azure_search.title_column = knowledge_base_config['title_column']
+                app_settings.azure_search.url_column = knowledge_base_config['url_column']
+                app_settings.azure_search.filename_column = knowledge_base_config['filename_column']
+                app_settings.azure_search.query_type = knowledge_base_config['query_type']
+                app_settings.azure_search.top_k = knowledge_base_config['top_k']
+                app_settings.azure_search.strictness = knowledge_base_config['strictness']
+                app_settings.azure_search.enable_in_domain = knowledge_base_config['enable_in_domain']
+
                 return jsonify({"success": True})
+            
             return jsonify({"error": "Invalid knowledge base"}), 400
         except Exception as e:
             logging.exception("Error setting knowledge base")
