@@ -838,23 +838,5 @@ class _AppSettings(BaseModel):
             logging.warning("No datasource configuration found in the environment -- calls will be made to Azure OpenAI without grounding data.")
             logging.warning(e.errors())
 
-def create_azure_search_settings(app_settings, knowledge_base_config):
-    return _AzureSearchSettings(
-        settings=app_settings, 
-        service=knowledge_base_config['service'],  
-        endpoint=knowledge_base_config['endpoint'],
-        key=knowledge_base_config['api_key'],
-        index=knowledge_base_config['index_name'],
-        vector_column=knowledge_base_config['vector_column'],
-        content_columns=knowledge_base_config['content_columns'],
-        title_column=knowledge_base_config['title_column'],
-        url_column=knowledge_base_config['url_column'],
-        filename_column=knowledge_base_config['filename_column'],
-        query_type=knowledge_base_config['query_type'],
-        top_k=knowledge_base_config['top_k'],
-        strictness=knowledge_base_config['strictness'],
-        enable_in_domain=knowledge_base_config['enable_in_domain'],
-    )
-
 app_settings = _AppSettings()
 

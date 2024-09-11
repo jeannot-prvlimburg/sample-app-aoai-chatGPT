@@ -39,15 +39,19 @@ from backend.utils import (
 )
 from frontend.src.constants.KnowledgeBases import KnowledgeBases
 
+from dotenv import load_dotenv, set_key
+
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
 cosmos_db_ready = asyncio.Event()
-
 
 def create_app():
     app = Quart(__name__)
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
+
+    # Laad de .env-bestanden
+    load_dotenv()
     
     @app.before_serving
     async def init():
@@ -132,26 +136,23 @@ async def set_knowledge_base():
         )
 
         if knowledge_base_config:
-            # Controleer of azure_search is geïnitialiseerd
-            if not hasattr(app_settings, 'azure_search'):
-                # app_settings.azure_search = create_azure_search_settings(app_settings, knowledge_base_config)
-                # Roep de construct_payload_configuration aan om de instellingen te initialiseren
-                # app_settings.azure_search.construct_payload_configuration()
-                pass
+            # Update de .env-instellingen
+            set_key('.env', 'AZURE_SEARCH_SERVICE', knowledge_base_config['service'])
+            set_key('.env', 'AZURE_SEARCH_ENDPOINT', knowledge_base_config['endpoint'])
+            set_key('.env', 'AZURE_SEARCH_KEY', knowledge_base_config['api_key'])
+            set_key('.env', 'AZURE_SEARCH_INDEX', knowledge_base_config['index_name'])
+            set_key('.env', 'AZURE_SEARCH_VECTOR_COLUMNS', knowledge_base_config['vector_column'])
+            set_key('.env', 'AZURE_SEARCH_CONTENT_COLUMNS', knowledge_base_config['content_columns'])
+            set_key('.env', 'AZURE_SEARCH_TITLE_COLUMN', knowledge_base_config['title_column'])
+            set_key('.env', 'AZURE_SEARCH_URL_COLUMN', knowledge_base_config['url_column'])
+            set_key('.env', 'AZURE_SEARCH_FILENAME_COLUMN', knowledge_base_config['filename_column'])
+            set_key('.env', 'AZURE_SEARCH_QUERY_TYPE', knowledge_base_config['query_type'])
+            set_key('.env', 'AZURE_SEARCH_TOP_K', str(knowledge_base_config['top_k']))
+            set_key('.env', 'AZURE_SEARCH_STRICTNESS', str(knowledge_base_config['strictness']))
+            set_key('.env', 'AZURE_SEARCH_ENABLE_IN_DOMAIN', str(knowledge_base_config['enable_in_domain']))
 
-            # Update de instellingen in app_settings
-            app_settings.azure_search.endpoint = knowledge_base_config['endpoint']
-            app_settings.azure_search.api_key = knowledge_base_config['api_key']
-            app_settings.azure_search.index = knowledge_base_config['index_name']
-            app_settings.azure_search.vector_column = knowledge_base_config['vector_column']
-            app_settings.azure_search.content_columns = knowledge_base_config['content_columns']
-            app_settings.azure_search.title_column = knowledge_base_config['title_column']
-            app_settings.azure_search.url_column = knowledge_base_config['url_column']
-            app_settings.azure_search.filename_column = knowledge_base_config['filename_column']
-            app_settings.azure_search.query_type = knowledge_base_config['query_type']
-            app_settings.azure_search.top_k = knowledge_base_config['top_k']
-            app_settings.azure_search.strictness = knowledge_base_config['strictness']
-            app_settings.azure_search.enable_in_domain = knowledge_base_config['enable_in_domain']
+            # Roep de set_datasource_settings aan om de datasource in te stellen
+            app_settings.set_datasource_settings()  # Dit haalt de waarden uit de .env
 
             return jsonify({"success": True})
         
