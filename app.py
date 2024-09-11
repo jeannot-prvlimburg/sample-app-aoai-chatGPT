@@ -31,7 +31,6 @@ from backend.settings import (
         MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
 )
 
-from backend.settings import _AzureSearchSettings 
 from backend.utils import (
     format_as_ndjson,
     format_stream_response,
