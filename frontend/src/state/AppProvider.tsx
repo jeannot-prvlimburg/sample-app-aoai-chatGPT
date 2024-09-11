@@ -19,7 +19,6 @@ import {
 
 import { appStateReducer } from './AppReducer'
 import { IDropdownOption } from '@fluentui/react'
-import { KnowledgeBases } from '../constants/KnowledgeBases'
 
 export interface AppState {
   isChatHistoryOpen: boolean
@@ -72,7 +71,7 @@ const initialState: AppState = {
   feedbackState: {},
   isLoading: true,
   answerExecResult: {},
-  availableKnowledgeBases: KnowledgeBases, 
+  availableKnowledgeBases: [], 
   selectedKnowledgeBase: null,
 }
 
@@ -161,6 +160,24 @@ export const AppStateProvider: React.FC<AppStateProviderProps> = ({ children }) 
         })
     }
     getFrontendSettings()
+  }, [])
+
+  // **Nieuwe useEffect voor het ophalen van kennisbanken**
+  useEffect(() => {
+    const fetchKnowledgeBases = async () => {
+      try {
+        const response = await fetch('/api/knowledge_bases');
+        if (!response.ok) {
+          throw new Error('Failed to fetch knowledge bases');
+        }
+        const knowledgeBases = await response.json();
+        dispatch({ type: 'SET_AVAILABLE_KNOWLEDGE_BASES', payload: knowledgeBases });
+      } catch (error) {
+        console.error('Error fetching knowledge bases:', error);
+      }
+    }
+
+    fetchKnowledgeBases()
   }, [])
 
   return <AppStateContext.Provider value={{ state, dispatch }}>{children}</AppStateContext.Provider>

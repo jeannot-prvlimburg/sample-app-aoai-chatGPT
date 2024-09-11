@@ -58,8 +58,11 @@ def create_app():
             app.cosmos_conversation_client = None
             raise e
     
+    @app.route('/api/knowledge_bases', methods=['GET'])
+    def get_knowledge_bases():
+        return jsonify(KnowledgeBases)
+    
     return app
-
 
 @bp.route("/")
 async def index():
