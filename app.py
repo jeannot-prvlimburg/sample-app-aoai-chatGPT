@@ -27,8 +27,11 @@ from backend.security.ms_defender_utils import get_msdefender_user_json
 from backend.history.cosmosdbservice import CosmosConversationClient
 from backend.settings import (
         app_settings,
+        create_azure_search_settings,
         MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
 )
+
+from backend.settings import _AzureSearchSettings 
 from backend.utils import (
     format_as_ndjson,
     format_stream_response,
@@ -133,28 +136,7 @@ async def set_knowledge_base():
         if knowledge_base_config:
             # Controleer of azure_search is geïnitialiseerd
             if not hasattr(app_settings, 'azure_search'):
-                try:
-                    from backend.utils import _AzureSearchSettings
-                except:
-                    pass
-                # Maak een nieuwe instantie van AzureSearchSettings aan
-                app_settings.azure_search = _AzureSearchSettings(
-                    settings=app_settings, 
-                    service=knowledge_base_config['service'],  
-                    endpoint=knowledge_base_config['endpoint'],
-                    key=knowledge_base_config['api_key'],
-                    index=knowledge_base_config['index_name'],
-                    vector_column=knowledge_base_config['vector_column'],
-                    content_columns=knowledge_base_config['content_columns'],
-                    title_column=knowledge_base_config['title_column'],
-                    url_column=knowledge_base_config['url_column'],
-                    filename_column=knowledge_base_config['filename_column'],
-                    query_type=knowledge_base_config['query_type'],
-                    top_k=knowledge_base_config['top_k'],
-                    strictness=knowledge_base_config['strictness'],
-                    enable_in_domain=knowledge_base_config['enable_in_domain'],
-                )
-
+                app_settings.azure_search = create_azure_search_settings(app_settings, knowledge_base_config)
                 # Roep de construct_payload_configuration aan om de instellingen te initialiseren
                 app_settings.azure_search.construct_payload_configuration()
 
