@@ -39,7 +39,7 @@ const Layout = () => {
         });
         if (!response.ok) {
           const errorData = await response.json(); // Lees de response body
-          throw new Error(`Failed to set knowledge base: ${errorData}`); // Voeg de error message toe
+          throw new Error(`Failed to set knowledge base: ${errorData.error || 'Unknown error'}`); // Gebruik error message
       }
     } catch (error) {
         console.error('Error setting knowledge base:', error);
