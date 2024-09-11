@@ -112,9 +112,9 @@ frontend_settings = {
 MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "true"
 
 @bp.route('/api/set_knowledge_base', methods=['POST'])
-def set_knowledge_base():
+async def set_knowledge_base():
     try:
-        data = request.json
+        data = await request.get_json()  # Gebruik await om de JSON op te halen
         knowledge_base_key = data.get('knowledge_base')
 
         # Validatie van de invoer
