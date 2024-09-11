@@ -22,28 +22,27 @@ const Layout = () => {
   const [logo, setLogo] = useState('')
   const appStateContext = useContext(AppStateContext)
   const ui = appStateContext?.state.frontendSettings?.ui
-  const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<string>("none"); // Incorporate later into appStateContext
+  const setSelectedKnowledgeBase = (kb: string) => {
+    appStateContext?.dispatch({ type: 'SET_KNOWLEDGE_BASE', payload: kb === 'none' ? null : kb });
+  };
 
   const handleKnowledgeBaseSelect = async (kb: string) => {
     setSelectedKnowledgeBase(kb);
     try {
-      const response = await fetch('/api/set_knowledge_base', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ knowledge_base: kb }),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to set knowledge base');
-      }
-      // Optioneel: update de app state
-      appStateContext?.dispatch({ type: 'SET_KNOWLEDGE_BASE', payload: kb });
+        const response = await fetch('/api/set_knowledge_base', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ knowledge_base: kb === 'none' ? null : kb }), // Stuur null als er geen kennisbank is geselecteerd
+        });
+        if (!response.ok) {
+            throw new Error('Failed to set knowledge base');
+        }
     } catch (error) {
-      console.error('Error setting knowledge base:', error);
-      // Hier kun je een foutmelding tonen aan de gebruiker
+        console.error('Error setting knowledge base:', error);
     }
-  }
+}
 
   useEffect(() => {
     const fetchKnowledgeBases = async () => {
