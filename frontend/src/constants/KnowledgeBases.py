@@ -13,6 +13,7 @@ KnowledgeBases = [
         "endpoint": "stikstof-v2.azurewebsites.net",
         "api_key": "fnwvwCuSUfVpx2p9R4lPb6S8y2W8RqvyZhqNwSOxDJAzSeDAnSBi",
         "index": "stikstof-24042024",
+        "index_name": "stikstof-24042024",
         "vector_column": "vector",
         "content_columns": "chunk",
         "title_column": "llm_title",

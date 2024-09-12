@@ -101,7 +101,8 @@ const Chat = () => {
 
   useEffect(() => {
     if (appStateContext?.state.selectedKnowledgeBase) {
-      clearChat();
+        console.log("Geselecteerde kennisbank:", appStateContext.state.selectedKnowledgeBase);
+        clearChat();
     }
   }, [appStateContext?.state.selectedKnowledgeBase]);
 
@@ -228,6 +229,8 @@ const Chat = () => {
     const request: ConversationRequest = {
       messages: [...conversation.messages.filter(answer => answer.role !== ERROR)]
     }
+
+    console.log("Verzenden naar API (without):", request)
 
     let result = {} as ChatResponse
     try {
