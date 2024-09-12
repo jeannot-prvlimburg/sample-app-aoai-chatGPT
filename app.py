@@ -136,15 +136,18 @@ async def set_knowledge_base():
         # Validatie van de invoer
         if not knowledge_base_key:
             return jsonify({"error": "knowledge_base key is required"}), 400
+        
+        # Controleer of het .env-bestand bestaat
+        dotenv_path = '.env'
+        if not os.path.exists(dotenv_path):
+            return jsonify({"error": f"{dotenv_path} does not exist."}), 500
 
         # Zoek de kennisbank configuratie op basis van de key
         knowledge_base_config = next(
             (kb for kb in KnowledgeBases if kb['key'] == knowledge_base_key), None
         )
 
-        if knowledge_base_config:
-            # Update de .env-instellingen
-            dotenv_path = '.env'
+        if knowledge_base_config: # Update de .env-instellingen
             set_key(dotenv_path, 'AZURE_SEARCH_SERVICE', knowledge_base_config['service'])
             set_key(dotenv_path, 'AZURE_SEARCH_ENDPOINT', knowledge_base_config['endpoint'])
             set_key(dotenv_path, 'AZURE_SEARCH_KEY', knowledge_base_config['api_key'])
