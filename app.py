@@ -37,10 +37,9 @@ from backend.utils import (
     convert_to_pf_format,
     format_pf_non_streaming_response,
 )
-try:
-    from frontend.src.constants.KnowledgeBases import KnowledgeBases
-except:
-    pass
+
+from frontend.src.constants.KnowledgeBases import KnowledgeBases
+
 
 try:
     from dotenv import load_dotenv, set_key
