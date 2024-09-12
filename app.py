@@ -144,7 +144,7 @@ async def set_knowledge_base():
 
         if knowledge_base_config:
             # Update de .env-instellingen
-            dotenv_path = '.env.sample'
+            dotenv_path = '.env'
             set_key(dotenv_path, 'AZURE_SEARCH_SERVICE', knowledge_base_config['service'])
             set_key(dotenv_path, 'AZURE_SEARCH_ENDPOINT', knowledge_base_config['endpoint'])
             set_key(dotenv_path, 'AZURE_SEARCH_KEY', knowledge_base_config['api_key'])
