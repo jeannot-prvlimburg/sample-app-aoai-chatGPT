@@ -143,6 +143,7 @@ async def set_knowledge_base():
 
         if knowledge_base_config: # Update de .env-instellingen
             dotenv_path = '.env'
+            # datasource
             set_key(dotenv_path, 'AZURE_SEARCH_SERVICE', knowledge_base_config['service'])
             set_key(dotenv_path, 'AZURE_SEARCH_ENDPOINT', knowledge_base_config['endpoint'])
             set_key(dotenv_path, 'AZURE_SEARCH_KEY', knowledge_base_config['api_key'])
@@ -156,6 +157,10 @@ async def set_knowledge_base():
             set_key(dotenv_path, 'AZURE_SEARCH_TOP_K', str(knowledge_base_config['top_k']))
             set_key(dotenv_path, 'AZURE_SEARCH_STRICTNESS', str(knowledge_base_config['strictness']))
             set_key(dotenv_path, 'AZURE_SEARCH_ENABLE_IN_DOMAIN', str(knowledge_base_config['enable_in_domain']))
+
+            # azure_openai
+            set_key(dotenv_path, 'AZURE_OPENAI_EMBEDDING_NAME', knowledge_base_config['embedding_name'])
+            set_key(dotenv_path, 'AZURE_OPENAI_EMBEDDING_ENDPOINT', knowledge_base_config['embedding_endpoint'])
 
             # Set the datasource type in app_settings
             app_settings.base_settings.datasource_type = knowledge_base_config['type']

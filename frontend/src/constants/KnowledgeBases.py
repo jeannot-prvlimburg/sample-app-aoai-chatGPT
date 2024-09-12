@@ -5,6 +5,8 @@ KnowledgeBases = [
     },
     {
         "type": "AzureCognitiveSearch",
+        "embedding_name": "text-embeddings-ada-002",
+        "embedding_endpoint": "https://laica-v1-0.openai.azure.com",
         "service": "ai-search-v2-0",
         "key": "stikstof",
         "text": "Stikstof24",
