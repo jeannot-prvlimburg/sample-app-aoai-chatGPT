@@ -50,17 +50,18 @@ bp = Blueprint("routes", __name__, static_folder="static", template_folder="stat
 cosmos_db_ready = asyncio.Event()
 
 def create_app():
-    # set_key('.env', 'AZURE_OPENAI_MODEL_NAME', 'gpt-4o-mini')
+    set_key('.env', 'AZURE_OPENAI_MODEL_NAME', 'gpt-4o-mini')
+    set_key('.env', 'AZURE_OPENAI_SYSTEM_MESSAGE', 'Praat alleen Nederlands en eindig ieder antwoord met "okidoki".')
 
     app = Quart(__name__)
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
 
-    # # Laad de .env-bestanden
-    # try:
-    #     load_dotenv()
-    # except:
-    #     pass
+    # Laad de .env-bestanden
+    try:
+        load_dotenv()
+    except:
+        pass
     
     @app.before_serving
     async def init():
@@ -167,6 +168,9 @@ async def set_knowledge_base():
             set_key(dotenv_path, 'AZURE_OPENAI_EMBEDDING_NAME', knowledge_base_config['embedding_name'])
             set_key(dotenv_path, 'AZURE_OPENAI_EMBEDDING_ENDPOINT', knowledge_base_config['embedding_endpoint'])
             set_key(dotenv_path, 'AZURE_OPENAI_EMBEDDING_KEY', os.getenv("AZURE_OPENAI_KEY"))
+
+            # Laad de .env-bestanden opnieuw om de nieuwe waarden te gebruiken
+            load_dotenv()
 
             app_settings.azure_openai.embedding_name = knowledge_base_config['embedding_name']
             app_settings.azure_openai.embedding_endpoint = knowledge_base_config['embedding_endpoint']
