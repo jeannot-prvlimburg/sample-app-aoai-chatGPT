@@ -9,7 +9,7 @@ KnowledgeBases = [
         "embedding_endpoint": "https://laica-v1-0.openai.azure.com",
         "service": "ai-search-v2-0",
         "key": "stikstof",
-        "text": "Stikstof25",
+        "text": "Stikstof26",
         "endpoint": "stikstof-v2.azurewebsites.net",
         "api_key": "fnwvwCuSUfVpx2p9R4lPb6S8y2W8RqvyZhqNwSOxDJAzSeDAnSBi",
         "index": "stikstof-24042024",

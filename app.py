@@ -50,17 +50,17 @@ bp = Blueprint("routes", __name__, static_folder="static", template_folder="stat
 cosmos_db_ready = asyncio.Event()
 
 def create_app():
-    set_key('.env', 'AZURE_OPENAI_MODEL_NAME', 'gpt-4o-mini')
+    # set_key('.env', 'AZURE_OPENAI_MODEL_NAME', 'gpt-4o-mini')
 
     app = Quart(__name__)
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
 
-    # Laad de .env-bestanden
-    try:
-        load_dotenv()
-    except:
-        pass
+    # # Laad de .env-bestanden
+    # try:
+    #     load_dotenv()
+    # except:
+    #     pass
     
     @app.before_serving
     async def init():
