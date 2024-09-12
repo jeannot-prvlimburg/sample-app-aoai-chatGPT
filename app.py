@@ -40,7 +40,6 @@ from backend.utils import (
 
 from frontend.src.constants.KnowledgeBases import KnowledgeBases
 
-
 try:
     from dotenv import load_dotenv, set_key
 except:
