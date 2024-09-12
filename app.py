@@ -37,9 +37,15 @@ from backend.utils import (
     convert_to_pf_format,
     format_pf_non_streaming_response,
 )
-from frontend.src.constants.KnowledgeBases import KnowledgeBases
+try:
+    from frontend.src.constants.KnowledgeBases import KnowledgeBases
+except:
+    pass
 
-from dotenv import load_dotenv, set_key
+try:
+    from dotenv import load_dotenv, set_key
+except:
+    pass
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
@@ -51,7 +57,10 @@ def create_app():
     app.config["TEMPLATES_AUTO_RELOAD"] = True
 
     # Laad de .env-bestanden
-    load_dotenv()
+    try:
+        load_dotenv()
+    except:
+        pass
     
     @app.before_serving
     async def init():
@@ -137,19 +146,20 @@ async def set_knowledge_base():
 
         if knowledge_base_config:
             # Update de .env-instellingen
-            set_key('.env', 'AZURE_SEARCH_SERVICE', knowledge_base_config['service'])
-            set_key('.env', 'AZURE_SEARCH_ENDPOINT', knowledge_base_config['endpoint'])
-            set_key('.env', 'AZURE_SEARCH_KEY', knowledge_base_config['api_key'])
-            set_key('.env', 'AZURE_SEARCH_INDEX', knowledge_base_config['index_name'])
-            set_key('.env', 'AZURE_SEARCH_VECTOR_COLUMNS', knowledge_base_config['vector_column'])
-            set_key('.env', 'AZURE_SEARCH_CONTENT_COLUMNS', knowledge_base_config['content_columns'])
-            set_key('.env', 'AZURE_SEARCH_TITLE_COLUMN', knowledge_base_config['title_column'])
-            set_key('.env', 'AZURE_SEARCH_URL_COLUMN', knowledge_base_config['url_column'])
-            set_key('.env', 'AZURE_SEARCH_FILENAME_COLUMN', knowledge_base_config['filename_column'])
-            set_key('.env', 'AZURE_SEARCH_QUERY_TYPE', knowledge_base_config['query_type'])
-            set_key('.env', 'AZURE_SEARCH_TOP_K', str(knowledge_base_config['top_k']))
-            set_key('.env', 'AZURE_SEARCH_STRICTNESS', str(knowledge_base_config['strictness']))
-            set_key('.env', 'AZURE_SEARCH_ENABLE_IN_DOMAIN', str(knowledge_base_config['enable_in_domain']))
+            dotenv_path = '.env.sample'
+            set_key(dotenv_path, 'AZURE_SEARCH_SERVICE', knowledge_base_config['service'])
+            set_key(dotenv_path, 'AZURE_SEARCH_ENDPOINT', knowledge_base_config['endpoint'])
+            set_key(dotenv_path, 'AZURE_SEARCH_KEY', knowledge_base_config['api_key'])
+            set_key(dotenv_path, 'AZURE_SEARCH_INDEX', knowledge_base_config['index_name'])
+            set_key(dotenv_path, 'AZURE_SEARCH_VECTOR_COLUMNS', knowledge_base_config['vector_column'])
+            set_key(dotenv_path, 'AZURE_SEARCH_CONTENT_COLUMNS', knowledge_base_config['content_columns'])
+            set_key(dotenv_path, 'AZURE_SEARCH_TITLE_COLUMN', knowledge_base_config['title_column'])
+            set_key(dotenv_path, 'AZURE_SEARCH_URL_COLUMN', knowledge_base_config['url_column'])
+            set_key(dotenv_path, 'AZURE_SEARCH_FILENAME_COLUMN', knowledge_base_config['filename_column'])
+            set_key(dotenv_path, 'AZURE_SEARCH_QUERY_TYPE', knowledge_base_config['query_type'])
+            set_key(dotenv_path, 'AZURE_SEARCH_TOP_K', str(knowledge_base_config['top_k']))
+            set_key(dotenv_path, 'AZURE_SEARCH_STRICTNESS', str(knowledge_base_config['strictness']))
+            set_key(dotenv_path, 'AZURE_SEARCH_ENABLE_IN_DOMAIN', str(knowledge_base_config['enable_in_domain']))
 
             # Roep de set_datasource_settings aan om de datasource in te stellen
             app_settings.set_datasource_settings()  # Dit haalt de waarden uit de .env
