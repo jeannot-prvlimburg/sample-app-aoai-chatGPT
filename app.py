@@ -159,10 +159,13 @@ async def set_knowledge_base():
             set_key(dotenv_path, 'AZURE_SEARCH_STRICTNESS', str(knowledge_base_config['strictness']))
             set_key(dotenv_path, 'AZURE_SEARCH_ENABLE_IN_DOMAIN', str(knowledge_base_config['enable_in_domain']))
 
+            # Set the datasource type in app_settings
+            app_settings.base_settings.datasource_type = knowledge_base_config['type']
+
             # Roep de set_datasource_settings aan om de datasource in te stellen
             app_settings.set_datasource_settings()  # Dit haalt de waarden uit de .env
 
-            return jsonify({"success": True})
+            return jsonify({"success": True}), 200
         
         return jsonify({"error": "Invalid knowledge base"}), 400
     except Exception as e:

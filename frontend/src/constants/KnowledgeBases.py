@@ -4,9 +4,10 @@ KnowledgeBases = [
         "text": "Geen kennisbank",
     },
     {
+        "type": "AzureCognitiveSearch",
         "service": "ai-search-v2-0",
         "key": "stikstof",
-        "text": "Stikstof22",
+        "text": "Stikstof23",
         "endpoint": "stikstof-v2.azurewebsites.net",
         "api_key": "fnwvwCuSUfVpx2p9R4lPb6S8y2W8RqvyZhqNwSOxDJAzSeDAnSBi",
         "index_name": "stikstof-24042024",
