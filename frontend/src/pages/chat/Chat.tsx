@@ -99,6 +99,12 @@ const Chat = () => {
     }
   }, [appStateContext?.state.isCosmosDBAvailable])
 
+  useEffect(() => {
+    if (appStateContext?.state.selectedKnowledgeBase) {
+      clearChat();
+    }
+  }, [appStateContext?.state.selectedKnowledgeBase]);
+
   const handleErrorDialogClose = () => {
     toggleErrorDialog()
     setTimeout(() => {

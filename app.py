@@ -161,6 +161,11 @@ async def set_knowledge_base():
             # azure_openai
             set_key(dotenv_path, 'AZURE_OPENAI_EMBEDDING_NAME', knowledge_base_config['embedding_name'])
             set_key(dotenv_path, 'AZURE_OPENAI_EMBEDDING_ENDPOINT', knowledge_base_config['embedding_endpoint'])
+            set_key(dotenv_path, 'AZURE_OPENAI_EMBEDDING_KEY', os.getenv("AZURE_OPENAI_KEY"))
+
+            app_settings.azure_openai.embedding_name = knowledge_base_config['embedding_name']
+            app_settings.azure_openai.embedding_endpoint = knowledge_base_config['embedding_endpoint']
+            app_settings.azure_openai.embedding_key= os.getenv("AZURE_OPENAI_KEY")
 
             # Set the datasource type in app_settings
             app_settings.base_settings.datasource_type = knowledge_base_config['type']
