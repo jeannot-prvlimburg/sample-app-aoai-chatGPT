@@ -146,7 +146,7 @@ async def set_knowledge_base():
             set_key(dotenv_path, 'AZURE_SEARCH_SERVICE', knowledge_base_config['service'])
             set_key(dotenv_path, 'AZURE_SEARCH_ENDPOINT', knowledge_base_config['endpoint'])
             set_key(dotenv_path, 'AZURE_SEARCH_KEY', knowledge_base_config['api_key'])
-            set_key(dotenv_path, 'AZURE_SEARCH_INDEX', knowledge_base_config['index_name'])
+            set_key(dotenv_path, 'AZURE_SEARCH_INDEX', knowledge_base_config['index'])
             set_key(dotenv_path, 'AZURE_SEARCH_VECTOR_COLUMNS', knowledge_base_config['vector_column'])
             set_key(dotenv_path, 'AZURE_SEARCH_CONTENT_COLUMNS', knowledge_base_config['content_columns'])
             set_key(dotenv_path, 'AZURE_SEARCH_TITLE_COLUMN', knowledge_base_config['title_column'])
