@@ -145,8 +145,8 @@ async def set_knowledge_base():
         )
 
         if knowledge_base_key is None:  # Als de key "none" is
-            set_key(dotenv_path, 'DATASOURCE_TYPE', None)
-            app_settings.base_settings.datasource_type = None
+            set_key(dotenv_path, 'DATASOURCE_TYPE', '')
+            app_settings.base_settings.datasource_type = ''
             app_settings.set_datasource_settings()  # Dit haalt de waarden uit de .env
 
             return jsonify({"success": True}), 200
