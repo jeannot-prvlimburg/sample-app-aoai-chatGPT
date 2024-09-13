@@ -134,16 +134,20 @@ async def set_knowledge_base():
         data = await request.get_json()  # Gebruik await om de JSON op te halen
         knowledge_base_key = data.get('knowledge_base')
 
-        # Validatie van de invoer
-        if not knowledge_base_key:
-            return jsonify({"error": "knowledge_base key is required"}), 400
+        # # Validatie van de invoer
+        # if not knowledge_base_key:
+        #     return jsonify({"error": "knowledge_base key is required"}), 400
+
         # Zoek de kennisbank configuratie op basis van de key
         knowledge_base_config = next(
             (kb for kb in KnowledgeBases if kb['key'] == knowledge_base_key), None
         )
 
-        if knowledge_base_key == "none":  # Als de key "none" is
+        if knowledge_base_key is None:  # Als de key "none" is
+            set_key(dotenv_path, 'DATASOURCE_TYPE', knowledge_base_config['type'])
             app_settings.base_settings.datasource_type = None
+            app_settings.set_datasource_settings()  # Dit haalt de waarden uit de .env
+
             return jsonify({"success": True}), 200
 
         if knowledge_base_config: # Update de .env-instellingen

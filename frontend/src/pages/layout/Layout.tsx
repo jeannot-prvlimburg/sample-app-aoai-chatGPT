@@ -28,6 +28,7 @@ const Layout = () => {
     appStateContext?.dispatch({ type: 'SET_KNOWLEDGE_BASE', payload: kb === 'none' ? '' : kb }); // Gebruik een lege string in plaats van null
   };
 
+  // random comment
   const handleKnowledgeBaseSelect = async (kb: string) => {
     setSelectedKnowledgeBase(kb);
     try {
