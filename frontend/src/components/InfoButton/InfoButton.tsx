@@ -13,7 +13,7 @@ const InfoButton: React.FC = () => {
             const data = await response.json();
             setUserInfo(data);
         } catch (err) {
-            setError(err.message);
+            setError(error.message);
         }
     };
 
