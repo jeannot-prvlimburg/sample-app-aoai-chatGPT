@@ -26,7 +26,7 @@ from backend.auth.auth_utils import get_authenticated_user_details
 from backend.security.ms_defender_utils import get_msdefender_user_json
 from backend.history.cosmosdbservice import CosmosConversationClient
 from backend.settings import (
-        app_settings,
+        create_user_app_settings,
         MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
 )
 
@@ -79,10 +79,12 @@ def create_app():
 
 @bp.route("/")
 async def index():
+    user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
+    user_app_settings = create_user_app_settings()  # Create user-specific settings instance
     return await render_template(
         "index.html",
-        title=app_settings.ui.title,
-        favicon=app_settings.ui.favicon
+        title=user_app_settings.ui.title,
+        favicon=user_app_settings.ui.favicon
     )
 
 
@@ -140,13 +142,12 @@ async def get_user_info():
 @bp.route('/api/set_knowledge_base', methods=['POST'])
 async def set_knowledge_base():
     dotenv_path = '.env'
+    user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
+    user_app_settings = create_user_app_settings()  # Create user-specific settings instance
+
     try:
         data = await request.get_json()  # Gebruik await om de JSON op te halen
         knowledge_base_key = data.get('knowledge_base')
-
-        # # Validatie van de invoer
-        # if not knowledge_base_key:
-        #     return jsonify({"error": "knowledge_base key is required"}), 400
 
         # Zoek de kennisbank configuratie op basis van de key
         knowledge_base_config = next(
@@ -156,12 +157,12 @@ async def set_knowledge_base():
         if knowledge_base_config['text'] == 'Geen kennisbank':
             set_key(dotenv_path, 'DATASOURCE_TYPE', '')
             load_dotenv()
-            app_settings.base_settings.datasource_type = ''
-            app_settings.set_datasource_settings()  # Dit haalt de waarden uit de .env
+            user_app_settings.base_settings.datasource_type = ''
+            user_app_settings.set_datasource_settings()  # Dit haalt de waarden uit de .env
 
             return jsonify({"success": True}), 200
 
-        elif knowledge_base_config: # Update de .env-instellingen
+        elif knowledge_base_config:  # Update de .env-instellingen
             # common
             set_key(dotenv_path, 'DATASOURCE_TYPE', knowledge_base_config['type'])
 
@@ -188,17 +189,22 @@ async def set_knowledge_base():
             # Laad de .env-bestanden opnieuw om de nieuwe waarden te gebruiken
             load_dotenv()
 
-            app_settings.azure_openai.embedding_name = knowledge_base_config['embedding_name']
-            app_settings.azure_openai.embedding_endpoint = knowledge_base_config['embedding_endpoint']
-            app_settings.azure_openai.embedding_key= os.getenv("AZURE_OPENAI_KEY")
+            user_app_settings.azure_openai.embedding_name = knowledge_base_config['embedding_name']
+            user_app_settings.azure_openai.embedding_endpoint = knowledge_base_config['embedding_endpoint']
+            user_app_settings.azure_openai.embedding_key = os.getenv("AZURE_OPENAI_KEY")
 
-            # Set the datasource type in app_settings
-            app_settings.base_settings.datasource_type = knowledge_base_config['type']
+            # Set the datasource type in user_app_settings
+            user_app_settings.base_settings.datasource_type = knowledge_base_config['type']
 
             # Roep de set_datasource_settings aan om de datasource in te stellen
-            app_settings.set_datasource_settings()  # Dit haalt de waarden uit de .env
+            user_app_settings.set_datasource_settings()  # Dit haalt de waarden uit de .env
 
             return jsonify({"success": True}), 200
+        
+        return jsonify({"error": "Invalid knowledge base"}), 400
+    except Exception as e:
+        logging.exception("Error setting knowledge base")
+        return jsonify({"error": f"Failed to set knowledge base: {str(e)}"}), 500
         
         return jsonify({"error": "Invalid knowledge base"}), 400
     except Exception as e:

@@ -28,7 +28,6 @@ const Layout = () => {
     appStateContext?.dispatch({ type: 'SET_KNOWLEDGE_BASE', payload: kb }); 
   };
 
-  // sjeng
   const handleKnowledgeBaseSelect = async (kb: string) => {
     setSelectedKnowledgeBase(kb);
     try {
