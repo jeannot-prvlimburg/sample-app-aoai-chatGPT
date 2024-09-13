@@ -142,6 +142,10 @@ async def set_knowledge_base():
             (kb for kb in KnowledgeBases if kb['key'] == knowledge_base_key), None
         )
 
+        if knowledge_base_key == "none":  # Als de key "none" is
+            app_settings.base_settings.datasource_type = None
+            return jsonify({"success": True}), 200
+
         if knowledge_base_config: # Update de .env-instellingen
             dotenv_path = '.env'
             # common
