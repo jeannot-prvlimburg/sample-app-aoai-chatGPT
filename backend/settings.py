@@ -834,5 +834,5 @@ class _AppSettings(BaseModel):
 def create_user_app_settings() -> _AppSettings:
     return _AppSettings()
 
-# app_settings = _AppSettings()
+app_settings = _AppSettings()
 
