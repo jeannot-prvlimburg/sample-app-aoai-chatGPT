@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 
 const InfoButton: React.FC = () => {
-    const [userInfo, setUserInfo] = useState(null);
-    const [error, setError] = useState(null);
+    const [userInfo, setUserInfo] = useState<any>(null); // Specificeer het type indien nodig
+    const [error, setError] = useState<string | null>(null); // error kan een string of null zijn
 
     const fetchUserInfo = async () => {
         try {
@@ -12,8 +12,10 @@ const InfoButton: React.FC = () => {
             }
             const data = await response.json();
             setUserInfo(data);
+            setError(null); // Reset error als de fetch succesvol is
         } catch (err) {
-            setError(error.message);
+            // Controleer of err een Error is en gebruik de message
+            setError(err instanceof Error ? err.message : 'Unknown error occurred');
         }
     };
 
