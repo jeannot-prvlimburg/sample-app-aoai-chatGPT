@@ -130,6 +130,7 @@ MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "
 
 @bp.route('/api/set_knowledge_base', methods=['POST'])
 async def set_knowledge_base():
+    dotenv_path = '.env'
     try:
         data = await request.get_json()  # Gebruik await om de JSON op te halen
         knowledge_base_key = data.get('knowledge_base')
@@ -151,7 +152,6 @@ async def set_knowledge_base():
             return jsonify({"success": True}), 200
 
         if knowledge_base_config: # Update de .env-instellingen
-            dotenv_path = '.env'
             # common
             set_key(dotenv_path, 'DATASOURCE_TYPE', knowledge_base_config['type'])
 
