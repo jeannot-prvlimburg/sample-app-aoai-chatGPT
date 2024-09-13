@@ -144,14 +144,15 @@ async def set_knowledge_base():
             (kb for kb in KnowledgeBases if kb['key'] == knowledge_base_key), None
         )
 
-        if knowledge_base_key is None:  # Als de key "none" is
+        if knowledge_base_config['text'] == 'Geen kennisbank':
             set_key(dotenv_path, 'DATASOURCE_TYPE', '')
+            load_dotenv()
             app_settings.base_settings.datasource_type = ''
             app_settings.set_datasource_settings()  # Dit haalt de waarden uit de .env
 
             return jsonify({"success": True}), 200
 
-        if knowledge_base_config: # Update de .env-instellingen
+        elif knowledge_base_config: # Update de .env-instellingen
             # common
             set_key(dotenv_path, 'DATASOURCE_TYPE', knowledge_base_config['type'])
 

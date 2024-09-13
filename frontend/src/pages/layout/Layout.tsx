@@ -11,7 +11,6 @@ import { AppStateContext } from '../../state/AppProvider'
 
 import styles from './Layout.module.css'
 
-// dag hoor
 const Layout = () => {
   const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false)
   const [isKnowledgeBaseSelectorOpen, setIsKnowledgeBaseSelectorOpen] = useState(false);
@@ -36,7 +35,7 @@ const Layout = () => {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ knowledge_base: kb === 'none' ? null : kb }), // Stuur null als er geen kennisbank is geselecteerd
+            body: JSON.stringify({ knowledge_base: kb }),
         });
         if (!response.ok) {
           const errorData = await response.json(); // Lees de response body
