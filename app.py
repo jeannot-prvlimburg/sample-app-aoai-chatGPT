@@ -49,6 +49,9 @@ bp = Blueprint("routes", __name__, static_folder="static", template_folder="stat
 
 cosmos_db_ready = asyncio.Event()
 
+# Globale variabele voor gebruikersspecifieke instellingen
+user_app_settings = None
+
 def create_app():
     set_key('.env', 'AZURE_OPENAI_MODEL_NAME', 'gpt-4o-mini')
     set_key('.env', 'AZURE_OPENAI_SYSTEM_MESSAGE', 'Praat alleen Nederlands en eindig ieder antwoord met "okidoki".')
@@ -79,6 +82,7 @@ def create_app():
 
 @bp.route("/")
 async def index():
+    global user_app_settings  # Maak de globale variabele beschikbaar
     user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
     user_app_settings = create_user_app_settings()  # Create user-specific settings instance
     return await render_template(
@@ -108,22 +112,22 @@ USER_AGENT = "GitHubSampleWebApp/AsyncAzureOpenAI/1.0.0"
 
 # Frontend Settings via Environment Variables
 frontend_settings = {
-    "auth_enabled": app_settings.base_settings.auth_enabled,
+    "auth_enabled": user_app_settings.base_settings.auth_enabled,
     "feedback_enabled": (
-        app_settings.chat_history and
-        app_settings.chat_history.enable_feedback
+        user_app_settings.chat_history and
+        user_app_settings.chat_history.enable_feedback
     ),
     "ui": {
-        "title": app_settings.ui.title,
-        "logo": app_settings.ui.logo,
-        "chat_logo": app_settings.ui.chat_logo or app_settings.ui.logo,
-        "chat_title": app_settings.ui.chat_title,
-        "chat_description": app_settings.ui.chat_description,
-        "show_share_button": app_settings.ui.show_share_button,
-        "show_chat_history_button": app_settings.ui.show_chat_history_button,
+        "title": user_app_settings.ui.title,
+        "logo": user_app_settings.ui.logo,
+        "chat_logo": user_app_settings.ui.chat_logo or user_app_settings.ui.logo,
+        "chat_title": user_app_settings.ui.chat_title,
+        "chat_description": user_app_settings.ui.chat_description,
+        "show_share_button": user_app_settings.ui.show_share_button,
+        "show_chat_history_button": user_app_settings.ui.show_chat_history_button,
     },
-    "sanitize_answer": app_settings.base_settings.sanitize_answer,
-    "oyd_enabled": app_settings.base_settings.datasource_type,
+    "sanitize_answer": user_app_settings.base_settings.sanitize_answer,
+    "oyd_enabled": user_app_settings.base_settings.datasource_type,
 }
 
 
@@ -219,7 +223,7 @@ async def init_openai_client():
     try:
         # API version check
         if (
-            app_settings.azure_openai.preview_api_version
+            user_app_settings.azure_openai.preview_api_version
             < MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
         ):
             raise ValueError(
@@ -228,21 +232,21 @@ async def init_openai_client():
 
         # Endpoint
         if (
-            not app_settings.azure_openai.endpoint and
-            not app_settings.azure_openai.resource
+            not user_app_settings.azure_openai.endpoint and
+            not user_app_settings.azure_openai.resource
         ):
             raise ValueError(
                 "AZURE_OPENAI_ENDPOINT or AZURE_OPENAI_RESOURCE is required"
             )
 
         endpoint = (
-            app_settings.azure_openai.endpoint
-            if app_settings.azure_openai.endpoint
+            user_app_settings.azure_openai.endpoint
+            if user_app_settings.azure_openai.endpoint
             else f"https://{app_settings.azure_openai.resource}.openai.azure.com/"
         )
 
         # Authentication
-        aoai_api_key = app_settings.azure_openai.key
+        aoai_api_key = user_app_settings.azure_openai.key
         ad_token_provider = None
         if not aoai_api_key:
             logging.debug("No AZURE_OPENAI_KEY found, using Azure Entra ID auth")
@@ -253,7 +257,7 @@ async def init_openai_client():
                 )
 
         # Deployment
-        deployment = app_settings.azure_openai.model
+        deployment = user_app_settings.azure_openai.model
         if not deployment:
             raise ValueError("AZURE_OPENAI_MODEL is required")
 
@@ -277,18 +281,18 @@ async def init_openai_client():
 
 async def init_cosmosdb_client():
     cosmos_conversation_client = None
-    if app_settings.chat_history:
+    if user_app_settings.chat_history:
         try:
             cosmos_endpoint = (
                 f"https://{app_settings.chat_history.account}.documents.azure.com:443/"
             )
 
-            if not app_settings.chat_history.account_key:
+            if not user_app_settings.chat_history.account_key:
                 async with DefaultAzureCredential() as cred:
                     credential = cred
                     
             else:
-                credential = app_settings.chat_history.account_key
+                credential = user_app_settings.chat_history.account_key
 
             cosmos_conversation_client = CosmosConversationClient(
                 cosmosdb_endpoint=cosmos_endpoint,
@@ -310,11 +314,11 @@ async def init_cosmosdb_client():
 def prepare_model_args(request_body, request_headers):
     request_messages = request_body.get("messages", [])
     messages = []
-    if not app_settings.datasource:
+    if not user_app_settings.datasource:
         messages = [
             {
                 "role": "system",
-                "content": app_settings.azure_openai.system_message
+                "content": user_app_settings.azure_openai.system_message
             }
         ]
 
@@ -345,19 +349,19 @@ def prepare_model_args(request_body, request_headers):
 
     model_args = {
         "messages": messages,
-        "temperature": app_settings.azure_openai.temperature,
-        "max_tokens": app_settings.azure_openai.max_tokens,
-        "top_p": app_settings.azure_openai.top_p,
-        "stop": app_settings.azure_openai.stop_sequence,
-        "stream": app_settings.azure_openai.stream,
-        "model": app_settings.azure_openai.model,
+        "temperature": user_app_settings.azure_openai.temperature,
+        "max_tokens": user_app_settings.azure_openai.max_tokens,
+        "top_p": user_app_settings.azure_openai.top_p,
+        "stop": user_app_settings.azure_openai.stop_sequence,
+        "stream": user_app_settings.azure_openai.stream,
+        "model": user_app_settings.azure_openai.model,
         "user": user_json
     }
 
-    if app_settings.datasource:
+    if user_app_settings.datasource:
         model_args["extra_body"] = {
             "data_sources": [
-                app_settings.datasource.construct_payload_configuration(
+                user_app_settings.datasource.construct_payload_configuration(
                     request=request
                 )
             ]
@@ -415,15 +419,15 @@ async def promptflow_request(request):
         ) as client:
             pf_formatted_obj = convert_to_pf_format(
                 request,
-                app_settings.promptflow.request_field_name,
-                app_settings.promptflow.response_field_name
+                user_app_settings.promptflow.request_field_name,
+                user_app_settings.promptflow.response_field_name
             )
             # NOTE: This only support question and chat_history parameters
             # If you need to add more parameters, you need to modify the request body
             response = await client.post(
-                app_settings.promptflow.endpoint,
+                user_app_settings.promptflow.endpoint,
                 json={
-                    app_settings.promptflow.request_field_name: pf_formatted_obj[-1]["inputs"][app_settings.promptflow.request_field_name],
+                    user_app_settings.promptflow.request_field_name: pf_formatted_obj[-1]["inputs"][app_settings.promptflow.request_field_name],
                     "chat_history": pf_formatted_obj[:-1],
                 },
                 headers=headers,
@@ -458,14 +462,14 @@ async def send_chat_request(request_body, request_headers):
 
 
 async def complete_chat_request(request_body, request_headers):
-    if app_settings.base_settings.use_promptflow:
+    if user_app_settings.base_settings.use_promptflow:
         response = await promptflow_request(request_body)
         history_metadata = request_body.get("history_metadata", {})
         return format_pf_non_streaming_response(
             response,
             history_metadata,
-            app_settings.promptflow.response_field_name,
-            app_settings.promptflow.citations_field_name
+            user_app_settings.promptflow.response_field_name,
+            user_app_settings.promptflow.citations_field_name
         )
     else:
         response, apim_request_id = await send_chat_request(request_body, request_headers)
@@ -486,7 +490,7 @@ async def stream_chat_request(request_body, request_headers):
 
 async def conversation_internal(request_body, request_headers):
     try:
-        if app_settings.azure_openai.stream and not app_settings.base_settings.use_promptflow:
+        if user_app_settings.azure_openai.stream and not user_app_settings.base_settings.use_promptflow:
             result = await stream_chat_request(request_body, request_headers)
             response = await make_response(format_as_ndjson(result))
             response.timeout = None
@@ -921,7 +925,7 @@ async def clear_messages():
 @bp.route("/history/ensure", methods=["GET"])
 async def ensure_cosmos():
     await cosmos_db_ready.wait()
-    if not app_settings.chat_history:
+    if not user_app_settings.chat_history:
         return jsonify({"error": "CosmosDB is not configured"}), 404
 
     try:
