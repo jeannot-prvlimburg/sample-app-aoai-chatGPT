@@ -128,6 +128,15 @@ frontend_settings = {
 # Enable Microsoft Defender for Cloud Integration
 MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "true"
 
+@bp.route("/api/user_info", methods=["GET"])
+async def get_user_info():
+    try:
+        authenticated_user = get_authenticated_user_details(request_headers=request.headers)
+        return jsonify(authenticated_user), 200
+    except Exception as e:
+        logging.exception("Exception in /api/user_info")
+        return jsonify({"error": str(e)}), 500
+
 @bp.route('/api/set_knowledge_base', methods=['POST'])
 async def set_knowledge_base():
     dotenv_path = '.env'

@@ -7,6 +7,7 @@ import { CosmosDBStatus } from '../../api'
 import Contoso from '../../assets/Contoso.svg'
 import { HistoryButton, ShareButton } from '../../components/common/Button'
 import KnowledgeBaseSelector from '../../components/KnowledgeBaseSelector/KnowledgeBaseSelector'
+import InfoButton from '../../components/InfoButton/InfoButton'
 import { AppStateContext } from '../../state/AppProvider'
 
 import styles from './Layout.module.css'
@@ -127,6 +128,7 @@ const Layout = () => {
               onClick={() => setIsKnowledgeBaseSelectorOpen(true)}
             />
             {ui?.show_share_button && <ShareButton onClick={handleShareClick} text={shareLabel} />}
+            <InfoButton /> {/* Voeg hier de InfoButton toe */}
           </Stack>
         </Stack>
       </header>
