@@ -15,6 +15,7 @@ from quart import (
     send_from_directory,
     render_template,
     current_app,
+    g
 )
 
 from openai import AsyncAzureOpenAI
@@ -49,10 +50,8 @@ bp = Blueprint("routes", __name__, static_folder="static", template_folder="stat
 
 cosmos_db_ready = asyncio.Event()
 
-# Globale variabele voor gebruikersspecifieke instellingen
-user_app_settings = None
-
 def create_app():
+
     set_key('.env', 'AZURE_OPENAI_MODEL_NAME', 'gpt-4o-mini')
     set_key('.env', 'AZURE_OPENAI_SYSTEM_MESSAGE', 'Praat alleen Nederlands en eindig ieder antwoord met "okidoki".')
     load_dotenv()
@@ -63,6 +62,11 @@ def create_app():
     app = Quart(__name__)
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
+
+    @app.before_request
+    async def before_request():
+        """Voer uit voor elk verzoek om gebruikersspecifieke instellingen in te stellen."""
+        g.g.user_app_settings = create_user_app_settings()  # Maak een nieuwe instantie voor deze gebruiker
     
     @app.before_serving
     async def init():
@@ -82,13 +86,12 @@ def create_app():
 
 @bp.route("/")
 async def index():
-    global user_app_settings  # Maak de globale variabele beschikbaar
     user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
-    user_app_settings = create_user_app_settings()  # Create user-specific settings instance
+    g.user_app_settings = g.g.user_app_settings  # Gebruik de globale variabele
     return await render_template(
         "index.html",
-        title=user_app_settings.ui.title,
-        favicon=user_app_settings.ui.favicon
+        title=g.user_app_settings.ui.title,
+        favicon=g.user_app_settings.ui.favicon
     )
 
 
@@ -112,22 +115,22 @@ USER_AGENT = "GitHubSampleWebApp/AsyncAzureOpenAI/1.0.0"
 
 # Frontend Settings via Environment Variables
 frontend_settings = {
-    "auth_enabled": user_app_settings.base_settings.auth_enabled,
+    "auth_enabled": g.user_app_settings.base_settings.auth_enabled,
     "feedback_enabled": (
-        user_app_settings.chat_history and
-        user_app_settings.chat_history.enable_feedback
+        g.user_app_settings.chat_history and
+        g.user_app_settings.chat_history.enable_feedback
     ),
     "ui": {
-        "title": user_app_settings.ui.title,
-        "logo": user_app_settings.ui.logo,
-        "chat_logo": user_app_settings.ui.chat_logo or user_app_settings.ui.logo,
-        "chat_title": user_app_settings.ui.chat_title,
-        "chat_description": user_app_settings.ui.chat_description,
-        "show_share_button": user_app_settings.ui.show_share_button,
-        "show_chat_history_button": user_app_settings.ui.show_chat_history_button,
+        "title": g.user_app_settings.ui.title,
+        "logo": g.user_app_settings.ui.logo,
+        "chat_logo": g.user_app_settings.ui.chat_logo or g.user_app_settings.ui.logo,
+        "chat_title": g.user_app_settings.ui.chat_title,
+        "chat_description": g.user_app_settings.ui.chat_description,
+        "show_share_button": g.user_app_settings.ui.show_share_button,
+        "show_chat_history_button": g.user_app_settings.ui.show_chat_history_button,
     },
-    "sanitize_answer": user_app_settings.base_settings.sanitize_answer,
-    "oyd_enabled": user_app_settings.base_settings.datasource_type,
+    "sanitize_answer": g.user_app_settings.base_settings.sanitize_answer,
+    "oyd_enabled": g.user_app_settings.base_settings.datasource_type,
 }
 
 
@@ -147,7 +150,7 @@ async def get_user_info():
 async def set_knowledge_base():
     dotenv_path = '.env'
     user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
-    user_app_settings = create_user_app_settings()  # Create user-specific settings instance
+    g.user_app_settings = create_g.user_app_settings()  # Create user-specific settings instance
 
     try:
         data = await request.get_json()  # Gebruik await om de JSON op te halen
@@ -161,8 +164,8 @@ async def set_knowledge_base():
         if knowledge_base_config['text'] == 'Geen kennisbank':
             set_key(dotenv_path, 'DATASOURCE_TYPE', '')
             load_dotenv()
-            user_app_settings.base_settings.datasource_type = ''
-            user_app_settings.set_datasource_settings()  # Dit haalt de waarden uit de .env
+            g.user_app_settings.base_settings.datasource_type = ''
+            g.user_app_settings.set_datasource_settings()  # Dit haalt de waarden uit de .env
 
             return jsonify({"success": True}), 200
 
@@ -193,15 +196,15 @@ async def set_knowledge_base():
             # Laad de .env-bestanden opnieuw om de nieuwe waarden te gebruiken
             load_dotenv()
 
-            user_app_settings.azure_openai.embedding_name = knowledge_base_config['embedding_name']
-            user_app_settings.azure_openai.embedding_endpoint = knowledge_base_config['embedding_endpoint']
-            user_app_settings.azure_openai.embedding_key = os.getenv("AZURE_OPENAI_KEY")
+            g.user_app_settings.azure_openai.embedding_name = knowledge_base_config['embedding_name']
+            g.user_app_settings.azure_openai.embedding_endpoint = knowledge_base_config['embedding_endpoint']
+            g.user_app_settings.azure_openai.embedding_key = os.getenv("AZURE_OPENAI_KEY")
 
-            # Set the datasource type in user_app_settings
-            user_app_settings.base_settings.datasource_type = knowledge_base_config['type']
+            # Set the datasource type in g.user_app_settings
+            g.user_app_settings.base_settings.datasource_type = knowledge_base_config['type']
 
             # Roep de set_datasource_settings aan om de datasource in te stellen
-            user_app_settings.set_datasource_settings()  # Dit haalt de waarden uit de .env
+            g.user_app_settings.set_datasource_settings()  # Dit haalt de waarden uit de .env
 
             return jsonify({"success": True}), 200
         
@@ -223,7 +226,7 @@ async def init_openai_client():
     try:
         # API version check
         if (
-            user_app_settings.azure_openai.preview_api_version
+            g.user_app_settings.azure_openai.preview_api_version
             < MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
         ):
             raise ValueError(
@@ -232,21 +235,21 @@ async def init_openai_client():
 
         # Endpoint
         if (
-            not user_app_settings.azure_openai.endpoint and
-            not user_app_settings.azure_openai.resource
+            not g.user_app_settings.azure_openai.endpoint and
+            not g.user_app_settings.azure_openai.resource
         ):
             raise ValueError(
                 "AZURE_OPENAI_ENDPOINT or AZURE_OPENAI_RESOURCE is required"
             )
 
         endpoint = (
-            user_app_settings.azure_openai.endpoint
-            if user_app_settings.azure_openai.endpoint
-            else f"https://{app_settings.azure_openai.resource}.openai.azure.com/"
+            g.user_app_settings.azure_openai.endpoint
+            if g.user_app_settings.azure_openai.endpoint
+            else f"https://{g.user_app_settings.azure_openai.resource}.openai.azure.com/"
         )
 
         # Authentication
-        aoai_api_key = user_app_settings.azure_openai.key
+        aoai_api_key = g.user_app_settings.azure_openai.key
         ad_token_provider = None
         if not aoai_api_key:
             logging.debug("No AZURE_OPENAI_KEY found, using Azure Entra ID auth")
@@ -257,7 +260,7 @@ async def init_openai_client():
                 )
 
         # Deployment
-        deployment = user_app_settings.azure_openai.model
+        deployment = g.user_app_settings.azure_openai.model
         if not deployment:
             raise ValueError("AZURE_OPENAI_MODEL is required")
 
@@ -265,7 +268,7 @@ async def init_openai_client():
         default_headers = {"x-ms-useragent": USER_AGENT}
 
         azure_openai_client = AsyncAzureOpenAI(
-            api_version=app_settings.azure_openai.preview_api_version,
+            api_version=g.user_app_settings.azure_openai.preview_api_version,
             api_key=aoai_api_key,
             azure_ad_token_provider=ad_token_provider,
             default_headers=default_headers,
@@ -281,25 +284,25 @@ async def init_openai_client():
 
 async def init_cosmosdb_client():
     cosmos_conversation_client = None
-    if user_app_settings.chat_history:
+    if g.user_app_settings.chat_history:
         try:
             cosmos_endpoint = (
-                f"https://{app_settings.chat_history.account}.documents.azure.com:443/"
+                f"https://{g.user_app_settings.chat_history.account}.documents.azure.com:443/"
             )
 
-            if not user_app_settings.chat_history.account_key:
+            if not g.user_app_settings.chat_history.account_key:
                 async with DefaultAzureCredential() as cred:
                     credential = cred
                     
             else:
-                credential = user_app_settings.chat_history.account_key
+                credential = g.user_app_settings.chat_history.account_key
 
             cosmos_conversation_client = CosmosConversationClient(
                 cosmosdb_endpoint=cosmos_endpoint,
                 credential=credential,
-                database_name=app_settings.chat_history.database,
-                container_name=app_settings.chat_history.conversations_container,
-                enable_message_feedback=app_settings.chat_history.enable_feedback,
+                database_name=g.user_app_settings.chat_history.database,
+                container_name=g.user_app_settings.chat_history.conversations_container,
+                enable_message_feedback=g.user_app_settings.chat_history.enable_feedback,
             )
         except Exception as e:
             logging.exception("Exception in CosmosDB initialization", e)
@@ -314,11 +317,11 @@ async def init_cosmosdb_client():
 def prepare_model_args(request_body, request_headers):
     request_messages = request_body.get("messages", [])
     messages = []
-    if not user_app_settings.datasource:
+    if not g.user_app_settings.datasource:
         messages = [
             {
                 "role": "system",
-                "content": user_app_settings.azure_openai.system_message
+                "content": g.user_app_settings.azure_openai.system_message
             }
         ]
 
@@ -349,19 +352,19 @@ def prepare_model_args(request_body, request_headers):
 
     model_args = {
         "messages": messages,
-        "temperature": user_app_settings.azure_openai.temperature,
-        "max_tokens": user_app_settings.azure_openai.max_tokens,
-        "top_p": user_app_settings.azure_openai.top_p,
-        "stop": user_app_settings.azure_openai.stop_sequence,
-        "stream": user_app_settings.azure_openai.stream,
-        "model": user_app_settings.azure_openai.model,
+        "temperature": g.user_app_settings.azure_openai.temperature,
+        "max_tokens": g.user_app_settings.azure_openai.max_tokens,
+        "top_p": g.user_app_settings.azure_openai.top_p,
+        "stop": g.user_app_settings.azure_openai.stop_sequence,
+        "stream": g.user_app_settings.azure_openai.stream,
+        "model": g.user_app_settings.azure_openai.model,
         "user": user_json
     }
 
-    if user_app_settings.datasource:
+    if g.user_app_settings.datasource:
         model_args["extra_body"] = {
             "data_sources": [
-                user_app_settings.datasource.construct_payload_configuration(
+                g.user_app_settings.datasource.construct_payload_configuration(
                     request=request
                 )
             ]
@@ -410,24 +413,24 @@ async def promptflow_request(request):
     try:
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {app_settings.promptflow.api_key}",
+            "Authorization": f"Bearer {g.user_app_settings.promptflow.api_key}",
         }
         # Adding timeout for scenarios where response takes longer to come back
-        logging.debug(f"Setting timeout to {app_settings.promptflow.response_timeout}")
+        logging.debug(f"Setting timeout to {g.user_app_settings.promptflow.response_timeout}")
         async with httpx.AsyncClient(
-            timeout=float(app_settings.promptflow.response_timeout)
+            timeout=float(g.user_app_settings.promptflow.response_timeout)
         ) as client:
             pf_formatted_obj = convert_to_pf_format(
                 request,
-                user_app_settings.promptflow.request_field_name,
-                user_app_settings.promptflow.response_field_name
+                g.user_app_settings.promptflow.request_field_name,
+                g.user_app_settings.promptflow.response_field_name
             )
             # NOTE: This only support question and chat_history parameters
             # If you need to add more parameters, you need to modify the request body
             response = await client.post(
-                user_app_settings.promptflow.endpoint,
+                g.user_app_settings.promptflow.endpoint,
                 json={
-                    user_app_settings.promptflow.request_field_name: pf_formatted_obj[-1]["inputs"][app_settings.promptflow.request_field_name],
+                    g.user_app_settings.promptflow.request_field_name: pf_formatted_obj[-1]["inputs"][app_settings.promptflow.request_field_name],
                     "chat_history": pf_formatted_obj[:-1],
                 },
                 headers=headers,
@@ -462,14 +465,14 @@ async def send_chat_request(request_body, request_headers):
 
 
 async def complete_chat_request(request_body, request_headers):
-    if user_app_settings.base_settings.use_promptflow:
+    if g.user_app_settings.base_settings.use_promptflow:
         response = await promptflow_request(request_body)
         history_metadata = request_body.get("history_metadata", {})
         return format_pf_non_streaming_response(
             response,
             history_metadata,
-            user_app_settings.promptflow.response_field_name,
-            user_app_settings.promptflow.citations_field_name
+            g.user_app_settings.promptflow.response_field_name,
+            g.user_app_settings.promptflow.citations_field_name
         )
     else:
         response, apim_request_id = await send_chat_request(request_body, request_headers)
@@ -490,7 +493,7 @@ async def stream_chat_request(request_body, request_headers):
 
 async def conversation_internal(request_body, request_headers):
     try:
-        if user_app_settings.azure_openai.stream and not user_app_settings.base_settings.use_promptflow:
+        if g.user_app_settings.azure_openai.stream and not g.user_app_settings.base_settings.use_promptflow:
             result = await stream_chat_request(request_body, request_headers)
             response = await make_response(format_as_ndjson(result))
             response.timeout = None
@@ -925,7 +928,7 @@ async def clear_messages():
 @bp.route("/history/ensure", methods=["GET"])
 async def ensure_cosmos():
     await cosmos_db_ready.wait()
-    if not user_app_settings.chat_history:
+    if not g.user_app_settings.chat_history:
         return jsonify({"error": "CosmosDB is not configured"}), 404
 
     try:
@@ -945,7 +948,7 @@ async def ensure_cosmos():
             return (
                 jsonify(
                     {
-                        "error": f"{cosmos_exception} {app_settings.chat_history.database} for account {app_settings.chat_history.account}"
+                        "error": f"{cosmos_exception} {g.user_app_settings.chat_history.database} for account {g.user_app_settings.chat_history.account}"
                     }
                 ),
                 422,
@@ -954,7 +957,7 @@ async def ensure_cosmos():
             return (
                 jsonify(
                     {
-                        "error": f"{cosmos_exception}: {app_settings.chat_history.conversations_container}"
+                        "error": f"{cosmos_exception}: {g.user_app_settings.chat_history.conversations_container}"
                     }
                 ),
                 422,
@@ -976,7 +979,7 @@ async def generate_title(conversation_messages) -> str:
     try:
         azure_openai_client = await init_openai_client()
         response = await azure_openai_client.chat.completions.create(
-            model=app_settings.azure_openai.model, messages=messages, temperature=1, max_tokens=64
+            model=g.user_app_settings.azure_openai.model, messages=messages, temperature=1, max_tokens=64
         )
 
         title = response.choices[0].message.content
