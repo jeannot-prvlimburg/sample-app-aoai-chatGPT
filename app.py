@@ -145,7 +145,7 @@ async def set_knowledge_base():
         )
 
         if knowledge_base_key is None:  # Als de key "none" is
-            set_key(dotenv_path, 'DATASOURCE_TYPE', knowledge_base_config['type'])
+            set_key(dotenv_path, 'DATASOURCE_TYPE', None)
             app_settings.base_settings.datasource_type = None
             app_settings.set_datasource_settings()  # Dit haalt de waarden uit de .env
 
