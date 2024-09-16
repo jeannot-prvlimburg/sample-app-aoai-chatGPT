@@ -192,13 +192,13 @@ async def set_knowledge_base():
 
 
 # Initialize Azure OpenAI Client
-async def init_openai_client():
+async def init_openai_client(user_app_settings):
     azure_openai_client = None
     
     try:
         # API version check
         if (
-            app_settings.azure_openai.preview_api_version
+            user_app_settings.azure_openai.preview_api_version
             < MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
         ):
             raise ValueError(
@@ -207,21 +207,21 @@ async def init_openai_client():
 
         # Endpoint
         if (
-            not app_settings.azure_openai.endpoint and
-            not app_settings.azure_openai.resource
+            not user_app_settings.azure_openai.endpoint and
+            not user_app_settings.azure_openai.resource
         ):
             raise ValueError(
                 "AZURE_OPENAI_ENDPOINT or AZURE_OPENAI_RESOURCE is required"
             )
 
         endpoint = (
-            app_settings.azure_openai.endpoint
-            if app_settings.azure_openai.endpoint
-            else f"https://{app_settings.azure_openai.resource}.openai.azure.com/"
+            user_app_settings.azure_openai.endpoint
+            if user_app_settings.azure_openai.endpoint
+            else f"https://{user_app_settings.azure_openai.resource}.openai.azure.com/"
         )
 
         # Authentication
-        aoai_api_key = app_settings.azure_openai.key
+        aoai_api_key = user_app_settings.azure_openai.key
         ad_token_provider = None
         if not aoai_api_key:
             logging.debug("No AZURE_OPENAI_KEY found, using Azure Entra ID auth")
@@ -232,7 +232,7 @@ async def init_openai_client():
                 )
 
         # Deployment
-        deployment = app_settings.azure_openai.model
+        deployment = user_app_settings.azure_openai.model
         if not deployment:
             raise ValueError("AZURE_OPENAI_MODEL is required")
 
@@ -240,7 +240,7 @@ async def init_openai_client():
         default_headers = {"x-ms-useragent": USER_AGENT}
 
         azure_openai_client = AsyncAzureOpenAI(
-            api_version=app_settings.azure_openai.preview_api_version,
+            api_version=user_app_settings.azure_openai.preview_api_version,
             api_key=aoai_api_key,
             azure_ad_token_provider=ad_token_provider,
             default_headers=default_headers,
@@ -286,14 +286,14 @@ async def init_cosmosdb_client():
     return cosmos_conversation_client
 
 
-def prepare_model_args(request_body, request_headers):
+def prepare_model_args(request_body, request_headers, user_app_settings):
     request_messages = request_body.get("messages", [])
     messages = []
-    if not app_settings.datasource:
+    if not user_app_settings.datasource:
         messages = [
             {
                 "role": "system",
-                "content": app_settings.azure_openai.system_message
+                "content": user_app_settings.azure_openai.system_message
             }
         ]
 
@@ -324,19 +324,19 @@ def prepare_model_args(request_body, request_headers):
 
     model_args = {
         "messages": messages,
-        "temperature": app_settings.azure_openai.temperature,
-        "max_tokens": app_settings.azure_openai.max_tokens,
-        "top_p": app_settings.azure_openai.top_p,
-        "stop": app_settings.azure_openai.stop_sequence,
-        "stream": app_settings.azure_openai.stream,
-        "model": app_settings.azure_openai.model,
+        "temperature": user_app_settings.azure_openai.temperature,
+        "max_tokens": user_app_settings.azure_openai.max_tokens,
+        "top_p": user_app_settings.azure_openai.top_p,
+        "stop": user_app_settings.azure_openai.stop_sequence,
+        "stream": user_app_settings.azure_openai.stream,
+        "model": user_app_settings.azure_openai.model,
         "user": user_json
     }
 
-    if app_settings.datasource:
+    if user_app_settings.datasource:
         model_args["extra_body"] = {
             "data_sources": [
-                app_settings.datasource.construct_payload_configuration(
+                user_app_settings.datasource.construct_payload_configuration(
                     request=request
                 )
             ]
