@@ -53,22 +53,11 @@ bp = Blueprint("routes", __name__, static_folder="static", template_folder="stat
 cosmos_db_ready = asyncio.Event()
 
 def create_app():
-
-    set_key('.env', 'AZURE_OPENAI_MODEL_NAME', 'gpt-4o-mini')
-    set_key('.env', 'AZURE_OPENAI_SYSTEM_MESSAGE', 'Praat alleen Nederlands en eindig ieder antwoord met "okidoki".')
-    load_dotenv()
-
-    os.environ['AZURE_OPENAI_MODEL_NAME'] = 'gpt-4o-mini'
-    os.environ['AZURE_OPENAI_SYSTEM_MESSAGE'] = 'Praat alleen Nederlands en eindig ieder antwoord met okidoki'
+    # load_dotenv()
 
     app = Quart(__name__)
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
-
-    # @app.before_request
-    # async def before_request():
-    #     """Voer uit voor elk verzoek om gebruikersspecifieke instellingen in te stellen."""
-    #     g.g.user_app_settings = create_user_app_settings()  # Maak een nieuwe instantie voor deze gebruiker
     
     @app.before_serving
     async def init():
