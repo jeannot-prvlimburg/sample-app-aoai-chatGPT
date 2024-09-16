@@ -48,6 +48,12 @@ bp = Blueprint("routes", __name__, static_folder="static", template_folder="stat
 
 cosmos_db_ready = asyncio.Event()
 
+class UserSettings:
+    def __init__(self):
+        self.knowledge_base = None
+
+user_settings = {}
+
 def create_app():
     # load_dotenv()
 
@@ -131,15 +137,30 @@ async def get_user_info():
         logging.exception("Exception in /api/user_info")
         return jsonify({"error": str(e)}), 500
 
+def apply_user_settings(f):
+    @wraps(f)
+    async def decorated_function(*args, **kwargs):
+        user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
+        if user_id in user_settings:
+            g.user_app_settings = user_settings[user_id].app_settings
+        else:
+            g.user_app_settings = app_settings
+        return await f(*args, **kwargs)
+    return decorated_function
+
 @bp.route('/api/set_knowledge_base', methods=['POST'])
 async def set_knowledge_base():
-    dotenv_path = '.env'
-    # user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
-    # g.user_app_settings = create_g.user_app_settings()  # Create user-specific settings instance
+    # dotenv_path = '.env'
 
     try:
         data = await request.get_json()  # Gebruik await om de JSON op te halen
         knowledge_base_key = data.get('knowledge_base')
+        user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
+
+        if user_id not in user_settings:
+            user_settings[user_id] = UserSettings()
+
+        user_settings[user_id].knowledge_base = knowledge_base_key
 
         # Zoek de kennisbank configuratie op basis van de key
         knowledge_base_config = next(
@@ -147,10 +168,12 @@ async def set_knowledge_base():
         )
 
         if knowledge_base_config['text'] == 'Geen kennisbank':
-            set_key(dotenv_path, 'DATASOURCE_TYPE', '')
+            # set_key(dotenv_path, 'DATASOURCE_TYPE', '')
             load_dotenv()
             app_settings.base_settings.datasource_type = ''
             app_settings.set_datasource_settings()  # Dit haalt de waarden uit de .env
+
+            user_settings[user_id].app_settings = user_app_settings
 
             return jsonify({"success": True}), 200
 
@@ -190,6 +213,8 @@ async def set_knowledge_base():
 
             # Roep de set_datasource_settings aan om de datasource in te stellen
             app_settings.set_datasource_settings()  # Dit haalt de waarden uit de .env
+
+            user_settings[user_id].app_settings = user_app_settings
 
             return jsonify({"success": True}), 200
         
@@ -497,6 +522,7 @@ async def conversation_internal(request_body, request_headers):
 
 
 @bp.route("/conversation", methods=["POST"])
+@apply_user_settings
 async def conversation():
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
