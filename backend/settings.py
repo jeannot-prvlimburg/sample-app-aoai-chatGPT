@@ -830,9 +830,5 @@ class _AppSettings(BaseModel):
             logging.warning("No datasource configuration found in the environment -- calls will be made to Azure OpenAI without grounding data.")
             logging.warning(e.errors())
 
-# Functie om een nieuwe instantie van _AppSettings voor een gebruiker te maken
-def create_user_app_settings() -> _AppSettings:
-    return _AppSettings()
-
 app_settings = _AppSettings()
 
