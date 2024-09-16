@@ -73,8 +73,6 @@ def create_app():
 
 @bp.route("/")
 async def index():
-    # user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
-    # g.user_app_settings = g.g.user_app_settings  # Gebruik de globale variabele
     return await render_template(
         "index.html",
         title=app_settings.ui.title,
