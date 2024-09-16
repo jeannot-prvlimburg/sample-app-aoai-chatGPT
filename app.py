@@ -29,10 +29,6 @@ from backend.history.cosmosdbservice import CosmosConversationClient
 from backend.settings import MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
 from backend.settings import app_settings
 
-
-from backend.settings import create_user_app_settings
-
-
 from backend.utils import (
     format_as_ndjson,
     format_stream_response,
