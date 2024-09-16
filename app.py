@@ -41,6 +41,7 @@ from frontend.src.constants.KnowledgeBases import KnowledgeBases
 
 try:
     from dotenv import load_dotenv, set_key
+    from functools import wraps
 except:
     pass
 
@@ -51,6 +52,7 @@ cosmos_db_ready = asyncio.Event()
 class UserSettings:
     def __init__(self):
         self.knowledge_base = None
+        self.app_settings = None
 
 user_settings = {}
 
@@ -150,10 +152,8 @@ def apply_user_settings(f):
 
 @bp.route('/api/set_knowledge_base', methods=['POST'])
 async def set_knowledge_base():
-    # dotenv_path = '.env'
-
     try:
-        data = await request.get_json()  # Gebruik await om de JSON op te halen
+        data = await request.get_json()
         knowledge_base_key = data.get('knowledge_base')
         user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
 
@@ -167,61 +167,23 @@ async def set_knowledge_base():
             (kb for kb in KnowledgeBases if kb['key'] == knowledge_base_key), None
         )
 
-        if knowledge_base_config['text'] == 'Geen kennisbank':
-            # set_key(dotenv_path, 'DATASOURCE_TYPE', '')
-            load_dotenv()
-            app_settings.base_settings.datasource_type = ''
-            app_settings.set_datasource_settings()  # Dit haalt de waarden uit de .env
+        if knowledge_base_config:
+            # Maak een kopie van de huidige app_settings
+            user_app_settings = copy.deepcopy(app_settings)
 
+            # Update de instellingen voor deze specifieke gebruiker
+            user_app_settings.base_settings.datasource_type = knowledge_base_config['type']
+            user_app_settings.azure_openai.embedding_name = knowledge_base_config['embedding_name']
+            user_app_settings.azure_openai.embedding_endpoint = knowledge_base_config['embedding_endpoint']
+            user_app_settings.azure_openai.embedding_key = os.getenv("AZURE_OPENAI_KEY")
+
+            # Stel de datasource in voor de gebruiker
+            user_app_settings.set_datasource_settings()
+
+            # Sla de aangepaste instellingen op voor deze gebruiker
             user_settings[user_id].app_settings = user_app_settings
 
             return jsonify({"success": True}), 200
-
-        elif knowledge_base_config:  # Update de .env-instellingen
-            # common
-            set_key(dotenv_path, 'DATASOURCE_TYPE', knowledge_base_config['type'])
-
-            # datasource
-            set_key(dotenv_path, 'AZURE_SEARCH_SERVICE', knowledge_base_config['service'])
-            set_key(dotenv_path, 'AZURE_SEARCH_ENDPOINT', knowledge_base_config['endpoint'])
-            set_key(dotenv_path, 'AZURE_SEARCH_KEY', knowledge_base_config['api_key'])
-            set_key(dotenv_path, 'AZURE_SEARCH_INDEX', knowledge_base_config['index'])
-            set_key(dotenv_path, 'AZURE_SEARCH_VECTOR_COLUMNS', knowledge_base_config['vector_column'])
-            set_key(dotenv_path, 'AZURE_SEARCH_CONTENT_COLUMNS', knowledge_base_config['content_columns'])
-            set_key(dotenv_path, 'AZURE_SEARCH_TITLE_COLUMN', knowledge_base_config['title_column'])
-            set_key(dotenv_path, 'AZURE_SEARCH_URL_COLUMN', knowledge_base_config['url_column'])
-            set_key(dotenv_path, 'AZURE_SEARCH_FILENAME_COLUMN', knowledge_base_config['filename_column'])
-            set_key(dotenv_path, 'AZURE_SEARCH_QUERY_TYPE', knowledge_base_config['query_type'])
-            set_key(dotenv_path, 'AZURE_SEARCH_TOP_K', str(knowledge_base_config['top_k']))
-            set_key(dotenv_path, 'AZURE_SEARCH_STRICTNESS', str(knowledge_base_config['strictness']))
-            set_key(dotenv_path, 'AZURE_SEARCH_ENABLE_IN_DOMAIN', str(knowledge_base_config['enable_in_domain']))
-
-            # azure_openai
-            set_key(dotenv_path, 'AZURE_OPENAI_EMBEDDING_NAME', knowledge_base_config['embedding_name'])
-            set_key(dotenv_path, 'AZURE_OPENAI_EMBEDDING_ENDPOINT', knowledge_base_config['embedding_endpoint'])
-            set_key(dotenv_path, 'AZURE_OPENAI_EMBEDDING_KEY', os.getenv("AZURE_OPENAI_KEY"))
-
-            # Laad de .env-bestanden opnieuw om de nieuwe waarden te gebruiken
-            load_dotenv()
-
-            app_settings.azure_openai.embedding_name = knowledge_base_config['embedding_name']
-            app_settings.azure_openai.embedding_endpoint = knowledge_base_config['embedding_endpoint']
-            app_settings.azure_openai.embedding_key = os.getenv("AZURE_OPENAI_KEY")
-
-            # Set the datasource type in app_settings
-            app_settings.base_settings.datasource_type = knowledge_base_config['type']
-
-            # Roep de set_datasource_settings aan om de datasource in te stellen
-            app_settings.set_datasource_settings()  # Dit haalt de waarden uit de .env
-
-            user_settings[user_id].app_settings = user_app_settings
-
-            return jsonify({"success": True}), 200
-        
-        return jsonify({"error": "Invalid knowledge base"}), 400
-    except Exception as e:
-        logging.exception("Error setting knowledge base")
-        return jsonify({"error": f"Failed to set knowledge base: {str(e)}"}), 500
         
         return jsonify({"error": "Invalid knowledge base"}), 400
     except Exception as e:
@@ -452,7 +414,7 @@ async def promptflow_request(request):
         logging.error(f"An error occurred while making promptflow_request: {e}")
 
 
-async def send_chat_request(request_body, request_headers):
+async def send_chat_request(request_body, request_headers, user_app_settings):
     filtered_messages = []
     messages = request_body.get("messages", [])
     for message in messages:
@@ -460,10 +422,10 @@ async def send_chat_request(request_body, request_headers):
             filtered_messages.append(message)
             
     request_body['messages'] = filtered_messages
-    model_args = prepare_model_args(request_body, request_headers)
+    model_args = prepare_model_args(request_body, request_headers, user_app_settings)
 
     try:
-        azure_openai_client = await init_openai_client()
+        azure_openai_client = await init_openai_client(user_app_settings)
         raw_response = await azure_openai_client.chat.completions.with_raw_response.create(**model_args)
         response = raw_response.parse()
         apim_request_id = raw_response.headers.get("apim-request-id") 
@@ -474,24 +436,24 @@ async def send_chat_request(request_body, request_headers):
     return response, apim_request_id
 
 
-async def complete_chat_request(request_body, request_headers):
-    if app_settings.base_settings.use_promptflow:
-        response = await promptflow_request(request_body)
+async def complete_chat_request(request_body, request_headers, user_app_settings):
+    if user_app_settings.base_settings.use_promptflow:
+        response = await promptflow_request(request_body, user_app_settings)
         history_metadata = request_body.get("history_metadata", {})
         return format_pf_non_streaming_response(
             response,
             history_metadata,
-            app_settings.promptflow.response_field_name,
-            app_settings.promptflow.citations_field_name
+            user_app_settings.promptflow.response_field_name,
+            user_app_settings.promptflow.citations_field_name
         )
     else:
-        response, apim_request_id = await send_chat_request(request_body, request_headers)
+        response, apim_request_id = await send_chat_request(request_body, request_headers, user_app_settings)
         history_metadata = request_body.get("history_metadata", {})
         return format_non_streaming_response(response, history_metadata, apim_request_id)
 
 
-async def stream_chat_request(request_body, request_headers):
-    response, apim_request_id = await send_chat_request(request_body, request_headers)
+async def stream_chat_request(request_body, request_headers, user_app_settings):
+    response, apim_request_id = await send_chat_request(request_body, request_headers, user_app_settings)
     history_metadata = request_body.get("history_metadata", {})
     
     async def generate():
@@ -503,14 +465,15 @@ async def stream_chat_request(request_body, request_headers):
 
 async def conversation_internal(request_body, request_headers):
     try:
-        if app_settings.azure_openai.stream and not app_settings.base_settings.use_promptflow:
-            result = await stream_chat_request(request_body, request_headers)
+        user_app_settings = g.user_app_settings
+        if user_app_settings.azure_openai.stream and not user_app_settings.base_settings.use_promptflow:
+            result = await stream_chat_request(request_body, request_headers, user_app_settings)
             response = await make_response(format_as_ndjson(result))
             response.timeout = None
             response.mimetype = "application/json-lines"
             return response
         else:
-            result = await complete_chat_request(request_body, request_headers)
+            result = await complete_chat_request(request_body, request_headers, user_app_settings)
             return jsonify(result)
 
     except Exception as ex:
