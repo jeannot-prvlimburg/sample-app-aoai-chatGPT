@@ -181,7 +181,7 @@ async def set_knowledge_base():
             AzureSearchSettings = type(user_app_settings.datasource)
             new_search_settings = AzureSearchSettings(
                 settings=user_app_settings,
-                service=knowledge_base_config['search_service_name'],
+                service=knowledge_base_config['service'],
                 index=knowledge_base_config['index_name'],
                 key=knowledge_base_config['search_key'],
                 use_semantic_search=knowledge_base_config.get('use_semantic_search', False),
