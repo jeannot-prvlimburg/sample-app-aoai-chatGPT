@@ -182,7 +182,9 @@ async def set_knowledge_base():
 
             # Sla de aangepaste instellingen op voor deze gebruiker
             user_settings[user_id].app_settings = user_app_settings
-            g.user_app_settings = user_app_settings  # Store in g for current request
+
+            # Initialiseer de Azure OpenAI-client opnieuw met de nieuwe instellingen
+            azure_openai_client = await init_openai_client(user_app_settings)
 
             return jsonify({"success": True}), 200
         
@@ -190,7 +192,6 @@ async def set_knowledge_base():
     except Exception as e:
         logging.exception("Error setting knowledge base")
         return jsonify({"error": f"Failed to set knowledge base: {str(e)}"}), 500
-
 
 # Initialize Azure OpenAI Client
 async def init_openai_client(user_app_settings):
