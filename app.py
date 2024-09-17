@@ -66,7 +66,7 @@ def create_app():
     @app.before_serving
     async def init():
         try:
-            app.cosmos_conversation_client = await init_cosmosdb_client()
+            app.cosmos_conversation_client = None  # We initialize this later per user
             cosmos_db_ready.set()
         except Exception as e:
             logging.exception("Failed to initialize CosmosDB client")
@@ -143,7 +143,7 @@ def apply_user_settings(f):
     @wraps(f)
     async def decorated_function(*args, **kwargs):
         user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
-        if user_id in user_settings:
+        if user_id in user_settings and user_settings[user_id].app_settings:
             g.user_app_settings = user_settings[user_id].app_settings
         else:
             g.user_app_settings = app_settings
@@ -254,27 +254,26 @@ async def init_openai_client(user_app_settings):
         raise e
 
 
-async def init_cosmosdb_client():
+async def init_cosmosdb_client(user_app_settings):
     cosmos_conversation_client = None
-    if app_settings.chat_history:
+    if user_app_settings.chat_history:
         try:
             cosmos_endpoint = (
-                f"https://{app_settings.chat_history.account}.documents.azure.com:443/"
+                f"https://{user_app_settings.chat_history.account}.documents.azure.com:443/"
             )
 
-            if not app_settings.chat_history.account_key:
+            if not user_app_settings.chat_history.account_key:
                 async with DefaultAzureCredential() as cred:
                     credential = cred
-                    
             else:
-                credential = app_settings.chat_history.account_key
+                credential = user_app_settings.chat_history.account_key
 
             cosmos_conversation_client = CosmosConversationClient(
                 cosmosdb_endpoint=cosmos_endpoint,
                 credential=credential,
-                database_name=app_settings.chat_history.database,
-                container_name=app_settings.chat_history.conversations_container,
-                enable_message_feedback=app_settings.chat_history.enable_feedback,
+                database_name=user_app_settings.chat_history.database,
+                container_name=user_app_settings.chat_history.conversations_container,
+                enable_message_feedback=user_app_settings.chat_history.enable_feedback,
             )
         except Exception as e:
             logging.exception("Exception in CosmosDB initialization", e)
@@ -381,28 +380,28 @@ def prepare_model_args(request_body, request_headers, user_app_settings):
     return model_args
 
 
-async def promptflow_request(request):
+async def promptflow_request(request, user_app_settings):
     try:
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {app_settings.promptflow.api_key}",
+            "Authorization": f"Bearer {user_app_settings.promptflow.api_key}",
         }
         # Adding timeout for scenarios where response takes longer to come back
-        logging.debug(f"Setting timeout to {app_settings.promptflow.response_timeout}")
+        logging.debug(f"Setting timeout to {user_app_settings.promptflow.response_timeout}")
         async with httpx.AsyncClient(
-            timeout=float(app_settings.promptflow.response_timeout)
+            timeout=float(user_app_settings.promptflow.response_timeout)
         ) as client:
             pf_formatted_obj = convert_to_pf_format(
                 request,
-                app_settings.promptflow.request_field_name,
-                app_settings.promptflow.response_field_name
+                user_app_settings.promptflow.request_field_name,
+                user_app_settings.promptflow.response_field_name
             )
             # NOTE: This only support question and chat_history parameters
             # If you need to add more parameters, you need to modify the request body
             response = await client.post(
-                app_settings.promptflow.endpoint,
+                user_app_settings.promptflow.endpoint,
                 json={
-                    app_settings.promptflow.request_field_name: pf_formatted_obj[-1]["inputs"][app_settings.promptflow.request_field_name],
+                    user_app_settings.promptflow.request_field_name: pf_formatted_obj[-1]["inputs"][user_app_settings.promptflow.request_field_name],
                     "chat_history": pf_formatted_obj[:-1],
                 },
                 headers=headers,
@@ -505,11 +504,17 @@ def get_frontend_settings():
 
 ## Conversation History API ##
 @bp.route("/history/generate", methods=["POST"])
+@apply_user_settings
 async def add_conversation():
     await cosmos_db_ready.wait()
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
 
+    user_app_settings = g.user_app_settings
+    
+    if not hasattr(current_app, 'cosmos_conversation_client') or current_app.cosmos_conversation_client is None:
+        current_app.cosmos_conversation_client = await init_cosmosdb_client(user_app_settings)
+        
     ## check request for conversation_id
     request_json = await request.get_json()
     conversation_id = request_json.get("conversation_id", None)
@@ -522,7 +527,7 @@ async def add_conversation():
         # check for the conversation_id, if the conversation is not set, we will create a new one
         history_metadata = {}
         if not conversation_id:
-            title = await generate_title(request_json["messages"])
+            title = await generate_title(request_json["messages"], g.user_app_settings)
             conversation_dict = await current_app.cosmos_conversation_client.create_conversation(
                 user_id=user_id, title=title
             )
@@ -900,14 +905,17 @@ async def clear_messages():
 
 
 @bp.route("/history/ensure", methods=["GET"])
+@apply_user_settings
 async def ensure_cosmos():
     await cosmos_db_ready.wait()
-    if not app_settings.chat_history:
+    user_app_settings = g.user_app_settings
+    if not user_app_settings.chat_history:
         return jsonify({"error": "CosmosDB is not configured"}), 404
 
     try:
-        success, err = await current_app.cosmos_conversation_client.ensure()
-        if not current_app.cosmos_conversation_client or not success:
+        cosmos_conversation_client = await init_cosmosdb_client(user_app_settings)
+        success, err = await cosmos_conversation_client.ensure()
+        if not cosmos_conversation_client or not success:
             if err:
                 return jsonify({"error": err}), 422
             return jsonify({"error": "CosmosDB is not configured or not working"}), 500
@@ -922,7 +930,7 @@ async def ensure_cosmos():
             return (
                 jsonify(
                     {
-                        "error": f"{cosmos_exception} {app_settings.chat_history.database} for account {app_settings.chat_history.account}"
+                        "error": f"{cosmos_exception} {user_app_settings.chat_history.database} for account {user_app_settings.chat_history.account}"
                     }
                 ),
                 422,
@@ -931,7 +939,7 @@ async def ensure_cosmos():
             return (
                 jsonify(
                     {
-                        "error": f"{cosmos_exception}: {app_settings.chat_history.conversations_container}"
+                        "error": f"{cosmos_exception}: {user_app_settings.chat_history.conversations_container}"
                     }
                 ),
                 422,
@@ -940,9 +948,9 @@ async def ensure_cosmos():
             return jsonify({"error": "CosmosDB is not working"}), 500
 
 
-async def generate_title(conversation_messages) -> str:
+async def generate_title(conversation_messages, user_app_settings) -> str:
     ## make sure the messages are sorted by _ts descending
-    title_prompt = "Summarize the conversation so far into a 4-word or less title. Do not use any quotation marks or punctuation. Do not include any other commentary or description."
+    title_prompt = "Vat het gesprek tot nu toe samen in een titel van 4 woorden of minder. Gebruik geen aanhalingstekens of interpunctie. Voeg geen ander commentaar of beschrijving toe."
 
     messages = [
         {"role": msg["role"], "content": msg["content"]}
@@ -951,9 +959,9 @@ async def generate_title(conversation_messages) -> str:
     messages.append({"role": "user", "content": title_prompt})
 
     try:
-        azure_openai_client = await init_openai_client()
+        azure_openai_client = await init_openai_client(user_app_settings)
         response = await azure_openai_client.chat.completions.create(
-            model=app_settings.azure_openai.model, messages=messages, temperature=1, max_tokens=64
+            model=user_app_settings.azure_openai.model, messages=messages, temperature=1, max_tokens=64
         )
 
         title = response.choices[0].message.content
