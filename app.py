@@ -27,7 +27,7 @@ from backend.auth.auth_utils import get_authenticated_user_details
 from backend.security.ms_defender_utils import get_msdefender_user_json
 from backend.history.cosmosdbservice import CosmosConversationClient
 from backend.settings import MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
-from backend.settings import app_settings, _AppSettings
+from backend.settings import app_settings, AzureSearchSettings
 
 from backend.utils import (
     format_as_ndjson,
@@ -178,7 +178,6 @@ async def set_knowledge_base():
             user_app_settings.azure_openai.embedding_key = os.getenv("AZURE_OPENAI_KEY")
 
             # Maak een nieuwe AzureSearchSettings instantie
-            AzureSearchSettings = type(user_app_settings.datasource)
             new_search_settings = AzureSearchSettings(
                 settings=user_app_settings,
                 service=knowledge_base_config['service'],
