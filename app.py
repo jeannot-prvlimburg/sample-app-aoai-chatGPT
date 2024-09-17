@@ -27,7 +27,7 @@ from backend.auth.auth_utils import get_authenticated_user_details
 from backend.security.ms_defender_utils import get_msdefender_user_json
 from backend.history.cosmosdbservice import CosmosConversationClient
 from backend.settings import MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
-from backend.settings import app_settings
+from backend.settings import app_settings, _AppSettings
 
 from backend.utils import (
     format_as_ndjson,
