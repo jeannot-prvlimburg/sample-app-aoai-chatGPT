@@ -183,7 +183,7 @@ async def set_knowledge_base():
                 settings=user_app_settings,
                 service=knowledge_base_config['service'],
                 index=knowledge_base_config['index_name'],
-                key=knowledge_base_config['search_key'],
+                key=knowledge_base_config['key'],
                 use_semantic_search=knowledge_base_config.get('use_semantic_search', False),
                 semantic_search_config=knowledge_base_config.get('semantic_search_config', ''),
                 content_columns=knowledge_base_config.get('content_columns', []),
