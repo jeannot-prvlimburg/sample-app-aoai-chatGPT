@@ -66,7 +66,7 @@ def create_app():
     @app.before_serving
     async def init():
         try:
-            app.cosmos_conversation_client = None  # We initialize this later per user
+            app.cosmos_conversation_client = await init_cosmosdb_client(app_settings)
             cosmos_db_ready.set()
         except Exception as e:
             logging.exception("Failed to initialize CosmosDB client")
@@ -182,6 +182,7 @@ async def set_knowledge_base():
 
             # Sla de aangepaste instellingen op voor deze gebruiker
             user_settings[user_id].app_settings = user_app_settings
+            g.user_app_settings = user_app_settings  # Store in g for current request
 
             return jsonify({"success": True}), 200
         
@@ -512,8 +513,8 @@ async def add_conversation():
 
     user_app_settings = g.user_app_settings
     
-    if not hasattr(current_app, 'cosmos_conversation_client') or current_app.cosmos_conversation_client is None:
-        current_app.cosmos_conversation_client = await init_cosmosdb_client(user_app_settings)
+    if not current_app.cosmos_conversation_client:
+        return jsonify({"error": "CosmosDB is not configured or not working"}), 500
         
     ## check request for conversation_id
     request_json = await request.get_json()
