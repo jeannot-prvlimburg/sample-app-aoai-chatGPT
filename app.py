@@ -178,7 +178,7 @@ async def set_knowledge_base():
             user_app_settings.azure_openai.embedding_key = os.getenv("AZURE_OPENAI_KEY")
 
             # Update de AzureSearchSettings met de nieuwe kennisbank configuratie
-            new_search_settings = _AzureSearchSettings(
+            new_search_settings = AzureSearchSettings(
                 settings=user_app_settings,
                 service=knowledge_base_config['search_service_name'],
                 index=knowledge_base_config['index_name'],
