@@ -827,14 +827,29 @@ class _AppSettings(BaseModel):
             logging.warning("No datasource configuration found in the environment -- calls will be made to Azure OpenAI without grounding data.")
             logging.warning(e.errors())
 
-class GlobalAzureSearchSettings(BaseSettings):
+class GlobalDatasourcePayloadConstructor(BaseModel, ABC):
+    _settings: '_AppSettings' = PrivateAttr()
+    
+    def __init__(self, settings: '_AppSettings', **data):
+        super().__init__(**data)
+        self._settings = settings
+    
+    @abstractmethod
+    def construct_payload_configuration(
+        self,
+        *args,
+        **kwargs
+    ):
+        pass
+
+class GlobalAzureSearchSettings(BaseSettings, GlobalDatasourcePayloadConstructor):
     model_config = SettingsConfigDict(
         env_prefix="AZURE_SEARCH_",
-        env_file=".env",
+        env_file=DOTENV_PATH,
         extra="ignore",
         env_ignore_empty=True
     )
-    
+    _type: Literal["azure_search"] = PrivateAttr(default="azure_search")
     top_k: int = Field(default=5, serialization_alias="top_n_documents")
     strictness: int = 3
     enable_in_domain: bool = Field(default=True, serialization_alias="in_scope")
@@ -859,14 +874,87 @@ class GlobalAzureSearchSettings(BaseSettings):
         'vectorSemanticHybrid'
     ] = "simple"
     permitted_groups_column: Optional[str] = Field(default=None, exclude=True)
-
+    
     # Constructed fields
     endpoint: Optional[str] = None
     authentication: Optional[dict] = None
     embedding_dependency: Optional[dict] = None
     fields_mapping: Optional[dict] = None
     filter: Optional[str] = Field(default=None, exclude=True)
+    
+    @field_validator('content_columns', 'vector_columns', mode="before")
+    @classmethod
+    def split_columns(cls, comma_separated_string: str) -> List[str]:
+        if isinstance(comma_separated_string, str) and len(comma_separated_string) > 0:
+            return parse_multi_columns(comma_separated_string)
+        
+        return None
+    
+    @model_validator(mode="after")
+    def set_endpoint(self) -> Self:
+        self.endpoint = f"https://{self.service}.{self.endpoint_suffix}"
+        return self
+    
+    @model_validator(mode="after")
+    def set_authentication(self) -> Self:
+        if self.key:
+            self.authentication = {"type": "api_key", "key": self.key}
+        else:
+            self.authentication = {"type": "system_assigned_managed_identity"}
+            
+        return self
+    
+    @model_validator(mode="after")
+    def set_fields_mapping(self) -> Self:
+        self.fields_mapping = {
+            "content_fields": self.content_columns,
+            "title_field": self.title_column,
+            "url_field": self.url_column,
+            "filepath_field": self.filename_column,
+            "vector_fields": self.vector_columns
+        }
+        return self
+    
+    @model_validator(mode="after")
+    def set_query_type(self) -> Self:
+        self.query_type = to_snake(self.query_type)
 
-global_azure_search_settings = GlobalAzureSearchSettings()
+    def _set_filter_string(self, request: Request) -> str:
+        if self.permitted_groups_column:
+            user_token = request.headers.get("X-MS-TOKEN-AAD-ACCESS-TOKEN", "")
+            logging.debug(f"USER TOKEN is {'present' if user_token else 'not present'}")
+            if not user_token:
+                raise ValueError(
+                    "Document-level access control is enabled, but user access token could not be fetched."
+                )
+
+            filter_string = generateFilterString(user_token)
+            logging.debug(f"FILTER: {filter_string}")
+            return filter_string
+        
+        return None
+            
+    def construct_payload_configuration(
+        self,
+        *args,
+        **kwargs
+    ):
+        request = kwargs.pop('request', None)
+        if request and self.permitted_groups_column:
+            self.filter = self._set_filter_string(request)
+            
+        self.embedding_dependency = \
+            self._settings.azure_openai.extract_embedding_dependency()
+        parameters = self.model_dump(exclude_none=True, by_alias=True)
+        parameters.update(self._settings.search.model_dump(exclude_none=True, by_alias=True))
+        
+        return {
+            "type": self._type,
+            "parameters": parameters
+        }
+
+    
+
+# global_azure_search_settings = GlobalAzureSearchSettings()
 app_settings = _AppSettings()
 
