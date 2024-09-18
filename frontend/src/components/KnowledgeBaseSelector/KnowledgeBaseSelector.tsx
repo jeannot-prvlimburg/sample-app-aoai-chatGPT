@@ -25,6 +25,15 @@ const KnowledgeBaseSelector: React.FC<KnowledgeBaseSelectorProps> = ({
     }
   }
 
+    // Find the key for the selected text
+    const findSelectedKey = (text: string) => {
+      const option = options.find(opt => opt.text === text);
+      return option ? option.key : undefined;
+    };
+  
+    // Determine the selected key based on the selected text
+    const selectedKey = findSelectedKey(selectedKnowledgeBase);
+
   return (
     <Panel
       isOpen={isOpen}
@@ -35,7 +44,7 @@ const KnowledgeBaseSelector: React.FC<KnowledgeBaseSelectorProps> = ({
       {options.length > 0 ? (
         <Dropdown
           label="Kies een kennisbank"
-          selectedKey={selectedKnowledgeBase}
+          selectedKey={selectedKey}
           options={options}
           onChange={onKBChange}
         />
