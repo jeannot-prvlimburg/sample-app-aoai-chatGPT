@@ -21,7 +21,7 @@ const KnowledgeBaseSelector: React.FC<KnowledgeBaseSelectorProps> = ({
 
   const onKBChange = (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
     if (option) {
-      onSelect(option.key as string);
+      onSelect(option.text as string);
     }
   }
 

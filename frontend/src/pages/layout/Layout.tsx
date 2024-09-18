@@ -29,40 +29,25 @@ const Layout = () => {
   };
 
   const handleKnowledgeBaseSelect = async (kb: string) => {
-    // Zoek de geselecteerde kennisbank in de lijst van beschikbare knowledge bases
-    const selectedKb = appStateContext?.state.availableKnowledgeBases?.find(option => option.key === kb);
-    
-    if (selectedKb) {
-        // Sla de 'text' van de geselecteerde kennisbank op in de state
-        setSelectedKnowledgeBase(selectedKb.text);
+    setSelectedKnowledgeBase(kb);
+    try {
+        const response = await fetch('/api/set_knowledge_base', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ knowledge_base_text: kb }),
+        });
+        if (!response.ok) {
+          const errorData = await response.json(); // Lees de response body
+          throw new Error(`Failed to set knowledge base: ${errorData.error || 'Unknown error'}`); // Gebruik error message
+      }
 
-        try {
-            const response = await fetch('/api/set_knowledge_base', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                // Verstuur nog steeds de 'key' naar de backend
-                body: JSON.stringify({ knowledge_base: kb }),
-            });
+      console.log(`Successfully set knowledge base to: ${kb}`); // Log success message
 
-            if (!response.ok) {
-                const errorData = await response.json(); // Lees de response body
-                throw new Error(`Failed to set knowledge base: ${errorData.error || 'Unknown error'}`); // Gebruik error message
-            }
-
-            console.log(`Successfully set knowledge base to: ${selectedKb.text}`); // Log success message met 'text'
-        } catch (error) {
-            console.error('Error setting knowledge base:', error);
-        }
-    } else {
-        console.error('Knowledge base not found');
+    } catch (error) {
+        console.error('Error setting knowledge base:', error);
     }
-}
-
-  const getSelectedKnowledgeBaseText = () => {
-    const selectedKB = appStateContext?.state.availableKnowledgeBases?.find(kb => kb.key === selectedKnowledgeBase);
-    return selectedKB ? selectedKB.text : 'Select Knowledge Base';
   }
 
   const handleShareClick = () => {
@@ -138,7 +123,7 @@ const Layout = () => {
             )}
             <CommandBarButton
               iconProps={{ iconName: 'Database' }}
-              text={getSelectedKnowledgeBaseText()}
+              text={selectedKnowledgeBase}
               onClick={() => setIsKnowledgeBaseSelectorOpen(true)}
             />
             {ui?.show_share_button && <ShareButton onClick={handleShareClick} text={shareLabel} />}

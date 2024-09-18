@@ -155,24 +155,24 @@ def apply_user_settings(f):
 async def set_knowledge_base():
     try:
         data = await request.get_json()
-        knowledge_base_key = data.get('knowledge_base')
+        knowledge_base_text = data.get('knowledge_base_text')
         user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
 
         if user_id not in user_settings:
             user_settings[user_id] = UserSettings()
 
-        user_settings[user_id].knowledge_base = knowledge_base_key
+        user_settings[user_id].knowledge_base = knowledge_base_text
 
         # Zoek de kennisbank configuratie op basis van de key
         knowledge_base_config = next(
-            (kb for kb in KnowledgeBases if kb['key'] == knowledge_base_key), None
+            (kb for kb in KnowledgeBases if kb['text'] == knowledge_base_text), None
         )
 
         if knowledge_base_config:
             # Maak een kopie van de huidige app_settings
             user_app_settings = copy.deepcopy(app_settings)
 
-            if knowledge_base_key == "none":
+            if knowledge_base_text == "Geen kennisbank":
                 # Reset settings for no knowledge base
                 user_app_settings.base_settings.datasource_type = None
 
