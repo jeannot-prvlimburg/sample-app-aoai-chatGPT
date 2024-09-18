@@ -12,7 +12,6 @@ import { AppStateContext } from '../../state/AppProvider'
 
 import styles from './Layout.module.css'
 
-// hoi
 const Layout = () => {
   const [isSharePanelOpen, setIsSharePanelOpen] = useState<boolean>(false)
   const [isKnowledgeBaseSelectorOpen, setIsKnowledgeBaseSelectorOpen] = useState(false);
@@ -49,6 +48,11 @@ const Layout = () => {
     } catch (error) {
         console.error('Error setting knowledge base:', error);
     }
+  }
+
+  const getSelectedKnowledgeBaseText = () => {
+    const selectedKB = appStateContext?.state.availableKnowledgeBases?.find(kb => kb.key === selectedKnowledgeBase);
+    return selectedKB ? selectedKB.text : 'Select Knowledge Base';
   }
 
   const handleShareClick = () => {
@@ -124,7 +128,7 @@ const Layout = () => {
             )}
             <CommandBarButton
               iconProps={{ iconName: 'Database' }}
-              text={selectedKnowledgeBase}
+              text={getSelectedKnowledgeBaseText()}
               onClick={() => setIsKnowledgeBaseSelectorOpen(true)}
             />
             {ui?.show_share_button && <ShareButton onClick={handleShareClick} text={shareLabel} />}
