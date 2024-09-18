@@ -124,7 +124,7 @@ const Layout = () => {
             )}
             <CommandBarButton
               iconProps={{ iconName: 'Database' }}
-              text="Selecteer Kennisbank"
+              text={selectedKnowledgeBase}
               onClick={() => setIsKnowledgeBaseSelectorOpen(true)}
             />
             {ui?.show_share_button && <ShareButton onClick={handleShareClick} text={shareLabel} />}
