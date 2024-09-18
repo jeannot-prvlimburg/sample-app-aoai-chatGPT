@@ -29,26 +29,36 @@ const Layout = () => {
   };
 
   const handleKnowledgeBaseSelect = async (kb: string) => {
-    setSelectedKnowledgeBase(kb);
-    try {
-        const response = await fetch('/api/set_knowledge_base', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ knowledge_base: kb }),
-        });
-        if (!response.ok) {
-          const errorData = await response.json(); // Lees de response body
-          throw new Error(`Failed to set knowledge base: ${errorData.error || 'Unknown error'}`); // Gebruik error message
-      }
+    // Zoek de geselecteerde kennisbank in de lijst van beschikbare knowledge bases
+    const selectedKb = appStateContext?.state.availableKnowledgeBases?.find(option => option.key === kb);
+    
+    if (selectedKb) {
+        // Sla de 'text' van de geselecteerde kennisbank op in de state
+        setSelectedKnowledgeBase(selectedKb.text);
 
-      console.log(`Successfully set knowledge base to: ${kb}`); // Log success message
+        try {
+            const response = await fetch('/api/set_knowledge_base', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                // Verstuur nog steeds de 'key' naar de backend
+                body: JSON.stringify({ knowledge_base: kb }),
+            });
 
-    } catch (error) {
-        console.error('Error setting knowledge base:', error);
+            if (!response.ok) {
+                const errorData = await response.json(); // Lees de response body
+                throw new Error(`Failed to set knowledge base: ${errorData.error || 'Unknown error'}`); // Gebruik error message
+            }
+
+            console.log(`Successfully set knowledge base to: ${selectedKb.text}`); // Log success message met 'text'
+        } catch (error) {
+            console.error('Error setting knowledge base:', error);
+        }
+    } else {
+        console.error('Knowledge base not found');
     }
-  }
+}
 
   const getSelectedKnowledgeBaseText = () => {
     const selectedKB = appStateContext?.state.availableKnowledgeBases?.find(kb => kb.key === selectedKnowledgeBase);
