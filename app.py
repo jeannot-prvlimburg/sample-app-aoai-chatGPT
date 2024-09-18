@@ -27,7 +27,7 @@ from backend.auth.auth_utils import get_authenticated_user_details
 from backend.security.ms_defender_utils import get_msdefender_user_json
 from backend.history.cosmosdbservice import CosmosConversationClient
 from backend.settings import MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
-from backend.settings import app_settings, global_azure_search_settings
+from backend.settings import app_settings, GlobalAzureSearchSettings
 
 from backend.utils import (
     format_as_ndjson,
@@ -203,7 +203,7 @@ async def set_knowledge_base():
             # Hier zou je de Azure OpenAI-client opnieuw kunnen initialiseren met de nieuwe instellingen
             # azure_openai_client = await init_openai_client(user_app_settings)
 
-            return jsonify({"success": True}), 200
+        return jsonify({"success": True}), 200
         
         return jsonify({"error": "Invalid knowledge base"}), 400
     except Exception as e:
