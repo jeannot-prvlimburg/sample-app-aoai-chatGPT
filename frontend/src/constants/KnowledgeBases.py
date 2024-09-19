@@ -8,7 +8,7 @@ KnowledgeBases = [
         "embedding_name": "text-embeddings-ada-002",
         "embedding_endpoint": "https://laica-v1-0.openai.azure.com",
         "service": "ai-search-v2-0",
-        # "key": "fnwvwCuSUfVpx2p9R4lPb6S8y2W8RqvyZhqNwSOxDJAzSeDAnSBi",
+        "key": "fnwvwCuSUfVpx2p9R4lPb6S8y2W8RqvyZhqNwSOxDJAzSeDAnSBi",
         "index": "stikstof-24042024",
         "text": "Stikstof",
         "vector_column": "vector",
@@ -21,7 +21,7 @@ KnowledgeBases = [
     {
         "type": "AzureCognitiveSearch",
         "service": "ai-search-v2-0",
-        # "key": "fnwvwCuSUfVpx2p9R4lPb6S8y2W8RqvyZhqNwSOxDJAzSeDAnSBi",
+        "key": "fnwvwCuSUfVpx2p9R4lPb6S8y2W8RqvyZhqNwSOxDJAzSeDAnSBi",
         "index": "griffie-06062024",
         "text": "Griffie",
         "vector_column": "vector",
