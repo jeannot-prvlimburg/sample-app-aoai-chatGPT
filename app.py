@@ -46,9 +46,23 @@ try:
 except:
     pass
 
+import redis
+from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
+
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
 cosmos_db_ready = asyncio.Event()
+
+# Haal de Redis-verbindingsstring op uit Azure Key Vault
+key_vault_url = "https://webapp-dev-prvlimburg.vault.azure.net/"
+secret_name = "prv-limburg-sleutelkluis"
+credential = DefaultAzureCredential()
+secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
+redis_connection_string = secret_client.get_secret(secret_name).value
+
+# Maak een Redis-client
+redis_client = redis.from_url(redis_connection_string)
 
 class UserSettings:
     def __init__(self):
@@ -131,6 +145,16 @@ frontend_settings = {
 # Enable Microsoft Defender for Cloud Integration
 MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "true"
 
+# Functie om gebruikersinstellingen op te halen
+def get_user_settings(user_id):
+    settings_json = redis_client.get(f"user_settings:{user_id}")
+    if settings_json:
+        return json.loads(settings_json)
+    return None
+
+def set_user_settings(user_id, settings):
+    redis_client.set(f"user_settings:{user_id}", json.dumps(settings))
+
 @bp.route("/api/user_info", methods=["GET"])
 async def get_user_info():
     try:
@@ -144,8 +168,9 @@ def apply_user_settings(f):
     @wraps(f)
     async def decorated_function(*args, **kwargs):
         user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
-        if user_id in user_settings and user_settings[user_id].app_settings:
-            g.user_app_settings = user_settings[user_id].app_settings
+        user_settings = get_user_settings(user_id)
+        if user_settings and user_settings.get('app_settings'):
+            g.user_app_settings = SimpleNamespace(**user_settings['app_settings'])
         else:
             g.user_app_settings = copy.deepcopy(app_settings)
         return await f(*args, **kwargs)
@@ -159,10 +184,8 @@ async def set_knowledge_base():
         knowledge_base_text = data.get('knowledge_base_text')
         user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
 
-        if user_id not in user_settings:
-            user_settings[user_id] = UserSettings()
-
-        user_settings[user_id].knowledge_base = knowledge_base_text
+        user_settings = get_user_settings(user_id) or {}
+        user_settings['knowledge_base'] = knowledge_base_text
 
         # Zoek de kennisbank configuratie op basis van de text
         knowledge_base_config = next(
@@ -170,11 +193,9 @@ async def set_knowledge_base():
         )
 
         if knowledge_base_config:
-            # Gebruik de user-specifieke app_settings
-            user_app_settings = g.user_app_settings
+            user_app_settings = copy.deepcopy(app_settings)
 
             if knowledge_base_text == "Geen kennisbank":
-                # Reset settings for no knowledge base
                 user_app_settings.base_settings.datasource_type = None
                 user_app_settings.datasource = None
             else:
@@ -198,11 +219,11 @@ async def set_knowledge_base():
                     query_type=knowledge_base_config.get('query_type', 'simple'),
                 )
 
-                # Stel de nieuwe AzureSearchSettings in als datasource
                 user_app_settings.datasource = new_search_settings
 
             # Sla de aangepaste instellingen op voor deze gebruiker
-            user_settings[user_id].app_settings = user_app_settings
+            user_settings['app_settings'] = vars(user_app_settings)
+            set_user_settings(user_id, user_settings)
 
             return jsonify({"success": True}), 200
         
