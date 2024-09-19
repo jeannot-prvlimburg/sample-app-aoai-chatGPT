@@ -23,7 +23,7 @@ const Layout = () => {
   const [logo, setLogo] = useState('')
   const appStateContext = useContext(AppStateContext)
   const ui = appStateContext?.state.frontendSettings?.ui
-  const selectedKnowledgeBase = appStateContext?.state.selectedKnowledgeBase || 'none' // Standaard op 'none' als er geen kennisbank is geselecteerd
+  const selectedKnowledgeBase = appStateContext?.state.selectedKnowledgeBase || 'Geen kennisbank' // Standaard op 'Geen kennisbank' als er geen kennisbank is geselecteerd
   const setSelectedKnowledgeBase = (kb: string) => {
     appStateContext?.dispatch({ type: 'SET_KNOWLEDGE_BASE', payload: kb }); 
   };
