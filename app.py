@@ -147,11 +147,12 @@ def apply_user_settings(f):
         if user_id in user_settings and user_settings[user_id].app_settings:
             g.user_app_settings = user_settings[user_id].app_settings
         else:
-            g.user_app_settings = app_settings
+            g.user_app_settings = copy.deepcopy(app_settings)
         return await f(*args, **kwargs)
     return decorated_function
 
 @bp.route('/api/set_knowledge_base', methods=['POST'])
+@apply_user_settings
 async def set_knowledge_base():
     try:
         data = await request.get_json()
@@ -163,59 +164,45 @@ async def set_knowledge_base():
 
         user_settings[user_id].knowledge_base = knowledge_base_text
 
-        # Zoek de kennisbank configuratie op basis van de key
+        # Zoek de kennisbank configuratie op basis van de text
         knowledge_base_config = next(
             (kb for kb in KnowledgeBases if kb['text'] == knowledge_base_text), None
         )
 
         if knowledge_base_config:
-            # Maak een kopie van de huidige app_settings
-            user_app_settings = copy.deepcopy(app_settings)
+            # Gebruik de user-specifieke app_settings
+            user_app_settings = g.user_app_settings
 
             if knowledge_base_text == "Geen kennisbank":
                 # Reset settings for no knowledge base
                 user_app_settings.base_settings.datasource_type = None
+                user_app_settings.datasource = None
+            else:
+                # Update de instellingen voor deze specifieke gebruiker
+                user_app_settings.base_settings.datasource_type = "AzureCognitiveSearch"
+                user_app_settings.azure_openai.embedding_name = knowledge_base_config['embedding_name']
+                user_app_settings.azure_openai.embedding_endpoint = knowledge_base_config['embedding_endpoint']
+                user_app_settings.azure_openai.embedding_key = os.getenv("AZURE_OPENAI_KEY")
+
+                # Maak een nieuwe AzureSearchSettings instantie
+                new_search_settings = GlobalAzureSearchSettings(
+                    settings=user_app_settings,
+                    service=knowledge_base_config['service'],
+                    index=knowledge_base_config['index'],
+                    key=knowledge_base_config['key'],
+                    content_columns=ast.literal_eval(knowledge_base_config.get('content_columns', '[]')),
+                    vector_columns=knowledge_base_config.get('vector_columns', []),
+                    title_column=knowledge_base_config.get('title_column'),
+                    url_column=knowledge_base_config.get('url_column'),
+                    filename_column=knowledge_base_config.get('filename_column'),
+                    query_type=knowledge_base_config.get('query_type', 'simple'),
+                )
 
                 # Stel de nieuwe AzureSearchSettings in als datasource
-                user_app_settings.datasource = None
-
-                # Sla de aangepaste instellingen op voor deze gebruiker
-                user_settings[user_id].app_settings = user_app_settings
-
-                return jsonify({"success": True, "message": "Knowledge base cleared"}), 200
-            
-            
-
-            # Update de instellingen voor deze specifieke gebruiker
-            user_app_settings.base_settings.datasource_type = "AzureCognitiveSearch" #knowledge_base_config['type']
-            user_app_settings.azure_openai.embedding_name = knowledge_base_config['embedding_name']
-            user_app_settings.azure_openai.embedding_endpoint = knowledge_base_config['embedding_endpoint']
-            user_app_settings.azure_openai.embedding_key = os.getenv("AZURE_OPENAI_KEY")
-
-            # Maak een nieuwe AzureSearchSettings instantie
-            new_search_settings = GlobalAzureSearchSettings(
-                settings=user_app_settings,
-                service=knowledge_base_config['service'],
-                index=knowledge_base_config['index'],
-                key=knowledge_base_config['key'],
-                # use_semantic_search=knowledge_base_config.get('use_semantic_search', False),
-                # semantic_search_config=knowledge_base_config.get('semantic_search_config', ''),
-                content_columns= ast.literal_eval(knowledge_base_config.get('content_columns', [])),
-                vector_columns=knowledge_base_config.get('vector_columns', []),
-                title_column=knowledge_base_config.get('title_column'),
-                url_column=knowledge_base_config.get('url_column'),
-                filename_column=knowledge_base_config.get('filename_column'),
-                query_type=knowledge_base_config.get('query_type', 'simple'),
-            )
-
-            # Stel de nieuwe AzureSearchSettings in als datasource
-            user_app_settings.datasource = new_search_settings
+                user_app_settings.datasource = new_search_settings
 
             # Sla de aangepaste instellingen op voor deze gebruiker
             user_settings[user_id].app_settings = user_app_settings
-
-            #Hier zou je de Azure OpenAI-client opnieuw kunnen initialiseren met de nieuwe instellingen
-            # azure_openai_client = await init_openai_client(user_app_settings)
 
             return jsonify({"success": True}), 200
         
