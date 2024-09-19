@@ -72,7 +72,7 @@ const initialState: AppState = {
   isLoading: true,
   answerExecResult: {},
   availableKnowledgeBases: [], 
-  selectedKnowledgeBase: null,
+  selectedKnowledgeBase: 'Geen kennisbank',
 }
 
 export const AppStateContext = createContext<
