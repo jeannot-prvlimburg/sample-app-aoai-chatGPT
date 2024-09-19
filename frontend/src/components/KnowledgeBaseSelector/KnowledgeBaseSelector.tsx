@@ -17,11 +17,22 @@ const KnowledgeBaseSelector: React.FC<KnowledgeBaseSelectorProps> = ({
   selectedKnowledgeBase,
   options,
 }) => {
+  const appStateContext = React.useContext(AppStateContext)
+
   const onKBChange = (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
     if (option) {
-      onSelect(option.text as string);
+      onSelect(option.text);
     }
   }
+
+  // Find the key for the selected text
+  const findSelectedKey = (text: string) => {
+    const option = options.find(opt => opt.text === text);
+    return option ? option.key : undefined;
+  };
+
+  // Determine the selected key based on the selected text
+  const selectedKey = findSelectedKey(selectedKnowledgeBase);
 
   return (
     <Panel
@@ -33,7 +44,7 @@ const KnowledgeBaseSelector: React.FC<KnowledgeBaseSelectorProps> = ({
       {options.length > 0 ? (
         <Dropdown
           label="Kies een kennisbank"
-          selectedKey={selectedKnowledgeBase}
+          selectedKey={selectedKey}
           options={options}
           onChange={onKBChange}
         />
