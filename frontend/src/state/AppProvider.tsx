@@ -171,12 +171,16 @@ export const AppStateProvider: React.FC<AppStateProviderProps> = ({ children }) 
           throw new Error('Failed to fetch knowledge bases');
         }
         const knowledgeBases = await response.json();
-        dispatch({ type: 'SET_AVAILABLE_KNOWLEDGE_BASES', payload: knowledgeBases });
+        const formattedKnowledgeBases = knowledgeBases.map((kb: any) => ({
+          key: kb.text,  // Use 'text' as the key
+          text: kb.text
+        }));
+        dispatch({ type: 'SET_AVAILABLE_KNOWLEDGE_BASES', payload: formattedKnowledgeBases });
       } catch (error) {
         console.error('Error fetching knowledge bases:', error);
       }
     }
-
+  
     fetchKnowledgeBases()
   }, [])
 
