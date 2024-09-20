@@ -65,21 +65,32 @@ class UserSettings:
 
 user_settings = {}
 
+class EnhancedJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if hasattr(obj, '__dict__'):
+            return obj.__dict__
+        return super().default(obj)
+
 def save_user_settings(user_id, settings):
+    serialized_settings = json.dumps(settings, cls=EnhancedJSONEncoder)
     container.upsert_item({
         'id': user_id,
-        'settings': json.dumps(settings.__dict__)
+        'settings': serialized_settings
     })
+
 
 def load_user_settings(user_id):
     try:
         item = container.read_item(item=user_id, partition_key=user_id)
+        settings_dict = json.loads(item['settings'])
         settings = UserSettings()
-        settings.__dict__ = json.loads(item['settings'])
+        settings.knowledge_base = settings_dict.get('knowledge_base')
+        settings.app_settings = SimpleNamespace(**settings_dict.get('app_settings', {}))
         return settings
     except Exception as e:
         print(f"Settings not found for user {user_id}: {str(e)}")
         return None
+
 
 def create_app():
     app = Quart(__name__)
