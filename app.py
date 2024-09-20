@@ -24,7 +24,8 @@ from azure.identity.aio import (
     DefaultAzureCredential,
     get_bearer_token_provider
 )
-from azure.keyvault.secrets import SecretClient
+from azure.keyvault.secrets.aio import SecretClient
+from redis.asyncio import Redis
 
 from backend.auth.auth_utils import get_authenticated_user_details
 from backend.security.ms_defender_utils import get_msdefender_user_json
@@ -45,33 +46,36 @@ from frontend.src.constants.KnowledgeBases import KnowledgeBases
 try:
     from dotenv import load_dotenv, set_key
     from functools import wraps
-    import redis
 except:
     pass
-
-
 
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
 cosmos_db_ready = asyncio.Event()
+redis_ready = asyncio.Event()
+redis_client = None
 
-# Haal de Redis-verbindingsstring op uit Azure Key Vault
-key_vault_url = "https://webapp-dev-prvlimburg.vault.azure.net/"
-secret_name = "prv-limburg-sleutelkluis"
-credential = DefaultAzureCredential()
-secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
-redis_connection_string = secret_client.get_secret(secret_name).value
-
-# Maak een Redis-client
-redis_client = redis.from_url(redis_connection_string)
+user_settings = {}
 
 class UserSettings:
     def __init__(self):
         self.knowledge_base = None
         self.app_settings = None
 
-user_settings = {}
+async def init_key_vault_and_redis():
+    global redis_client
+    key_vault_url = "https://webapp-dev-prvlimburg.vault.azure.net/"
+    secret_name = "prv-limburg-sleutelkluis"
+
+    async with DefaultAzureCredential() as credential:
+        secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
+        secret = await secret_client.get_secret(secret_name)
+        redis_connection_string = secret.value
+    
+    # Initialiseer de aioredis client
+    redis_client = await Redis.from_url(redis_connection_string)
+    redis_ready.set()
 
 def create_app():
     # load_dotenv()
@@ -82,6 +86,7 @@ def create_app():
     
     @app.before_serving
     async def init():
+        await init_key_vault_and_redis()
         try:
             app.cosmos_conversation_client = None # We initialize this later per user
             cosmos_db_ready.set()
@@ -148,14 +153,16 @@ frontend_settings = {
 MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "true"
 
 # Functie om gebruikersinstellingen op te halen
-def get_user_settings(user_id):
+async def get_user_settings(user_id):
+    await redis_ready.wait() # Wacht tot Redis klaar is
     settings_json = redis_client.get(f"user_settings:{user_id}")
     if settings_json:
         return json.loads(settings_json)
     return None
 
-def set_user_settings(user_id, settings):
-    redis_client.set(f"user_settings:{user_id}", json.dumps(settings))
+async def set_user_settings(user_id, settings):
+    await redis_ready.wait() # Wacht tot Redis klaar is
+    await redis_client.set(f"user_settings:{user_id}", json.dumps(settings))
 
 @bp.route("/api/user_info", methods=["GET"])
 async def get_user_info():
