@@ -24,7 +24,7 @@ from azure.identity.aio import (
     DefaultAzureCredential,
     get_bearer_token_provider
 )
-from azure.cosmos import CosmosClient
+from azure.cosmos import CosmosClient, exceptions
 
 from backend.auth.auth_utils import get_authenticated_user_details
 from backend.security.ms_defender_utils import get_msdefender_user_json
