@@ -24,6 +24,8 @@ from azure.identity.aio import (
     DefaultAzureCredential,
     get_bearer_token_provider
 )
+from azure.keyvault.secrets import SecretClient
+
 from backend.auth.auth_utils import get_authenticated_user_details
 from backend.security.ms_defender_utils import get_msdefender_user_json
 from backend.history.cosmosdbservice import CosmosConversationClient
@@ -43,12 +45,12 @@ from frontend.src.constants.KnowledgeBases import KnowledgeBases
 try:
     from dotenv import load_dotenv, set_key
     from functools import wraps
+    import redis
 except:
     pass
 
-import redis
-from azure.identity import DefaultAzureCredential
-from azure.keyvault.secrets import SecretClient
+
+
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
