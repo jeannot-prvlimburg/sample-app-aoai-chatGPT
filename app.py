@@ -55,8 +55,24 @@ client = CosmosClient(url, credential=key)
 database_name = "UserSettings"
 container_name = "AppSettings"
 
-database = client.get_database_client(database_name)
-container = database.get_container_client(container_name)
+cosmos_client = None
+container = None
+
+def init_cosmos_db():
+    global cosmos_client, container
+    try:
+        cosmos_client = CosmosClient(url, credential=key)
+        database = cosmos_client.create_database_if_not_exists(id=database_name)
+        container = database.create_container_if_not_exists(
+            id=container_name, 
+            partition_key='/id',
+            offer_throughput=400
+        )
+        logging.info("Successfully connected to Cosmos DB")
+    except exceptions.CosmosHttpResponseError as e:
+        logging.error(f"Failed to connect to Cosmos DB: {str(e)}")
+        cosmos_client = None
+        container = None
 
 class UserSettings:
     def __init__(self):
@@ -72,24 +88,34 @@ class EnhancedJSONEncoder(json.JSONEncoder):
         return super().default(obj)
 
 def save_user_settings(user_id, settings):
-    serialized_settings = json.dumps(settings, cls=EnhancedJSONEncoder)
-    container.upsert_item({
-        'id': user_id,
-        'settings': serialized_settings
-    })
+    if not container:
+        logging.warning("Cosmos DB not available, skipping save operation")
+        return
+    
+    try:
+        item = {
+            'id': user_id,
+            'settings': json.dumps(settings)
+        }
+        container.upsert_item(item)
+    except exceptions.CosmosHttpResponseError as e:
+        logging.error(f"Failed to save user settings: {str(e)}")
 
 
 def load_user_settings(user_id):
+    if not container:
+        logging.warning("Cosmos DB not available, using default settings")
+        return {}
+    
     try:
         item = container.read_item(item=user_id, partition_key=user_id)
-        settings_dict = json.loads(item['settings'])
-        settings = UserSettings()
-        settings.knowledge_base = settings_dict.get('knowledge_base')
-        settings.app_settings = SimpleNamespace(**settings_dict.get('app_settings', {}))
-        return settings
-    except Exception as e:
-        print(f"Settings not found for user {user_id}: {str(e)}")
-        return None
+        return json.loads(item.get('settings', '{}'))
+    except exceptions.CosmosResourceNotFoundError:
+        logging.info(f"Settings not found for user {user_id}")
+        return {}
+    except exceptions.CosmosHttpResponseError as e:
+        logging.error(f"Failed to load user settings: {str(e)}")
+        return {}
 
 
 def create_app():
@@ -103,10 +129,15 @@ def create_app():
             app.cosmos_conversation_client = await init_cosmosdb_client()
             cosmos_db_ready.set()
         except Exception as e:
-            logging.exception("Failed to initialize CosmosDB client")
+            logging.exception("Failed to initialize CosmosDB client for chat history")
             app.cosmos_conversation_client = None
             raise e
-    
+
+        try:
+            init_cosmos_db()
+        except Exception as e:
+            logging.exception("Failed to initialize CosmosDB client for user settings")
+            
     @app.route('/api/knowledge_bases', methods=['GET'])
     def get_knowledge_bases():
         return jsonify(KnowledgeBases)
@@ -177,10 +208,16 @@ def apply_user_settings(f):
     @wraps(f)
     async def decorated_function(*args, **kwargs):
         user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
-        user_setting = load_user_settings(user_id)
-        if user_setting and user_setting.app_settings:
-            g.user_app_settings = user_setting.app_settings
-        else:
+        try:
+            user_settings = load_user_settings(user_id)
+            knowledge_base = user_settings.get('knowledge_base')
+            if knowledge_base:
+                # Als er een opgeslagen kennisbank is, roep dan set_knowledge_base aan om de instellingen te laden
+                await set_knowledge_base({'knowledge_base_text': knowledge_base})
+            else:
+                g.user_app_settings = app_settings
+        except Exception as e:
+            logging.error(f"Failed to load user settings, using default: {str(e)}")
             g.user_app_settings = app_settings
         return await f(*args, **kwargs)
     return decorated_function
@@ -192,10 +229,12 @@ async def set_knowledge_base():
         knowledge_base_text = data.get('knowledge_base_text')
         user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
 
-        # Laad bestaande instellingen of maak nieuwe aan
-        user_setting = load_user_settings(user_id) or UserSettings()
+        # Laad bestaande instellingen of gebruik een lege dictionary
+        user_settings = load_user_settings(user_id)
+        user_settings['knowledge_base'] = knowledge_base_text
 
-        user_setting.knowledge_base = knowledge_base_text
+        # Sla de bijgewerkte instellingen op
+        save_user_settings(user_id, user_settings)
 
         # Zoek de kennisbank configuratie op basis van de key
         knowledge_base_config = next(
@@ -234,11 +273,8 @@ async def set_knowledge_base():
                 # Stel de nieuwe AzureSearchSettings in als datasource
                 user_app_settings.datasource = new_search_settings
 
-            # Sla de aangepaste instellingen op voor deze gebruiker
-            user_setting.app_settings = user_app_settings
-
-            # Sla de instellingen op in Cosmos DB
-            save_user_settings(user_id, user_setting)
+            # Sla de aangepaste instellingen op in g.user_app_settings
+            g.user_app_settings = user_app_settings
 
             return jsonify({"success": True}), 200
         
