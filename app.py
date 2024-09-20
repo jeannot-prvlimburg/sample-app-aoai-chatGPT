@@ -24,8 +24,8 @@ from azure.identity.aio import (
     DefaultAzureCredential,
     get_bearer_token_provider
 )
-from azure.keyvault.secrets.aio import SecretClient
-from redis.asyncio import Redis
+from azure.cosmos.aio import CosmosClient
+from azure.cosmos import PartitionKey
 
 from backend.auth.auth_utils import get_authenticated_user_details
 from backend.security.ms_defender_utils import get_msdefender_user_json
@@ -53,41 +53,43 @@ except:
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
 cosmos_db_ready = asyncio.Event()
-redis_ready = asyncio.Event()
-redis_client = None
 
 user_settings = {}
+
+COSMOS_ENDPOINT = "https://webapp-development-prvlimburg.documents.azure.com:443/"
+COSMOS_KEY = "bSKPKBQWTX8QUmPuqxwGCYsD1dGLTHswjGtyxOj6wSFKwHML4fG0HKkoF9K13ZCyfJsGAQXhrwiMACDbP8NHUg=="
+DATABASE_NAME = "AppSettings"
+CONTAINER_NAME = "UserSettings"
+
+client = None
+database = None
+container = None
+
+async def init_cosmos_db():
+    global client, database, container
+    client = CosmosClient(COSMOS_ENDPOINT, COSMOS_KEY)
+    database = await client.create_database_if_not_exists(id=DATABASE_NAME)
+    container = await database.create_container_if_not_exists(
+        id=CONTAINER_NAME,
+        partition_key=PartitionKey(path="/userId"),
+        offer_throughput=400
+    )
 
 class UserSettings:
     def __init__(self):
         self.knowledge_base = None
         self.app_settings = None
 
-async def init_key_vault_and_redis():
-    global redis_client
-    key_vault_url = "https://webapp-dev-prvlimburg.vault.azure.net/"
-    secret_name = "prv-limburg-sleutelkluis"
-
-    async with DefaultAzureCredential() as credential:
-        secret_client = SecretClient(vault_url=key_vault_url, credential=credential)
-        secret = await secret_client.get_secret(secret_name)
-        redis_connection_string = secret.value
-    
-    # Initialiseer de aioredis client
-    redis_client = await Redis.from_url(redis_connection_string)
-    redis_ready.set()
-
 def create_app():
-    # load_dotenv()
-
     app = Quart(__name__)
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
     
     @app.before_serving
     async def init():
-        await init_key_vault_and_redis()
         try:
+            await init_cosmos_db()
+            database = client.get_database_client(DATABASE_NAME)
             app.cosmos_conversation_client = None # We initialize this later per user
             cosmos_db_ready.set()
         except Exception as e:
@@ -154,15 +156,14 @@ MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "
 
 # Functie om gebruikersinstellingen op te halen
 async def get_user_settings(user_id):
-    await redis_ready.wait() # Wacht tot Redis klaar is
-    settings_json = redis_client.get(f"user_settings:{user_id}")
-    if settings_json:
-        return json.loads(settings_json)
+    query = f"SELECT * FROM c WHERE c.userId = '{user_id}'"
+    async for item in container.query_items(query=query, enable_cross_partition_query=True):
+        return item
     return None
 
 async def set_user_settings(user_id, settings):
-    await redis_ready.wait() # Wacht tot Redis klaar is
-    await redis_client.set(f"user_settings:{user_id}", json.dumps(settings))
+    settings['userId'] = user_id
+    await container.upsert_item(settings)
 
 @bp.route("/api/user_info", methods=["GET"])
 async def get_user_info():
@@ -177,7 +178,7 @@ def apply_user_settings(f):
     @wraps(f)
     async def decorated_function(*args, **kwargs):
         user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
-        user_settings = get_user_settings(user_id)
+        user_settings = await get_user_settings(user_id)  # Let op het 'await' hier
         if user_settings and user_settings.get('app_settings'):
             g.user_app_settings = SimpleNamespace(**user_settings['app_settings'])
         else:
@@ -193,7 +194,7 @@ async def set_knowledge_base():
         knowledge_base_text = data.get('knowledge_base_text')
         user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
 
-        user_settings = get_user_settings(user_id) or {}
+        user_settings = await get_user_settings(user_id) or {}  # Let op het 'await' hier
         user_settings['knowledge_base'] = knowledge_base_text
 
         # Zoek de kennisbank configuratie op basis van de text
@@ -231,12 +232,11 @@ async def set_knowledge_base():
                 user_app_settings.datasource = new_search_settings
 
             # Sla de aangepaste instellingen op voor deze gebruiker
-            user_settings['app_settings'] = vars(user_app_settings)
-            set_user_settings(user_id, user_settings)
+        user_settings['app_settings'] = vars(user_app_settings)
+        await set_user_settings(user_id, user_settings)
 
-            return jsonify({"success": True}), 200
+        return jsonify({"success": True}), 200
         
-        return jsonify({"error": "Invalid knowledge base"}), 400
     except Exception as e:
         logging.exception("Error setting knowledge base")
         return jsonify({"error": f"Failed to set knowledge base: {str(e)}"}), 500
