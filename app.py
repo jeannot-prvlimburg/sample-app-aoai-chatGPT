@@ -617,7 +617,7 @@ async def add_conversation():
         # check for the conversation_id, if the conversation is not set, we will create a new one
         history_metadata = {}
         if not conversation_id:
-            title = await generate_title(request_json["messages"], user_app_settings)
+            title = await generate_title(request_json["messages"], app_settings)
             conversation_dict = await current_app.cosmos_conversation_client.create_conversation(
                 user_id=user_id, title=title
             )
@@ -1037,7 +1037,7 @@ async def ensure_cosmos():
             return jsonify({"error": f"CosmosDB is not working: {e}"}), 500
 
 
-async def generate_title(conversation_messages, user_app_settings) -> str:
+async def generate_title(conversation_messages, app_settings) -> str:
     ## make sure the messages are sorted by _ts descending
     title_prompt = "Vat het gesprek tot nu toe samen in een titel van 4 woorden of minder. Gebruik geen aanhalingstekens of interpunctie. Voeg geen ander commentaar of beschrijving toe."
 
@@ -1048,9 +1048,9 @@ async def generate_title(conversation_messages, user_app_settings) -> str:
     messages.append({"role": "user", "content": title_prompt})
 
     try:
-        azure_openai_client = await init_openai_client(user_app_settings)
+        azure_openai_client = await init_openai_client(app_settings)
         response = await azure_openai_client.chat.completions.create(
-            model=user_app_settings.azure_openai.model, messages=messages, temperature=1, max_tokens=64
+            model=app_settings.azure_openai.model, messages=messages, temperature=1, max_tokens=64
         )
 
         title = response.choices[0].message.content
