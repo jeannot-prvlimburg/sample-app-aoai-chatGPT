@@ -61,7 +61,7 @@ def create_app():
     @app.before_serving
     async def init():
         try:
-            app.cosmos_conversation_client = None # We initialize this later per user
+            app.cosmos_conversation_client = await init_cosmosdb_client()
             cosmos_db_ready.set()
         except Exception as e:
             logging.exception("Failed to initialize CosmosDB client")
@@ -279,26 +279,27 @@ async def init_openai_client(user_app_settings):
         raise e
 
 
-async def init_cosmosdb_client(user_app_settings):
+async def init_cosmosdb_client():
     cosmos_conversation_client = None
-    if user_app_settings.chat_history:
+    if app_settings.chat_history:
         try:
             cosmos_endpoint = (
-                f"https://{user_app_settings.chat_history.account}.documents.azure.com:443/"
+                f"https://{app_settings.chat_history.account}.documents.azure.com:443/"
             )
 
-            if not user_app_settings.chat_history.account_key:
+            if not app_settings.chat_history.account_key:
                 async with DefaultAzureCredential() as cred:
                     credential = cred
+                    
             else:
-                credential = user_app_settings.chat_history.account_key
+                credential = app_settings.chat_history.account_key
 
             cosmos_conversation_client = CosmosConversationClient(
                 cosmosdb_endpoint=cosmos_endpoint,
                 credential=credential,
-                database_name=user_app_settings.chat_history.database,
-                container_name=user_app_settings.chat_history.conversations_container,
-                enable_message_feedback=user_app_settings.chat_history.enable_feedback,
+                database_name=app_settings.chat_history.database,
+                container_name=app_settings.chat_history.conversations_container,
+                enable_message_feedback=app_settings.chat_history.enable_feedback,
             )
         except Exception as e:
             logging.exception("Exception in CosmosDB initialization", e)
@@ -529,13 +530,10 @@ def get_frontend_settings():
 
 ## Conversation History API ##
 @bp.route("/history/generate", methods=["POST"])
-@apply_user_settings
 async def add_conversation():
     await cosmos_db_ready.wait()
     authenticated_user = get_authenticated_user_details(request_headers=request.headers)
     user_id = authenticated_user["user_principal_id"]
-
-    user_app_settings = g.user_app_settings
     
     if not current_app.cosmos_conversation_client:
         return jsonify({"error": "CosmosDB is not configured or not working"}), 500
@@ -552,7 +550,7 @@ async def add_conversation():
         # check for the conversation_id, if the conversation is not set, we will create a new one
         history_metadata = {}
         if not conversation_id:
-            title = await generate_title(request_json["messages"], g.user_app_settings)
+            title = await generate_title(request_json["messages"], app_settings)
             conversation_dict = await current_app.cosmos_conversation_client.create_conversation(
                 user_id=user_id, title=title
             )
@@ -930,15 +928,14 @@ async def clear_messages():
 
 
 @bp.route("/history/ensure", methods=["GET"])
-@apply_user_settings
 async def ensure_cosmos():
     await cosmos_db_ready.wait()
-    user_app_settings = g.user_app_settings
-    if not user_app_settings.chat_history:
+
+    if not app_settings.chat_history:
         return jsonify({"error": "CosmosDB is not configured"}), 404
 
     try:
-        cosmos_conversation_client = await init_cosmosdb_client(user_app_settings)
+        cosmos_conversation_client = await init_cosmosdb_client()
         success, err = await cosmos_conversation_client.ensure()
         if not cosmos_conversation_client or not success:
             if err:
@@ -955,7 +952,7 @@ async def ensure_cosmos():
             return (
                 jsonify(
                     {
-                        "error": f"{cosmos_exception} {user_app_settings.chat_history.database} for account {user_app_settings.chat_history.account}"
+                        "error": f"{cosmos_exception} {app_settings.chat_history.database} for account {app_settings.chat_history.account}"
                     }
                 ),
                 422,
@@ -964,13 +961,13 @@ async def ensure_cosmos():
             return (
                 jsonify(
                     {
-                        "error": f"{cosmos_exception}: {user_app_settings.chat_history.conversations_container}"
+                        "error": f"{cosmos_exception}: {app_settings.chat_history.conversations_container}"
                     }
                 ),
                 422,
             )
         else:
-            return jsonify({"error": "CosmosDB is not working"}), 500
+            return jsonify({"error": f"CosmosDB is not working: {e}"}), 500
 
 
 async def generate_title(conversation_messages, user_app_settings) -> str:
