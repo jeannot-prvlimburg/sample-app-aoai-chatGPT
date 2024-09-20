@@ -40,11 +40,7 @@ from backend.utils import (
 
 from frontend.src.constants.KnowledgeBases import KnowledgeBases
 
-try:
-    from dotenv import load_dotenv, set_key
-    from functools import wraps
-except:
-    pass
+from functools import wraps
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
@@ -58,8 +54,6 @@ class UserSettings:
 user_settings = {}
 
 def create_app():
-    # load_dotenv()
-
     app = Quart(__name__)
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -131,31 +125,6 @@ frontend_settings = {
 # Enable Microsoft Defender for Cloud Integration
 MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "true"
 
-<<<<<<< Updated upstream
-async def user_has_settings(user_id):
-    query = f"SELECT * FROM c WHERE c.userId = '{user_id}'"
-    async for item in container.query_items(query=query, enable_cross_partition_query=True):
-        return True
-    return False
-    
-async def get_user_settings(user_id):
-    query = f"SELECT * FROM c WHERE c.userId = '{user_id}'"
-    async for item in container.query_items(query=query, enable_cross_partition_query=True):
-        return item
-    
-    # Als er geen settings zijn gevonden, maak dan standaard settings
-    default_settings = {
-        'userId': user_id,
-        'knowledge_base': 'Geen kennisbank',
-        'app_settings': vars(copy.deepcopy(app_settings))
-    }
-    await set_user_settings(user_id, default_settings)
-    return default_settings
-
-async def set_user_settings(user_id, settings):
-    settings['userId'] = user_id
-    await user_settings_container.upsert_item(settings)
-=======
 @bp.route("/api/user_info", methods=["GET"])
 async def get_user_info():
     try:
@@ -164,21 +133,15 @@ async def get_user_info():
     except Exception as e:
         logging.exception("Exception in /api/user_info")
         return jsonify({"error": str(e)}), 500
->>>>>>> Stashed changes
 
 def apply_user_settings(f):
     @wraps(f)
     async def decorated_function(*args, **kwargs):
         user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
-<<<<<<< Updated upstream
-        user_settings = await get_user_settings(user_id)
-        g.user_app_settings = SimpleNamespace(**user_settings['app_settings'])
-=======
         if user_id in user_settings and user_settings[user_id].app_settings:
             g.user_app_settings = user_settings[user_id].app_settings
         else:
             g.user_app_settings = app_settings
->>>>>>> Stashed changes
         return await f(*args, **kwargs)
     return decorated_function
 
@@ -189,13 +152,8 @@ async def set_knowledge_base():
         knowledge_base_text = data.get('knowledge_base_text')
         user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
 
-<<<<<<< Updated upstream
-        user_settings = await get_user_settings(user_id)
-        user_settings['knowledge_base'] = knowledge_base_text
-=======
         if user_id not in user_settings:
             user_settings[user_id] = UserSettings()
->>>>>>> Stashed changes
 
         user_settings[user_id].knowledge_base = knowledge_base_text
 
@@ -205,12 +163,8 @@ async def set_knowledge_base():
         )
 
         if knowledge_base_config:
-<<<<<<< Updated upstream
-            user_app_settings = SimpleNamespace(**user_settings['app_settings'])
-=======
             # Maak een kopie van de huidige app_settings
             user_app_settings = copy.deepcopy(app_settings)
->>>>>>> Stashed changes
 
             if knowledge_base_text == "Geen kennisbank":
                 # Reset settings for no knowledge base
@@ -224,8 +178,6 @@ async def set_knowledge_base():
 
                 return jsonify({"success": True, "message": "Knowledge base cleared"}), 200
             
-            
-
             # Update de instellingen voor deze specifieke gebruiker
             user_app_settings.base_settings.datasource_type = "AzureCognitiveSearch" #knowledge_base_config['type']
             user_app_settings.azure_openai.embedding_name = knowledge_base_config['embedding_name']
@@ -252,12 +204,7 @@ async def set_knowledge_base():
             user_app_settings.datasource = new_search_settings
 
             # Sla de aangepaste instellingen op voor deze gebruiker
-<<<<<<< Updated upstream
-            user_settings['app_settings'] = vars(user_app_settings)
-            await set_user_settings(user_id, user_settings)
-=======
             user_settings[user_id].app_settings = user_app_settings
->>>>>>> Stashed changes
 
             #Hier zou je de Azure OpenAI-client opnieuw kunnen initialiseren met de nieuwe instellingen
             # azure_openai_client = await init_openai_client(user_app_settings)
