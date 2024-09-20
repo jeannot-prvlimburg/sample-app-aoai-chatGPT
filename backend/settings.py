@@ -889,7 +889,7 @@ class GlobalAzureSearchSettings(BaseSettings, GlobalDatasourcePayloadConstructor
             return parse_multi_columns(comma_separated_string)
         
         return None
-    
+        
     @model_validator(mode="after")
     def set_endpoint(self) -> Self:
         self.endpoint = f"https://{self.service}.{self.endpoint_suffix}"

@@ -24,9 +24,6 @@ from azure.identity.aio import (
     DefaultAzureCredential,
     get_bearer_token_provider
 )
-from azure.cosmos.aio import CosmosClient
-from azure.cosmos import PartitionKey
-
 from backend.auth.auth_utils import get_authenticated_user_details
 from backend.security.ms_defender_utils import get_msdefender_user_json
 from backend.history.cosmosdbservice import CosmosConversationClient
@@ -53,32 +50,16 @@ bp = Blueprint("routes", __name__, static_folder="static", template_folder="stat
 
 cosmos_db_ready = asyncio.Event()
 
-COSMOS_ENDPOINT = "https://webapp-development-prvlimburg.documents.azure.com:443/"
-COSMOS_KEY = "bSKPKBQWTX8QUmPuqxwGCYsD1dGLTHswjGtyxOj6wSFKwHML4fG0HKkoF9K13ZCyfJsGAQXhrwiMACDbP8NHUg=="
-DATABASE_NAME = "AppSettings"
-CONTAINER_NAME = "UserSettings"
-
-client = None
-database = None
-user_settings_container = None
-user_settings = {}
-
-async def init_cosmos_db():
-    global client, database, user_settings_container
-    client = CosmosClient(COSMOS_ENDPOINT, COSMOS_KEY)
-    database = await client.create_database_if_not_exists(id=DATABASE_NAME)
-    user_settings_container = await database.create_container_if_not_exists(
-        id=CONTAINER_NAME,
-        partition_key=PartitionKey(path="/userId"),
-        offer_throughput=400
-    )
-
 class UserSettings:
     def __init__(self):
         self.knowledge_base = None
         self.app_settings = None
 
+user_settings = {}
+
 def create_app():
+    # load_dotenv()
+
     app = Quart(__name__)
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -86,8 +67,6 @@ def create_app():
     @app.before_serving
     async def init():
         try:
-            await init_cosmos_db()
-            database = client.get_database_client(DATABASE_NAME)
             app.cosmos_conversation_client = None # We initialize this later per user
             cosmos_db_ready.set()
         except Exception as e:
@@ -152,6 +131,7 @@ frontend_settings = {
 # Enable Microsoft Defender for Cloud Integration
 MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "true"
 
+<<<<<<< Updated upstream
 async def user_has_settings(user_id):
     query = f"SELECT * FROM c WHERE c.userId = '{user_id}'"
     async for item in container.query_items(query=query, enable_cross_partition_query=True):
@@ -175,67 +155,116 @@ async def get_user_settings(user_id):
 async def set_user_settings(user_id, settings):
     settings['userId'] = user_id
     await user_settings_container.upsert_item(settings)
+=======
+@bp.route("/api/user_info", methods=["GET"])
+async def get_user_info():
+    try:
+        authenticated_user = get_authenticated_user_details(request_headers=request.headers)
+        return jsonify(authenticated_user), 200
+    except Exception as e:
+        logging.exception("Exception in /api/user_info")
+        return jsonify({"error": str(e)}), 500
+>>>>>>> Stashed changes
 
 def apply_user_settings(f):
     @wraps(f)
     async def decorated_function(*args, **kwargs):
         user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
+<<<<<<< Updated upstream
         user_settings = await get_user_settings(user_id)
         g.user_app_settings = SimpleNamespace(**user_settings['app_settings'])
+=======
+        if user_id in user_settings and user_settings[user_id].app_settings:
+            g.user_app_settings = user_settings[user_id].app_settings
+        else:
+            g.user_app_settings = app_settings
+>>>>>>> Stashed changes
         return await f(*args, **kwargs)
     return decorated_function
 
 @bp.route('/api/set_knowledge_base', methods=['POST'])
-@apply_user_settings
 async def set_knowledge_base():
     try:
         data = await request.get_json()
         knowledge_base_text = data.get('knowledge_base_text')
         user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
 
+<<<<<<< Updated upstream
         user_settings = await get_user_settings(user_id)
         user_settings['knowledge_base'] = knowledge_base_text
+=======
+        if user_id not in user_settings:
+            user_settings[user_id] = UserSettings()
+>>>>>>> Stashed changes
 
-        # Zoek de kennisbank configuratie op basis van de text
+        user_settings[user_id].knowledge_base = knowledge_base_text
+
+        # Zoek de kennisbank configuratie op basis van de key
         knowledge_base_config = next(
             (kb for kb in KnowledgeBases if kb['text'] == knowledge_base_text), None
         )
 
         if knowledge_base_config:
+<<<<<<< Updated upstream
             user_app_settings = SimpleNamespace(**user_settings['app_settings'])
+=======
+            # Maak een kopie van de huidige app_settings
+            user_app_settings = copy.deepcopy(app_settings)
+>>>>>>> Stashed changes
 
             if knowledge_base_text == "Geen kennisbank":
+                # Reset settings for no knowledge base
                 user_app_settings.base_settings.datasource_type = None
+
+                # Stel de nieuwe AzureSearchSettings in als datasource
                 user_app_settings.datasource = None
-            else:
-                # Update de instellingen voor deze specifieke gebruiker
-                user_app_settings.base_settings.datasource_type = "AzureCognitiveSearch"
-                user_app_settings.azure_openai.embedding_name = knowledge_base_config['embedding_name']
-                user_app_settings.azure_openai.embedding_endpoint = knowledge_base_config['embedding_endpoint']
-                user_app_settings.azure_openai.embedding_key = os.getenv("AZURE_OPENAI_KEY")
 
-                # Maak een nieuwe AzureSearchSettings instantie
-                new_search_settings = GlobalAzureSearchSettings(
-                    settings=user_app_settings,
-                    service=knowledge_base_config['service'],
-                    index=knowledge_base_config['index'],
-                    key=knowledge_base_config['key'],
-                    content_columns=ast.literal_eval(knowledge_base_config.get('content_columns', '[]')),
-                    vector_columns=knowledge_base_config.get('vector_columns', []),
-                    title_column=knowledge_base_config.get('title_column'),
-                    url_column=knowledge_base_config.get('url_column'),
-                    filename_column=knowledge_base_config.get('filename_column'),
-                    query_type=knowledge_base_config.get('query_type', 'simple'),
-                )
+                # Sla de aangepaste instellingen op voor deze gebruiker
+                user_settings[user_id].app_settings = user_app_settings
 
-                user_app_settings.datasource = new_search_settings
+                return jsonify({"success": True, "message": "Knowledge base cleared"}), 200
+            
+            
+
+            # Update de instellingen voor deze specifieke gebruiker
+            user_app_settings.base_settings.datasource_type = "AzureCognitiveSearch" #knowledge_base_config['type']
+            user_app_settings.azure_openai.embedding_name = knowledge_base_config['embedding_name']
+            user_app_settings.azure_openai.embedding_endpoint = knowledge_base_config['embedding_endpoint']
+            user_app_settings.azure_openai.embedding_key = os.getenv("AZURE_OPENAI_KEY")
+
+            # Maak een nieuwe AzureSearchSettings instantie
+            new_search_settings = GlobalAzureSearchSettings(
+                settings=user_app_settings,
+                service=knowledge_base_config['service'],
+                index=knowledge_base_config['index'],
+                key=knowledge_base_config['key'],
+                # use_semantic_search=knowledge_base_config.get('use_semantic_search', False),
+                # semantic_search_config=knowledge_base_config.get('semantic_search_config', ''),
+                content_columns= ast.literal_eval(knowledge_base_config.get('content_columns', [])),
+                vector_columns=knowledge_base_config.get('vector_columns', []),
+                title_column=knowledge_base_config.get('title_column'),
+                url_column=knowledge_base_config.get('url_column'),
+                filename_column=knowledge_base_config.get('filename_column'),
+                query_type=knowledge_base_config.get('query_type', 'simple'),
+            )
+
+            # Stel de nieuwe AzureSearchSettings in als datasource
+            user_app_settings.datasource = new_search_settings
 
             # Sla de aangepaste instellingen op voor deze gebruiker
+<<<<<<< Updated upstream
             user_settings['app_settings'] = vars(user_app_settings)
             await set_user_settings(user_id, user_settings)
+=======
+            user_settings[user_id].app_settings = user_app_settings
+>>>>>>> Stashed changes
 
-        return jsonify({"success": True}), 200
+            #Hier zou je de Azure OpenAI-client opnieuw kunnen initialiseren met de nieuwe instellingen
+            # azure_openai_client = await init_openai_client(user_app_settings)
+
+            return jsonify({"success": True}), 200
         
+        return jsonify({"error": "Invalid knowledge base"}), 400
     except Exception as e:
         logging.exception("Error setting knowledge base")
         return jsonify({"error": f"Failed to set knowledge base: {str(e)}"}), 500
@@ -1021,4 +1050,3 @@ async def generate_title(conversation_messages, user_app_settings) -> str:
 
 
 app = create_app()
-
