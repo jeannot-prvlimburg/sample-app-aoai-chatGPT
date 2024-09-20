@@ -49,12 +49,9 @@ try:
 except:
     pass
 
-
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
 cosmos_db_ready = asyncio.Event()
-
-user_settings = {}
 
 COSMOS_ENDPOINT = "https://webapp-development-prvlimburg.documents.azure.com:443/"
 COSMOS_KEY = "bSKPKBQWTX8QUmPuqxwGCYsD1dGLTHswjGtyxOj6wSFKwHML4fG0HKkoF9K13ZCyfJsGAQXhrwiMACDbP8NHUg=="
@@ -64,6 +61,7 @@ CONTAINER_NAME = "UserSettings"
 client = None
 database = None
 container = None
+user_settings = {}
 
 async def init_cosmos_db():
     global client, database, container
