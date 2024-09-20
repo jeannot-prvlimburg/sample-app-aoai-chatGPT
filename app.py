@@ -152,35 +152,36 @@ frontend_settings = {
 # Enable Microsoft Defender for Cloud Integration
 MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "true"
 
-# Functie om gebruikersinstellingen op te halen
+async def user_has_settings(user_id):
+    query = f"SELECT * FROM c WHERE c.userId = '{user_id}'"
+    async for item in container.query_items(query=query, enable_cross_partition_query=True):
+        return True
+    return False
+    
 async def get_user_settings(user_id):
     query = f"SELECT * FROM c WHERE c.userId = '{user_id}'"
-    async for item in user_settings_container.query_items(query=query, enable_cross_partition_query=True):
+    async for item in container.query_items(query=query, enable_cross_partition_query=True):
         return item
-    return None
+    
+    # Als er geen settings zijn gevonden, maak dan standaard settings
+    default_settings = {
+        'userId': user_id,
+        'knowledge_base': 'Geen kennisbank',
+        'app_settings': vars(copy.deepcopy(app_settings))
+    }
+    await set_user_settings(user_id, default_settings)
+    return default_settings
 
 async def set_user_settings(user_id, settings):
     settings['userId'] = user_id
     await user_settings_container.upsert_item(settings)
 
-@bp.route("/api/user_info", methods=["GET"])
-async def get_user_info():
-    try:
-        authenticated_user = get_authenticated_user_details(request_headers=request.headers)
-        return jsonify(authenticated_user), 200
-    except Exception as e:
-        logging.exception("Exception in /api/user_info")
-        return jsonify({"error": str(e)}), 500
-
 def apply_user_settings(f):
     @wraps(f)
     async def decorated_function(*args, **kwargs):
         user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
-        user_settings = await get_user_settings(user_id)  # Let op het 'await' hier
-        if user_settings and user_settings.get('app_settings'):
-            g.user_app_settings = SimpleNamespace(**user_settings['app_settings'])
-        else:
-            g.user_app_settings = copy.deepcopy(app_settings)
+        user_settings = await get_user_settings(user_id)
+        g.user_app_settings = SimpleNamespace(**user_settings['app_settings'])
         return await f(*args, **kwargs)
     return decorated_function
 
@@ -192,7 +193,7 @@ async def set_knowledge_base():
         knowledge_base_text = data.get('knowledge_base_text')
         user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
 
-        user_settings = await get_user_settings(user_id) or {}  # Let op het 'await' hier
+        user_settings = await get_user_settings(user_id)
         user_settings['knowledge_base'] = knowledge_base_text
 
         # Zoek de kennisbank configuratie op basis van de text
@@ -201,7 +202,7 @@ async def set_knowledge_base():
         )
 
         if knowledge_base_config:
-            user_app_settings = copy.deepcopy(app_settings)
+            user_app_settings = SimpleNamespace(**user_settings['app_settings'])
 
             if knowledge_base_text == "Geen kennisbank":
                 user_app_settings.base_settings.datasource_type = None
@@ -230,8 +231,8 @@ async def set_knowledge_base():
                 user_app_settings.datasource = new_search_settings
 
             # Sla de aangepaste instellingen op voor deze gebruiker
-        user_settings['app_settings'] = vars(user_app_settings)
-        await set_user_settings(user_id, user_settings)
+            user_settings['app_settings'] = vars(user_app_settings)
+            await set_user_settings(user_id, user_settings)
 
         return jsonify({"success": True}), 200
         
