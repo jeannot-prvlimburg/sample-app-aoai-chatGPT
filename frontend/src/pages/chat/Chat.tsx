@@ -272,7 +272,8 @@ const Chat = () => {
                 console.error(e)
                 throw e
               } else {
-                console.log('Incomplete message. Continuing...')
+                console.log('Incomplete message123. Continuing...')
+                console.error('SyntaxError caught:', e)
               }
             }
           })

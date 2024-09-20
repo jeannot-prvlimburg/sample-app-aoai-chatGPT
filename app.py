@@ -60,14 +60,14 @@ CONTAINER_NAME = "UserSettings"
 
 client = None
 database = None
-container = None
+user_settings_container = None
 user_settings = {}
 
 async def init_cosmos_db():
-    global client, database, container
+    global client, database, user_settings_container
     client = CosmosClient(COSMOS_ENDPOINT, COSMOS_KEY)
     database = await client.create_database_if_not_exists(id=DATABASE_NAME)
-    container = await database.create_container_if_not_exists(
+    user_settings_container = await database.create_container_if_not_exists(
         id=CONTAINER_NAME,
         partition_key=PartitionKey(path="/userId"),
         offer_throughput=400
@@ -155,13 +155,13 @@ MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "
 # Functie om gebruikersinstellingen op te halen
 async def get_user_settings(user_id):
     query = f"SELECT * FROM c WHERE c.userId = '{user_id}'"
-    async for item in container.query_items(query=query, enable_cross_partition_query=True):
+    async for item in user_settings_container.query_items(query=query, enable_cross_partition_query=True):
         return item
     return None
 
 async def set_user_settings(user_id, settings):
     settings['userId'] = user_id
-    await container.upsert_item(settings)
+    await user_settings_container.upsert_item(settings)
 
 @bp.route("/api/user_info", methods=["GET"])
 async def get_user_info():
