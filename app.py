@@ -48,6 +48,9 @@ bp = Blueprint("routes", __name__, static_folder="static", template_folder="stat
 
 cosmos_db_ready = asyncio.Event()
 
+# Definieer een versienummer voor je app
+APP_VERSION = "1.0.0"
+
 # CosmosDB instellingen
 url = "https://webapp-development-prvlimburg.documents.azure.com:443/"
 key = "bSKPKBQWTX8QUmPuqxwGCYsD1dGLTHswjGtyxOj6wSFKwHML4fG0HKkoF9K13ZCyfJsGAQXhrwiMACDbP8NHUg=="
@@ -128,6 +131,8 @@ def create_app():
     
     @app.before_serving
     async def init():
+        logging.info(f"Starting application version {APP_VERSION}") # Log de app versie bij het opstarten
+        
         try:
             app.cosmos_conversation_client = await init_cosmosdb_client()
             cosmos_db_ready.set()
