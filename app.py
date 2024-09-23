@@ -98,6 +98,7 @@ def save_user_settings(user_id, settings):
             'settings': json.dumps(settings)
         }
         container.upsert_item(item)
+        logging.info(f"Settings saved for user {user_id}")
     except exceptions.CosmosHttpResponseError as e:
         logging.error(f"Failed to save user settings: {str(e)}")
 
@@ -109,7 +110,9 @@ def load_user_settings(user_id):
     
     try:
         item = container.read_item(item=user_id, partition_key=user_id)
-        return json.loads(item.get('settings', '{}'))
+        settings = json.loads(item.get('settings', '{}'))
+        logging.info(f"Settings loaded for user {user_id}")
+        return settings
     except exceptions.CosmosResourceNotFoundError:
         logging.info(f"Settings not found for user {user_id}")
         return {}
@@ -222,6 +225,7 @@ def apply_user_settings(f):
         return await f(*args, **kwargs)
     return decorated_function
 
+
 @bp.route('/api/set_knowledge_base', methods=['POST'])
 async def set_knowledge_base():
     try:
@@ -282,6 +286,7 @@ async def set_knowledge_base():
     except Exception as e:
         logging.exception("Error setting knowledge base")
         return jsonify({"error": f"Failed to set knowledge base: {str(e)}"}), 500
+
 
 # Initialize Azure OpenAI Client
 async def init_openai_client(user_app_settings):
