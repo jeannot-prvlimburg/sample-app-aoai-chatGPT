@@ -218,6 +218,19 @@ frontend_settings = {
 # Enable Microsoft Defender for Cloud Integration
 MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "true"
 
+@bp.route("/api/user_settings", methods=['GET', 'POST'])
+async def user_settings():
+    user_id = "default_user"  # Je kunt dit vervangen door de echte user ID als je authenticatie gebruikt
+    
+    if request.method == 'GET':
+        result = load_user_settings(user_id)
+        return jsonify(result)
+    
+    elif request.method == 'POST':
+        settings = await request.get_json()
+        result = save_user_settings(user_id, settings)
+        return jsonify(result)
+
 @bp.route("/api/user_info", methods=["GET"])
 async def get_user_info():
     try:
