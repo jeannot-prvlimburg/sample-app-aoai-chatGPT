@@ -28,6 +28,20 @@ const Layout = () => {
     appStateContext?.dispatch({ type: 'SET_KNOWLEDGE_BASE', payload: kb }); 
   };
 
+  useEffect(() => {
+        const fetchAppInfo = async () => {
+            try {
+                const response = await fetch('/api/app_info');
+                const data = await response.json();
+                console.log(data.message);  // Log het bericht naar de console
+            } catch (error) {
+                console.error('Error fetching app info:', error);
+            }
+        };
+
+        fetchAppInfo();
+    }, []);  // Lege array zorgt ervoor dat dit effect alleen bij het monteren van de component wordt uitgevoerd
+
   const handleKnowledgeBaseSelect = async (kb: string) => {
     setSelectedKnowledgeBase(kb);
     try {
