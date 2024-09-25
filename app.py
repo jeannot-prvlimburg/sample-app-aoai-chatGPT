@@ -49,7 +49,7 @@ bp = Blueprint("routes", __name__, static_folder="static", template_folder="stat
 cosmos_db_ready = asyncio.Event()
 
 # Definieer een versienummer voor je app
-APP_VERSION = "1.0.3"
+APP_VERSION = "1.0.4"
 
 # CosmosDB instellingen
 url = "https://webapp-development-prvlimburg.documents.azure.com:443/"
@@ -90,7 +90,7 @@ class EnhancedJSONEncoder(json.JSONEncoder):
             return obj.__dict__
         return super().default(obj)
 
-def save_user_settings(user_id, settings):
+def save_user_settings(user_id, knowledge_base):
     if not current_app.cosmos_user_settings_client or not current_app.cosmos_user_settings_client.container:
         message = "User Settings Cosmos DB not available, skipping save operation"
         logging.warning(message)
@@ -99,14 +99,14 @@ def save_user_settings(user_id, settings):
     try:
         item = {
             'id': user_id,
-            'settings': json.dumps(settings)
+            'knowledge_base': knowledge_base
         }
         current_app.cosmos_user_settings_client.container.upsert_item(item)
-        message = f"Settings saved for user {user_id}"
+        message = f"Knowledge base saved for user {user_id}"
         logging.info(message)
         return {"success": True, "message": message}
     except exceptions.CosmosHttpResponseError as e:
-        message = f"Failed to save user settings: {str(e)}"
+        message = f"Failed to save knowledge base: {str(e)}"
         logging.error(message)
         return {"success": False, "message": message}
 
@@ -115,22 +115,22 @@ def load_user_settings(user_id):
     if not current_app.cosmos_user_settings_client or not current_app.cosmos_user_settings_client.container:
         message = "User Settings Cosmos DB not available, using default settings"
         logging.warning(message)
-        return {"success": False, "message": message, "settings": {}}
+        return {"success": False, "message": message, "knowledge_base": None}
     
     try:
         item = current_app.cosmos_user_settings_client.container.read_item(item=user_id, partition_key=user_id)
-        settings = json.loads(item.get('settings', '{}'))
-        message = f"Settings loaded for user {user_id}"
+        knowledge_base = item.get('knowledge_base')
+        message = f"Knowledge base loaded for user {user_id}"
         logging.info(message)
-        return {"success": True, "message": message, "settings": settings}
+        return {"success": True, "message": message, "knowledge_base": knowledge_base}
     except exceptions.CosmosResourceNotFoundError:
         message = f"Settings not found for user {user_id}"
         logging.info(message)
-        return {"success": False, "message": message, "settings": {}}
+        return {"success": False, "message": message, "knowledge_base": None}
     except exceptions.CosmosHttpResponseError as e:
-        message = f"Failed to load user settings: {str(e)}"
+        message = f"Failed to load knowledge base: {str(e)}"
         logging.error(message)
-        return {"success": False, "message": message, "settings": {}}
+        return {"success": False, "message": message, "knowledge_base": None}
 
 def create_app():
     app = Quart(__name__)
@@ -243,8 +243,9 @@ async def user_settings():
         return jsonify(result)
     
     elif request.method == 'POST':
-        settings = await request.get_json()
-        result = save_user_settings(user_id, settings)
+        data = await request.get_json()
+        knowledge_base = data.get('knowledge_base')
+        result = save_user_settings(user_id, knowledge_base)
         return jsonify(result)
 
 @bp.route("/api/user_info", methods=["GET"])
@@ -264,8 +265,7 @@ def apply_user_settings(f):
             user_settings = load_user_settings(user_id)
             knowledge_base = user_settings.get('knowledge_base')
             if knowledge_base:
-                # Als er een opgeslagen kennisbank is, roep dan set_knowledge_base aan om de instellingen te laden
-                await set_knowledge_base({'knowledge_base_text': knowledge_base})
+                g.user_app_settings = initialize_settings(knowledge_base)
             else:
                 g.user_app_settings = app_settings
         except Exception as e:
@@ -282,63 +282,52 @@ async def set_knowledge_base():
         knowledge_base_text = data.get('knowledge_base_text')
         user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
 
-        user_settings_result = load_user_settings(user_id)
-        if user_settings_result['success']:
-            user_settings = user_settings_result['settings']
-        else:
-            user_settings = {}
-        user_settings['knowledge_base'] = knowledge_base_text
+        # Sla de geselecteerde kennisbank op
+        save_result = save_user_settings(user_id, knowledge_base_text)
+        if not save_result['success']:
+            return jsonify({"error": "Failed to save knowledge base"}), 500
 
-        # Sla de bijgewerkte instellingen op
-        save_user_settings(user_id, user_settings)
+        # Initialiseer de instellingen op basis van de gekozen kennisbank
+        user_app_settings = initialize_settings(knowledge_base_text)
 
-        # Zoek de kennisbank configuratie op basis van de key
-        knowledge_base_config = next(
-            (kb for kb in KnowledgeBases if kb['text'] == knowledge_base_text), None
-        )
+        # Sla de aangepaste instellingen op in g.user_app_settings
+        g.user_app_settings = user_app_settings
 
-        if knowledge_base_config:
-            # Maak een kopie van de huidige app_settings
-            user_app_settings = copy.deepcopy(app_settings)
-
-            if knowledge_base_text == "Geen kennisbank":
-                # Reset settings for no knowledge base
-                user_app_settings.base_settings.datasource_type = None
-                user_app_settings.datasource = None
-            else:
-                # Update de instellingen voor deze specifieke gebruiker
-                user_app_settings.base_settings.datasource_type = "AzureCognitiveSearch"
-                user_app_settings.azure_openai.embedding_name = knowledge_base_config['embedding_name']
-                user_app_settings.azure_openai.embedding_endpoint = knowledge_base_config['embedding_endpoint']
-                user_app_settings.azure_openai.embedding_key = os.getenv("AZURE_OPENAI_KEY")
-
-                # Maak een nieuwe AzureSearchSettings instantie
-                new_search_settings = GlobalAzureSearchSettings(
-                    settings=user_app_settings,
-                    service=knowledge_base_config['service'],
-                    index=knowledge_base_config['index'],
-                    key=knowledge_base_config['key'],
-                    content_columns= ast.literal_eval(knowledge_base_config.get('content_columns', [])),
-                    vector_columns=knowledge_base_config.get('vector_columns', []),
-                    title_column=knowledge_base_config.get('title_column'),
-                    url_column=knowledge_base_config.get('url_column'),
-                    filename_column=knowledge_base_config.get('filename_column'),
-                    query_type=knowledge_base_config.get('query_type', 'simple'),
-                )
-
-                # Stel de nieuwe AzureSearchSettings in als datasource
-                user_app_settings.datasource = new_search_settings
-
-            # Sla de aangepaste instellingen op in g.user_app_settings
-            g.user_app_settings = user_app_settings
-
-            return jsonify({"success": True}), 200
-        
-        return jsonify({"error": "Invalid knowledge base"}), 400
+        return jsonify({"success": True}), 200
     except Exception as e:
         logging.exception("Error setting knowledge base")
         return jsonify({"error": f"Failed to set knowledge base: {str(e)}"}), 500
 
+def initialize_settings(knowledge_base_text):
+    user_app_settings = copy.deepcopy(app_settings)
+
+    if knowledge_base_text == "Geen kennisbank":
+        user_app_settings.base_settings.datasource_type = None
+        user_app_settings.datasource = None
+    else:
+        knowledge_base_config = next((kb for kb in KnowledgeBases if kb['text'] == knowledge_base_text), None)
+        if knowledge_base_config:
+            user_app_settings.base_settings.datasource_type = "AzureCognitiveSearch"
+            user_app_settings.azure_openai.embedding_name = knowledge_base_config['embedding_name']
+            user_app_settings.azure_openai.embedding_endpoint = knowledge_base_config['embedding_endpoint']
+            user_app_settings.azure_openai.embedding_key = os.getenv("AZURE_OPENAI_KEY")
+
+            new_search_settings = GlobalAzureSearchSettings(
+                settings=user_app_settings,
+                service=knowledge_base_config['service'],
+                index=knowledge_base_config['index'],
+                key=knowledge_base_config['key'],
+                content_columns= ast.literal_eval(knowledge_base_config.get('content_columns', [])),
+                vector_columns=knowledge_base_config.get('vector_columns', []),
+                title_column=knowledge_base_config.get('title_column'),
+                url_column=knowledge_base_config.get('url_column'),
+                filename_column=knowledge_base_config.get('filename_column'),
+                query_type=knowledge_base_config.get('query_type', 'simple'),
+            )
+
+            user_app_settings.datasource = new_search_settings
+
+    return user_app_settings
 
 # Initialize Azure OpenAI Client
 async def init_openai_client(user_app_settings):
