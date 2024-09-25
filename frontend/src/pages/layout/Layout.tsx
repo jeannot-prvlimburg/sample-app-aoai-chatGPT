@@ -39,31 +39,43 @@ const Layout = () => {
             }
         };
 
+        const fetchUserSettings = async () => {
+            try {
+                const response = await fetch('/api/user_settings');
+                const data = await response.json();
+                console.log('User settings:', data);  // Log de gebruikersinstellingen
+                if (data.success) {
+                    // Hier kun je de instellingen verwerken, bijvoorbeeld de kennisbank instellen
+                    setSelectedKnowledgeBase(data.settings.knowledge_base || 'Geen kennisbank');
+                }
+            } catch (error) {
+                console.error('Error fetching user settings:', error);
+            }
+        };
+
         fetchAppInfo();
-    }, []);  // Lege array zorgt ervoor dat dit effect alleen bij het monteren van de component wordt uitgevoerd
+        fetchUserSettings();
+    }, []);
 
   const handleKnowledgeBaseSelect = async (kb: string) => {
-    setSelectedKnowledgeBase(kb);
-    try {
-        const response = await fetch('/api/set_knowledge_base', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ knowledge_base_text: kb }),
-        });
-        if (!response.ok) {
-          const errorData = await response.json(); // Lees de response body
-          throw new Error(`Failed to set knowledge base: ${errorData.error || 'Unknown error'}`); // Gebruik error message
-      }
-
-      console.log(`Successfully set knowledge base to: ${kb}`); // Log success message
-
-    } catch (error) {
-        console.error('Error setting knowledge base:', error);
+        setSelectedKnowledgeBase(kb);
+        try {
+            const response = await fetch('/api/user_settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ knowledge_base: kb }),
+            });
+            const data = await response.json();
+            console.log('Save user settings result:', data);
+            if (!data.success) {
+                throw new Error(data.message);
+            }
+        } catch (error) {
+            console.error('Error setting knowledge base:', error);
+        }
     }
-  }
-
   const handleShareClick = () => {
     setIsSharePanelOpen(true)
   }
