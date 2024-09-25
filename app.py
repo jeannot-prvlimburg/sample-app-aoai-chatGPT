@@ -49,7 +49,7 @@ bp = Blueprint("routes", __name__, static_folder="static", template_folder="stat
 cosmos_db_ready = asyncio.Event()
 
 # Definieer een versienummer voor je app
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.0.1"
 
 # CosmosDB instellingen
 url = "https://webapp-development-prvlimburg.documents.azure.com:443/"
@@ -92,8 +92,9 @@ class EnhancedJSONEncoder(json.JSONEncoder):
 
 def save_user_settings(user_id, settings):
     if not container:
-        logging.warning("Cosmos DB not available, skipping save operation")
-        return
+        message = "Cosmos DB not available, skipping save operation"
+        logging.warning(message)
+        return {"success": False, "message": message}
     
     try:
         item = {
@@ -101,28 +102,35 @@ def save_user_settings(user_id, settings):
             'settings': json.dumps(settings)
         }
         container.upsert_item(item)
-        logging.info(f"Settings saved for user {user_id}")
+        message = f"Settings saved for user {user_id}"
+        logging.info(message)
+        return {"success": True, "message": message}
     except exceptions.CosmosHttpResponseError as e:
-        logging.error(f"Failed to save user settings: {str(e)}")
+        message = f"Failed to save user settings: {str(e)}"
+        logging.error(message)
+        return {"success": False, "message": message}
 
 
 def load_user_settings(user_id):
     if not container:
-        logging.warning("Cosmos DB not available, using default settings")
-        return {}
+        message = "Cosmos DB not available, using default settings"
+        logging.warning(message)
+        return {"success": False, "message": message, "settings": {}}
     
     try:
         item = container.read_item(item=user_id, partition_key=user_id)
         settings = json.loads(item.get('settings', '{}'))
-        logging.info(f"Settings loaded for user {user_id}")
-        return settings
+        message = f"Settings loaded for user {user_id}"
+        logging.info(message)
+        return {"success": True, "message": message, "settings": settings}
     except exceptions.CosmosResourceNotFoundError:
-        logging.info(f"Settings not found for user {user_id}")
-        return {}
+        message = f"Settings not found for user {user_id}"
+        logging.info(message)
+        return {"success": False, "message": message, "settings": {}}
     except exceptions.CosmosHttpResponseError as e:
-        logging.error(f"Failed to load user settings: {str(e)}")
-        return {}
-
+        message = f"Failed to load user settings: {str(e)}"
+        logging.error(message)
+        return {"success": False, "message": message, "settings": {}}
 
 def create_app():
     app = Quart(__name__)
