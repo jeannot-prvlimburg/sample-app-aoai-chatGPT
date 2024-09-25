@@ -54,51 +54,28 @@ APP_VERSION = "1.0.2"
 # CosmosDB instellingen
 url = "https://webapp-development-prvlimburg.documents.azure.com:443/"
 key = "bSKPKBQWTX8QUmPuqxwGCYsD1dGLTHswjGtyxOj6wSFKwHML4fG0HKkoF9K13ZCyfJsGAQXhrwiMACDbP8NHUg=="
-client = CosmosClient(url, credential=key)
 database_name = "UserSettings"
 container_name = "AppSettings"
 
-cosmos_client = None
-container = None
-
-async def init_cosmos_db():
-    global cosmos_client, container
-    
+async def init_user_settings_cosmosdb():
+    cosmos_user_settings_client = None
     try:
-        cosmos_endpoint = url
-        
-        # Als er geen key is opgegeven, probeer dan de DefaultAzureCredential te gebruiken
-        if not key:
-            async with DefaultAzureCredential() as cred:
-                credential = cred
-        else:
-            credential = key
+        cosmos_endpoint = url  # Gebruik de hardcoded URL
+        credential = key  # Gebruik de hardcoded key
 
-        logging.info(f"Attempting to connect to Cosmos DB at URL: {cosmos_endpoint}")
-        cosmos_client = CosmosClient(cosmos_endpoint, credential=credential)
-        logging.info("CosmosClient created successfully")
-
-        database = cosmos_client.create_database_if_not_exists(id=database_name)
-        logging.info(f"Database '{database_name}' created or already exists")
-
-        container = database.create_container_if_not_exists(
-            id=container_name, 
-            partition_key='/id',
-            offer_throughput=400
+        cosmos_user_settings_client = CosmosConversationClient(
+            cosmosdb_endpoint=cosmos_endpoint,
+            credential=credential,
+            database_name=database_name,  # Gebruik de hardcoded database_name
+            container_name=container_name,  # Gebruik de hardcoded container_name
+            enable_message_feedback=False,  # We don't need feedback for user settings
         )
-        logging.info(f"Container '{container_name}' created or already exists")
-        logging.info("Successfully connected to Cosmos DB")
-
-    except exceptions.CosmosHttpResponseError as e:
-        logging.error(f"Failed to connect to Cosmos DB: {str(e)}")
-        cosmos_client = None
-        container = None
+        logging.info("Successfully connected to Cosmos DB for user settings")
     except Exception as e:
-        logging.error(f"Unexpected error while connecting to Cosmos DB: {str(e)}")
-        cosmos_client = None
-        container = None
+        logging.exception("Exception in User Settings CosmosDB initialization", e)
+        cosmos_user_settings_client = None
 
-    return cosmos_client, container
+    return cosmos_user_settings_client
 
 class UserSettings:
     def __init__(self):
@@ -114,8 +91,8 @@ class EnhancedJSONEncoder(json.JSONEncoder):
         return super().default(obj)
 
 def save_user_settings(user_id, settings):
-    if not container:
-        message = "Cosmos DB not available, skipping save operation"
+    if not current_app.cosmos_user_settings_client or not current_app.cosmos_user_settings_client.container:
+        message = "User Settings Cosmos DB not available, skipping save operation"
         logging.warning(message)
         return {"success": False, "message": message}
     
@@ -124,7 +101,7 @@ def save_user_settings(user_id, settings):
             'id': user_id,
             'settings': json.dumps(settings)
         }
-        container.upsert_item(item)
+        current_app.cosmos_user_settings_client.container.upsert_item(item)
         message = f"Settings saved for user {user_id}"
         logging.info(message)
         return {"success": True, "message": message}
@@ -135,13 +112,13 @@ def save_user_settings(user_id, settings):
 
 
 def load_user_settings(user_id):
-    if not container:
-        message = "Cosmos DB not available, using default settings"
+    if not current_app.cosmos_user_settings_client or not current_app.cosmos_user_settings_client.container:
+        message = "User Settings Cosmos DB not available, using default settings"
         logging.warning(message)
         return {"success": False, "message": message, "settings": {}}
     
     try:
-        item = container.read_item(item=user_id, partition_key=user_id)
+        item = current_app.cosmos_user_settings_client.container.read_item(item=user_id, partition_key=user_id)
         settings = json.loads(item.get('settings', '{}'))
         message = f"Settings loaded for user {user_id}"
         logging.info(message)
@@ -171,11 +148,10 @@ def create_app():
         except Exception as e:
             app.startup_log += f"\nFailed to initialize CosmosDB client for chat history: {str(e)}"
             app.cosmos_conversation_client = None
-    
+
         try:
-            global cosmos_client, container
-            cosmos_client, container = await init_cosmos_db()
-            if cosmos_client and container:
+            app.cosmos_user_settings_client = await init_user_settings_cosmosdb()
+            if app.cosmos_user_settings_client:
                 app.startup_log += "\nCosmosDB for user settings initialized successfully"
             else:
                 app.startup_log += "\nFailed to initialize CosmosDB for user settings"
@@ -184,11 +160,16 @@ def create_app():
         
         logging.info(app.startup_log)
         
-        # Log de status van de Cosmos DB verbinding
-        if cosmos_client and container:
-            logging.info("Cosmos DB connection is ready")
+        # Log de status van de Cosmos DB verbindingen
+        if app.cosmos_conversation_client:
+            logging.info("Cosmos DB connection for chat history is ready")
         else:
-            logging.warning("Cosmos DB connection failed")
+            logging.warning("Cosmos DB connection for chat history failed")
+        
+        if app.cosmos_user_settings_client:
+            logging.info("Cosmos DB connection for user settings is ready")
+        else:
+            logging.warning("Cosmos DB connection for user settings failed")
             
     @app.route('/api/knowledge_bases', methods=['GET'])
     def get_knowledge_bases():
@@ -301,8 +282,11 @@ async def set_knowledge_base():
         knowledge_base_text = data.get('knowledge_base_text')
         user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
 
-        # Laad bestaande instellingen of gebruik een lege dictionary
-        user_settings = load_user_settings(user_id)
+        user_settings_result = load_user_settings(user_id)
+        if user_settings_result['success']:
+            user_settings = user_settings_result['settings']
+        else:
+            user_settings = {}
         user_settings['knowledge_base'] = knowledge_base_text
 
         # Sla de bijgewerkte instellingen op
