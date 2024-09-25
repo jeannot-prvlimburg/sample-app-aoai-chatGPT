@@ -49,7 +49,7 @@ bp = Blueprint("routes", __name__, static_folder="static", template_folder="stat
 cosmos_db_ready = asyncio.Event()
 
 # Definieer een versienummer voor je app
-APP_VERSION = "1.0.1"
+APP_VERSION = "1.0.2"
 
 # CosmosDB instellingen
 url = "https://webapp-development-prvlimburg.documents.azure.com:443/"
@@ -61,21 +61,44 @@ container_name = "AppSettings"
 cosmos_client = None
 container = None
 
-def init_cosmos_db():
+async def init_cosmos_db():
     global cosmos_client, container
+    
     try:
-        cosmos_client = CosmosClient(url, credential=key)
+        cosmos_endpoint = url
+        
+        # Als er geen key is opgegeven, probeer dan de DefaultAzureCredential te gebruiken
+        if not key:
+            async with DefaultAzureCredential() as cred:
+                credential = cred
+        else:
+            credential = key
+
+        logging.info(f"Attempting to connect to Cosmos DB at URL: {cosmos_endpoint}")
+        cosmos_client = CosmosClient(cosmos_endpoint, credential=credential)
+        logging.info("CosmosClient created successfully")
+
         database = cosmos_client.create_database_if_not_exists(id=database_name)
+        logging.info(f"Database '{database_name}' created or already exists")
+
         container = database.create_container_if_not_exists(
             id=container_name, 
             partition_key='/id',
             offer_throughput=400
         )
+        logging.info(f"Container '{container_name}' created or already exists")
         logging.info("Successfully connected to Cosmos DB")
+
     except exceptions.CosmosHttpResponseError as e:
         logging.error(f"Failed to connect to Cosmos DB: {str(e)}")
         cosmos_client = None
         container = None
+    except Exception as e:
+        logging.error(f"Unexpected error while connecting to Cosmos DB: {str(e)}")
+        cosmos_client = None
+        container = None
+
+    return cosmos_client, container
 
 class UserSettings:
     def __init__(self):
@@ -144,16 +167,28 @@ def create_app():
         try:
             app.cosmos_conversation_client = await init_cosmosdb_client()
             cosmos_db_ready.set()
-            app.startup_log += "\nCosmosDB client initialized successfully"
+            app.startup_log += "\nCosmosDB client for chat history initialized successfully"
         except Exception as e:
             app.startup_log += f"\nFailed to initialize CosmosDB client for chat history: {str(e)}"
             app.cosmos_conversation_client = None
-
+    
         try:
-            init_cosmos_db()
-            app.startup_log += "\nCosmosDB for user settings initialized successfully"
+            global cosmos_client, container
+            cosmos_client, container = await init_cosmos_db()
+            if cosmos_client and container:
+                app.startup_log += "\nCosmosDB for user settings initialized successfully"
+            else:
+                app.startup_log += "\nFailed to initialize CosmosDB for user settings"
         except Exception as e:
-            app.startup_log += f"\nFailed to initialize CosmosDB client for user settings: {str(e)}"
+            app.startup_log += f"\nException during CosmosDB initialization for user settings: {str(e)}"
+        
+        logging.info(app.startup_log)
+        
+        # Log de status van de Cosmos DB verbinding
+        if cosmos_client and container:
+            logging.info("Cosmos DB connection is ready")
+        else:
+            logging.warning("Cosmos DB connection failed")
             
     @app.route('/api/knowledge_bases', methods=['GET'])
     def get_knowledge_bases():
