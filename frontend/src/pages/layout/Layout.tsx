@@ -40,44 +40,64 @@ const Layout = () => {
         };
 
         const fetchUserSettings = async () => {
-            try {
-                const response = await fetch('/api/user_settings');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+        try {
+            const response = await fetch('/api/user_settings');
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                // Het is JSON, we kunnen het parsen
                 const data = await response.json();
                 console.log('User settings:', data);
                 if (data.success) {
                     setSelectedKnowledgeBase(data.knowledge_base || 'Geen kennisbank');
                 }
-            } catch (error) {
-                console.error('Error fetching user settings:', error);
+            } else {
+                // Het is geen JSON, waarschijnlijk HTML. Laten we de tekst lezen en loggen
+                const text = await response.text();
+                console.error('Unexpected response:', text);
+                throw new Error('Server returned unexpected content');
             }
-        };
+        } catch (error) {
+            console.error('Error fetching user settings:', error);
+            // Hier kun je een gebruikersvriendelijke foutmelding tonen
+            // setErrorMessage('Er is een fout opgetreden bij het ophalen van de gebruikersinstellingen');
+        }
+    };
 
         fetchAppInfo();
         fetchUserSettings();
     }, []);
 
-  const handleKnowledgeBaseSelect = async (kb: string) => {
-        setSelectedKnowledgeBase(kb);
-        try {
-            const response = await fetch('/api/user_settings', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ knowledge_base: kb }),
-            });
-            const data = await response.json();
-            console.log('Save user settings result:', data);
-            if (!data.success) {
-                throw new Error(data.message);
-            }
-        } catch (error) {
-            console.error('Error setting knowledge base:', error);
-        }
-    }
+    const handleKnowledgeBaseSelect = async (kb: string) => {
+      setSelectedKnowledgeBase(kb);
+      try {
+          const response = await fetch('/api/user_settings', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ knowledge_base: kb }),
+          });
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.indexOf("application/json") !== -1) {
+              // Het is JSON, we kunnen het parsen
+              const data = await response.json();
+              console.log('Save user settings result:', data);
+              if (!data.success) {
+                  throw new Error(data.message);
+              }
+          } else {
+              // Het is geen JSON, waarschijnlijk HTML. Laten we de tekst lezen en loggen
+              const text = await response.text();
+              console.error('Unexpected response:', text);
+              throw new Error('Server returned unexpected content');
+          }
+      } catch (error) {
+          console.error('Error setting knowledge base:', error);
+          // Hier kun je een gebruikersvriendelijke foutmelding tonen
+          // setErrorMessage('Er is een fout opgetreden bij het instellen van de kennisbank');
+      }
+  };
+  
   const handleShareClick = () => {
     setIsSharePanelOpen(true)
   }
