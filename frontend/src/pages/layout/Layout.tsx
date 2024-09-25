@@ -42,11 +42,13 @@ const Layout = () => {
         const fetchUserSettings = async () => {
             try {
                 const response = await fetch('/api/user_settings');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 const data = await response.json();
-                console.log('User settings:', data);  // Log de gebruikersinstellingen
+                console.log('User settings:', data);
                 if (data.success) {
-                    // Hier kun je de instellingen verwerken, bijvoorbeeld de kennisbank instellen
-                    setSelectedKnowledgeBase(data.settings.knowledge_base || 'Geen kennisbank');
+                    setSelectedKnowledgeBase(data.knowledge_base || 'Geen kennisbank');
                 }
             } catch (error) {
                 console.error('Error fetching user settings:', error);
