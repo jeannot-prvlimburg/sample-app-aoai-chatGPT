@@ -131,20 +131,21 @@ def create_app():
     
     @app.before_serving
     async def init():
-        logging.info(f"Starting application version {APP_VERSION}") # Log de app versie bij het opstarten
+        app.startup_log = f"Starting application version {APP_VERSION}"
         
         try:
             app.cosmos_conversation_client = await init_cosmosdb_client()
             cosmos_db_ready.set()
+            app.startup_log += "\nCosmosDB client initialized successfully"
         except Exception as e:
-            logging.exception("Failed to initialize CosmosDB client for chat history")
+            app.startup_log += f"\nFailed to initialize CosmosDB client for chat history: {str(e)}"
             app.cosmos_conversation_client = None
-            raise e
 
         try:
             init_cosmos_db()
+            app.startup_log += "\nCosmosDB for user settings initialized successfully"
         except Exception as e:
-            logging.exception("Failed to initialize CosmosDB client for user settings")
+            app.startup_log += f"\nFailed to initialize CosmosDB client for user settings: {str(e)}"
             
     @app.route('/api/knowledge_bases', methods=['GET'])
     def get_knowledge_bases():
@@ -170,7 +171,13 @@ async def favicon():
 async def assets(path):
     return await send_from_directory("static/assets", path)
 
-
+@bp.route("/api/app_info", methods=['GET'])
+async def get_app_info():
+    return jsonify({
+        "version": APP_VERSION,
+        "message": f"Application started successfully. Version: {APP_VERSION}"
+    })
+    
 # Debug settings
 DEBUG = os.environ.get("DEBUG", "false")
 if DEBUG.lower() == "true":
