@@ -220,7 +220,7 @@ MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "
 
 @bp.route("/api/user_settings", methods=['GET', 'POST'])
 async def user_settings():
-    user_id = "default_user"  # Je kunt dit vervangen door de echte user ID als je authenticatie gebruikt
+    user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
     
     if request.method == 'GET':
         result = load_user_settings(user_id)
