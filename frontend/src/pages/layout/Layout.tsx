@@ -29,50 +29,48 @@ const Layout = () => {
   };
 
   useEffect(() => {
-        const fetchAppInfo = async () => {
-            try {
-                const response = await fetch('/api/app_info');
-                const data = await response.json();
-                console.log(data.message);  // Log het bericht naar de console
-            } catch (error) {
-                console.error('Error fetching app info:', error);
+      const fetchAppInfo = async () => {
+        try {
+          const response = await fetch('/api/app_info');
+          const data = await response.json();
+          console.log(data.message);  // Log het bericht naar de console
+        } catch (error) {
+          console.error('Error fetching app info:', error);
+        }
+      };
+    
+      const fetchUserSettings = async () => {
+        try {
+          const response = await fetch('/api/user_settings');
+          console.log('Raw response:', response);
+    
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+    
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            console.log('JSON Response:', data);
+    
+            if (data.success) {
+              setSelectedKnowledgeBase(data.knowledge_base);
+            } else {
+              console.warn('API request was not successful:', data);
             }
-        };
-
-        const fetchUserSettings = async () => {
-            try {
-                const response = await fetch('/api/user_settings');
-                
-                console.log('Raw response:', response);
-            
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-            
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.includes('application/json')) {
-                    const data = await response.json();
-                    console.log('JSON Response:', data);
-                  
-                  if (data.success) {
-                      setSelectedKnowledgeBase(data.knowledge_base);
-                  } else {
-                      console.warn('API request was not successful:', data);
-                  }
-                } else {
-                    const text = await response.text();
-                    console.log('Text Response:', text);
-                    throw new Error('Server returned unexpected content');
-                }
-              } catch (error) {
-                  console.error('Error fetching user settings:', error);
-              }
-          };
-          
-          useEffect(() => {
-            fetchAppInfo();
-            fetchUserSettings();
-          }, []);
+          } else {
+            const text = await response.text();
+            console.log('Text Response:', text);
+            throw new Error('Server returned unexpected content');
+          }
+        } catch (error) {
+          console.error('Error fetching user settings:', error);
+        }
+      };
+    
+      fetchAppInfo();
+      fetchUserSettings();
+    }, []);
 
     const handleKnowledgeBaseSelect = async (kb: string) => {
       setSelectedKnowledgeBase(kb);
