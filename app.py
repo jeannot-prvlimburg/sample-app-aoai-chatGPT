@@ -94,6 +94,8 @@ class EnhancedJSONEncoder(json.JSONEncoder):
 
 async def save_user_settings(user_id, knowledge_base):
    logging.info(f"Attempting to save settings for user {user_id} with knowledge base {knowledge_base}")
+   logging.info(f"Using database: {current_app.cosmos_user_settings_client.database.id}")
+   logging.info(f"Using container: {current_app.cosmos_user_settings_client.container.id}")
    if not current_app.cosmos_user_settings_client:
        message = "User Settings Cosmos DB not available, skipping save operation"
        logging.warning(message)
@@ -142,6 +144,10 @@ async def verify_user_settings(user_id):
            return None
 
 async def load_user_settings(user_id):
+    logging.info(f"Loading user settings123")
+    logging.info(f"Using database: {current_app.cosmos_user_settings_client.database.id}")
+    logging.info(f"Using container: {current_app.cosmos_user_settings_client.container.id}")
+
     if not current_app.cosmos_user_settings_client:
         message = "User Settings Cosmos DB not available, using default settings"
         logging.warning(message)
