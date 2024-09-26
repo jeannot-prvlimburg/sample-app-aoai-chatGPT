@@ -40,32 +40,41 @@ const Layout = () => {
         };
 
         const fetchUserSettings = async () => {
-        try {
+          try {
             const response = await fetch('/api/user_settings');
-            const contentType = response.headers.get("content-type");
-            if (contentType && contentType.indexOf("application/json") !== -1) {
-                // Het is JSON, we kunnen het parsen
-                const data = await response.json();
-                console.log('User settings:', data);
-                if (data.success) {
-                    setSelectedKnowledgeBase(data.knowledge_base || 'Geen kennisbank');
-                }
-            } else {
-                // Het is geen JSON, waarschijnlijk HTML. Laten we de tekst lezen en loggen
-                const text = await response.text();
-                console.error('Unexpected response:', text);
-                throw new Error('Server returned unexpected content');
+            
+            console.log('Raw response:', response);
+        
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
             }
-        } catch (error) {
+        
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+              const data = await response.json();
+              console.log('JSON Response:', data);
+              
+              if (data.success) {
+                setSelectedKnowledgeBase(data.knowledge_base);
+              } else {
+                console.warn('API request was not successful:', data);
+              }
+            } else {
+              const text = await response.text();
+              console.log('Text Response:', text);
+              throw new Error('Server returned unexpected content');
+            }
+          } catch (error) {
             console.error('Error fetching user settings:', error);
             // Hier kun je een gebruikersvriendelijke foutmelding tonen
             // setErrorMessage('Er is een fout opgetreden bij het ophalen van de gebruikersinstellingen');
-        }
-    };
-
-        fetchAppInfo();
-        fetchUserSettings();
-    }, []);
+          }
+        };
+        
+        useEffect(() => {
+          fetchAppInfo();
+          fetchUserSettings();
+        }, []);
 
     const handleKnowledgeBaseSelect = async (kb: string) => {
       setSelectedKnowledgeBase(kb);
