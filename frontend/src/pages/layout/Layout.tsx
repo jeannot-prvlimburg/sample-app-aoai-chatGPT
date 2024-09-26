@@ -40,41 +40,39 @@ const Layout = () => {
         };
 
         const fetchUserSettings = async () => {
-          try {
-            const response = await fetch('/api/user_settings');
+            try {
+                const response = await fetch('/api/user_settings');
+                
+                console.log('Raw response:', response);
             
-            console.log('Raw response:', response);
-        
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
-        
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-              const data = await response.json();
-              console.log('JSON Response:', data);
-              
-              if (data.success) {
-                setSelectedKnowledgeBase(data.knowledge_base);
-              } else {
-                console.warn('API request was not successful:', data);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+            
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    const data = await response.json();
+                    console.log('JSON Response:', data);
+                  
+                  if (data.success) {
+                      setSelectedKnowledgeBase(data.knowledge_base);
+                  } else {
+                      console.warn('API request was not successful:', data);
+                  }
+                } else {
+                    const text = await response.text();
+                    console.log('Text Response:', text);
+                    throw new Error('Server returned unexpected content');
+                }
+              } catch (error) {
+                  console.error('Error fetching user settings:', error);
               }
-            } else {
-              const text = await response.text();
-              console.log('Text Response:', text);
-              throw new Error('Server returned unexpected content');
-            }
-          } catch (error) {
-            console.error('Error fetching user settings:', error);
-            // Hier kun je een gebruikersvriendelijke foutmelding tonen
-            // setErrorMessage('Er is een fout opgetreden bij het ophalen van de gebruikersinstellingen');
-          }
-        };
-        
-        useEffect(() => {
-          fetchAppInfo();
-          fetchUserSettings();
-        }, []);
+          };
+          
+          useEffect(() => {
+            fetchAppInfo();
+            fetchUserSettings();
+          }, []);
 
     const handleKnowledgeBaseSelect = async (kb: string) => {
       setSelectedKnowledgeBase(kb);
