@@ -5,6 +5,7 @@ import logging
 import uuid
 import httpx
 import asyncio
+import traceback
 import ast
 from types import SimpleNamespace
 from quart import (
@@ -49,7 +50,7 @@ bp = Blueprint("routes", __name__, static_folder="static", template_folder="stat
 cosmos_db_ready = asyncio.Event()
 
 # Definieer een versienummer voor je app
-APP_VERSION = "1.0.5"
+APP_VERSION = "1.0.6"
 
 # CosmosDB instellingen
 url = "https://webapp-development-prvlimburg.documents.azure.com:443/"
@@ -236,17 +237,23 @@ MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "
 
 @bp.route("/api/user_settings", methods=['GET', 'POST'])
 async def user_settings():
-    user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
-    
-    if request.method == 'GET':
-        result = load_user_settings(user_id)
-        return jsonify(result)
-    
-    elif request.method == 'POST':
-        data = await request.get_json()
-        knowledge_base = data.get('knowledge_base')
-        result = save_user_settings(user_id, knowledge_base)
-        return jsonify(result)
+    try:
+        user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
+        
+        if request.method == 'GET':
+            result = load_user_settings(user_id)
+            return jsonify(result)
+        
+        elif request.method == 'POST':
+            data = await request.get_json()
+            current_app.logger.info(f"Received POST data: {data}")
+            knowledge_base = data.get('knowledge_base')
+            result = save_user_settings(user_id, knowledge_base)
+            return jsonify(result)
+    except Exception as e:
+        current_app.logger.error(f"Error in user_settings: {str(e)}")
+        current_app.logger.error(traceback.format_exc())
+        return jsonify({"success": False, "message": str(e)}), 500
 
 @bp.route("/api/user_info", methods=["GET"])
 async def get_user_info():
