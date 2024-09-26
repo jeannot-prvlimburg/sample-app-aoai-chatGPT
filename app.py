@@ -58,7 +58,7 @@ key = "bSKPKBQWTX8QUmPuqxwGCYsD1dGLTHswjGtyxOj6wSFKwHML4fG0HKkoF9K13ZCyfJsGAQXhr
 database_name = "UserSettings"
 container_name = "AppSettings"
 
-   async def init_user_settings_cosmosdb():
+async def init_user_settings_cosmosdb():
        try:
            cosmos_endpoint = url
            credential = key
