@@ -181,42 +181,42 @@ def create_app():
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
     
-@app.before_serving
-async def init():
-    app.startup_log = f"Starting application version {APP_VERSION}"
+    @app.before_serving
+    async def init():
+        app.startup_log = f"Starting application version {APP_VERSION}"
+        
+        try:
+            app.cosmos_conversation_client = await init_cosmosdb_client()
+            cosmos_db_ready.set()
+            app.startup_log += "\nCosmosDB client for chat history initialized successfully"
+        except Exception as e:
+            app.startup_log += f"\nFailed to initialize CosmosDB client for chat history: {str(e)}"
+            app.cosmos_conversation_client = None
     
-    try:
-        app.cosmos_conversation_client = await init_cosmosdb_client()
-        cosmos_db_ready.set()
-        app.startup_log += "\nCosmosDB client for chat history initialized successfully"
-    except Exception as e:
-        app.startup_log += f"\nFailed to initialize CosmosDB client for chat history: {str(e)}"
-        app.cosmos_conversation_client = None
-
-    app.cosmos_user_settings_client = init_user_settings_cosmosdb()
-    if app.cosmos_user_settings_client:
-        app.startup_log += "\nCosmosDB for user settings initialized successfully"
-    else:
-        app.startup_log += "\nFailed to initialize CosmosDB for user settings"
-    
-    logging.info(app.startup_log)
-    
-    # Log de status van de Cosmos DB verbindingen
-    if app.cosmos_conversation_client:
-        logging.info("Cosmos DB connection for chat history is ready")
-    else:
-        logging.warning("Cosmos DB connection for chat history failed")
-    
-    if app.cosmos_user_settings_client:
-        logging.info("Cosmos DB connection for user settings is ready")
-    else:
-        logging.warning("Cosmos DB connection for user settings failed")
-    
-    app.before_serving(init)
-    
-    @app.route('/api/knowledge_bases', methods=['GET'])
-    def get_knowledge_bases():
-        return jsonify(KnowledgeBases)
+        app.cosmos_user_settings_client = init_user_settings_cosmosdb()
+        if app.cosmos_user_settings_client:
+            app.startup_log += "\nCosmosDB for user settings initialized successfully"
+        else:
+            app.startup_log += "\nFailed to initialize CosmosDB for user settings"
+        
+        logging.info(app.startup_log)
+        
+        # Log de status van de Cosmos DB verbindingen
+        if app.cosmos_conversation_client:
+            logging.info("Cosmos DB connection for chat history is ready")
+        else:
+            logging.warning("Cosmos DB connection for chat history failed")
+        
+        if app.cosmos_user_settings_client:
+            logging.info("Cosmos DB connection for user settings is ready")
+        else:
+            logging.warning("Cosmos DB connection for user settings failed")
+        
+        app.before_serving(init)
+        
+        @app.route('/api/knowledge_bases', methods=['GET'])
+        def get_knowledge_bases():
+            return jsonify(KnowledgeBases)
     
     return app
 
