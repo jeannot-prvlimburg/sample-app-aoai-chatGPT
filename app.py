@@ -50,7 +50,7 @@ bp = Blueprint("routes", __name__, static_folder="static", template_folder="stat
 cosmos_db_ready = asyncio.Event()
 
 # Definieer een versienummer voor je app
-APP_VERSION = "1.0.6"
+APP_VERSION = "1.0.7"
 
 # CosmosDB instellingen
 url = "https://webapp-development-prvlimburg.documents.azure.com:443/"
@@ -92,7 +92,7 @@ class EnhancedJSONEncoder(json.JSONEncoder):
         return super().default(obj)
 
 def save_user_settings(user_id, knowledge_base):
-    if not current_app.cosmos_user_settings_client or not current_app.cosmos_user_settings_client.container:
+    if not current_app.cosmos_user_settings_client:
         message = "User Settings Cosmos DB not available, skipping save operation"
         logging.warning(message)
         return {"success": False, "message": message}
@@ -102,11 +102,11 @@ def save_user_settings(user_id, knowledge_base):
             'id': user_id,
             'knowledge_base': knowledge_base
         }
-        current_app.cosmos_user_settings_client.container.upsert_item(item)
+        current_app.cosmos_user_settings_client.upsert_item(body=item)
         message = f"Knowledge base saved for user {user_id}"
         logging.info(message)
         return {"success": True, "message": message}
-    except exceptions.CosmosHttpResponseError as e:
+    except Exception as e:
         message = f"Failed to save knowledge base: {str(e)}"
         logging.error(message)
         return {"success": False, "message": message}
