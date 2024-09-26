@@ -58,31 +58,41 @@ key = "bSKPKBQWTX8QUmPuqxwGCYsD1dGLTHswjGtyxOj6wSFKwHML4fG0HKkoF9K13ZCyfJsGAQXhr
 database_name = "UserSettings"
 container_name = "AppSettings"
 
-async def init_user_settings_cosmosdb():
-   try:
-       cosmos_endpoint = url
-       credential = key
-       
-       logging.info(f"Initializing Cosmos DB client with endpoint: {cosmos_endpoint}")
-       logging.info(f"Using database: {database_name} and container: {container_name}")
-       
-       cosmos_client = CosmosClient(cosmos_endpoint, credential)
-       database = cosmos_client.get_database_client(database_name)
-       container = database.get_container_client(container_name)
-       
-       cosmos_user_settings_client = CosmosConversationClient(
-           cosmosdb_endpoint=cosmos_endpoint,
-           credential=credential,
-           database_name=database_name,
-           container_name=container_name,
-           enable_message_feedback=False
-       )
-       cosmos_user_settings_client.container = container
-       logging.info("Successfully connected to Cosmos DB for user settings")
-       return cosmos_user_settings_client
-   except Exception as e:
-       logging.exception("Exception in User Settings CosmosDB initialization", e)
-       return None
+   async def init_user_settings_cosmosdb():
+       try:
+           cosmos_endpoint = url
+           credential = key
+           
+           logging.info(f"Initializing Cosmos DB client with endpoint: {cosmos_endpoint}")
+           logging.info(f"Using database: {database_name} and container: {container_name}")
+           
+           client = CosmosClient(cosmos_endpoint, credential)
+           
+           # Create database if it doesn't exist
+           database = client.create_database_if_not_exists(id=database_name)
+           logging.info(f"Database '{database_name}' ensured")
+           
+           # Create container if it doesn't exist
+           container = database.create_container_if_not_exists(
+               id=container_name,
+               partition_key='/id',
+               offer_throughput=400
+           )
+           logging.info(f"Container '{container_name}' ensured")
+           
+           cosmos_user_settings_client = CosmosConversationClient(
+               cosmosdb_endpoint=cosmos_endpoint,
+               credential=credential,
+               database_name=database_name,
+               container_name=container_name,
+               enable_message_feedback=False
+           )
+           cosmos_user_settings_client.container = container
+           logging.info("Successfully connected to Cosmos DB for user settings")
+           return cosmos_user_settings_client
+       except Exception as e:
+           logging.exception("Exception in User Settings CosmosDB initialization", e)
+           return None
 
 class UserSettings:
     def __init__(self):
@@ -141,31 +151,32 @@ async def verify_user_settings(user_id):
            return None
 
 async def load_user_settings(user_id):
-    logging.info(f"Loading user settings for user {user_id}")
-    if not current_app.cosmos_user_settings_client:
-        message = "User Settings Cosmos DB not available, using default settings"
-        logging.warning(message)
-        return {"success": False, "message": message, "knowledge_base": None}
-    
-    try:
-        query = f"SELECT * FROM c WHERE c.id = '{user_id}'"
-        items = current_app.cosmos_user_settings_client.container.query_items(
-            query=query,
-            enable_cross_partition_query=True
-        )
-        async for item in items:
-            knowledge_base = item.get('knowledge_base')
-            message = f"Knowledge base loaded for user {user_id}"
-            logging.info(message)
-            return {"success": True, "message": message, "knowledge_base": knowledge_base}
-        
-        message = f"Settings not found for user {user_id}"
-        logging.info(message)
-        return {"success": False, "message": message, "knowledge_base": None}
-    except Exception as e:
-        message = f"Failed to load knowledge base: {str(e)}"
-        logging.error(message)
-        return {"success": False, "message": message, "knowledge_base": None}
+       logging.info(f"Loading user settings for user {user_id}")
+       if not current_app.cosmos_user_settings_client:
+           message = "User Settings Cosmos DB not available, using default settings"
+           logging.warning(message)
+           return {"success": False, "message": message, "knowledge_base": None}
+       
+       try:
+           query = f"SELECT * FROM c WHERE c.id = '{user_id}'"
+           items = current_app.cosmos_user_settings_client.container.query_items(
+               query=query,
+               enable_cross_partition_query=True
+           )
+           
+           async for item in items:
+               knowledge_base = item.get('knowledge_base')
+               message = f"Knowledge base loaded for user {user_id}"
+               logging.info(message)
+               return {"success": True, "message": message, "knowledge_base": knowledge_base}
+           
+           message = f"Settings not found for user {user_id}"
+           logging.info(message)
+           return {"success": False, "message": message, "knowledge_base": None}
+       except Exception as e:
+           message = f"Failed to load knowledge base: {str(e)}"
+           logging.error(message)
+           return {"success": False, "message": message, "knowledge_base": None}
 
 def create_app():
     app = Quart(__name__)
