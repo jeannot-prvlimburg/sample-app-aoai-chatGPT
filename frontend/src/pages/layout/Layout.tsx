@@ -75,33 +75,42 @@ const Layout = () => {
     const handleKnowledgeBaseSelect = async (kb: string) => {
       setSelectedKnowledgeBase(kb);
       try {
-          const response = await fetch('/api/user_settings', {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ knowledge_base: kb }),
-          });
-          const contentType = response.headers.get("content-type");
-          if (contentType && contentType.indexOf("application/json") !== -1) {
-              // Het is JSON, we kunnen het parsen
-              const data = await response.json();
-              console.log('Save user settings result:', data);
-              if (!data.success) {
-                  throw new Error(data.message);
-              }
-          } else {
-              // Het is geen JSON, waarschijnlijk HTML. Laten we de tekst lezen en loggen
-              const text = await response.text();
-              console.error('Unexpected response:', text);
-              throw new Error('Server returned unexpected content');
+        console.log('Sending request to set knowledge base:', kb);
+        const response = await fetch('/api/user_settings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ knowledge_base: kb }),
+        });
+        console.log('Response status:', response.status);
+        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+        
+        const contentType = response.headers.get("content-type");
+        console.log('Content-Type:', contentType);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Error response:', errorText);
+          throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+        }
+    
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+          const data = await response.json();
+          console.log('Save user settings result:', data);
+          if (!data.success) {
+            throw new Error(data.message || 'Unknown error occurred');
           }
+        } else {
+          const text = await response.text();
+          console.error('Unexpected response:', text);
+          throw new Error('Server returned unexpected content');
+        }
       } catch (error) {
-          console.error('Error setting knowledge base:', error);
-          // Hier kun je een gebruikersvriendelijke foutmelding tonen
-          // setErrorMessage('Er is een fout opgetreden bij het instellen van de kennisbank');
+        console.error('Error setting knowledge base:', error);
+        // setErrorMessage(`Er is een fout opgetreden bij het instellen van de kennisbank: ${error.message}`);
       }
-  };
+    };
   
   const handleShareClick = () => {
     setIsSharePanelOpen(true)
