@@ -50,7 +50,7 @@ bp = Blueprint("routes", __name__, static_folder="static", template_folder="stat
 cosmos_db_ready = asyncio.Event()
 
 # Definieer een versienummer voor je app
-APP_VERSION = "1.0.8"
+APP_VERSION = "1.0.9"
 
 # CosmosDB instellingen
 url = "https://webapp-development-prvlimburg.documents.azure.com:443/"
@@ -59,24 +59,22 @@ database_name = "UserSettings"
 container_name = "AppSettings"
 
 async def init_user_settings_cosmosdb():
-    cosmos_user_settings_client = None
     try:
-        cosmos_endpoint = url  # Gebruik de hardcoded URL
-        credential = key  # Gebruik de hardcoded key
+        cosmos_endpoint = url
+        credential = key
 
         cosmos_user_settings_client = CosmosConversationClient(
             cosmosdb_endpoint=cosmos_endpoint,
             credential=credential,
-            database_name=database_name,  # Gebruik de hardcoded database_name
-            container_name=container_name,  # Gebruik de hardcoded container_name
-            enable_message_feedback=False,  # We don't need feedback for user settings
+            database_name=database_name,
+            container_name=container_name,
+            enable_message_feedback=False
         )
         logging.info("Successfully connected to Cosmos DB for user settings")
+        return cosmos_user_settings_client
     except Exception as e:
         logging.exception("Exception in User Settings CosmosDB initialization", e)
-        cosmos_user_settings_client = None
-
-    return cosmos_user_settings_client
+        return None
 
 class UserSettings:
     def __init__(self):
@@ -113,14 +111,14 @@ def save_user_settings(user_id, knowledge_base):
         return {"success": False, "message": message}
 
 
-def load_user_settings(user_id):
+async def load_user_settings(user_id):
     if not current_app.cosmos_user_settings_client:
         message = "User Settings Cosmos DB not available, using default settings"
         logging.warning(message)
         return {"success": False, "message": message, "knowledge_base": None}
     
     try:
-        conversation = current_app.cosmos_user_settings_client.get_conversation(user_id, user_id)
+        conversation = await current_app.cosmos_user_settings_client.get_conversation(user_id, user_id)
         if conversation:
             knowledge_base = conversation.get('knowledge_base')
             message = f"Knowledge base loaded for user {user_id}"
@@ -239,23 +237,17 @@ MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "
 
 @bp.route("/api/user_settings", methods=['GET', 'POST'])
 async def user_settings():
-    try:
-        user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
-        
-        if request.method == 'GET':
-            result = load_user_settings(user_id)
-            return jsonify(result)
-        
-        elif request.method == 'POST':
-            data = await request.get_json()
-            current_app.logger.info(f"Received POST data: {data}")
-            knowledge_base = data.get('knowledge_base')
-            result = save_user_settings(user_id, knowledge_base)
-            return jsonify(result)
-    except Exception as e:
-        current_app.logger.error(f"Error in user_settings: {str(e)}")
-        current_app.logger.error(traceback.format_exc())
-        return jsonify({"success": False, "message": str(e)}), 500
+    user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
+    
+    if request.method == 'GET':
+        result = await load_user_settings(user_id)
+        return jsonify(result)
+    
+    elif request.method == 'POST':
+        data = await request.get_json()
+        knowledge_base = data.get('knowledge_base')
+        result = save_user_settings(user_id, knowledge_base)
+        return jsonify(result)
 
 @bp.route("/api/user_info", methods=["GET"])
 async def get_user_info():
