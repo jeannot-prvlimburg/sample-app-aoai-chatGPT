@@ -28,86 +28,81 @@ const Layout = () => {
     appStateContext?.dispatch({ type: 'SET_KNOWLEDGE_BASE', payload: kb }); 
   };
 
-   useEffect(() => {
-      const fetchAppInfo = async () => {
-        try {
-          const response = await fetch('/api/app_info');
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          const data = await response.json();
-          console.log(data.message);
-        } catch (error) {
-          console.error('Error fetching app info:', error);
-          setError('Failed to fetch app info. Please try again later.');
-        }
-      };
-    
-      const fetchUserSettings = async () => {
-        try {
-          const response = await fetch('/api/user_settings');
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-    
-          const contentType = response.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            const data = await response.json();
-            if (data.success) {
-              setSelectedKnowledgeBase(data.knowledge_base);
-            } else {
-              console.warn('API request was not successful:', data);
-              setError(data.message || 'Failed to load user settings');
-            }
-          } else {
-            const text = await response.text();
-            console.error('Unexpected response:', text);
-            setError('Server returned unexpected content');
-          }
-        } catch (error) {
-          console.error('Error fetching user settings:', error);
-          setError('Failed to fetch user settings. Please try again later.');
-        }
-      };
-    
-      fetchAppInfo();
-      fetchUserSettings();
-    }, []);
-
-    const handleKnowledgeBaseSelect = async (kb: string) => {
-      setSelectedKnowledgeBase(kb);
-      setError(null); // Clear any previous errors
+  useEffect(() => {
+    const fetchAppInfo = async () => {
       try {
-        const response = await fetch('/api/user_settings', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ knowledge_base: kb }),
-        });
-  
+        const response = await fetch('/api/app_info');
         if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Error response:', errorText);
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log(data.message);
+      } catch (error) {
+        console.error('Error fetching app info:', error);
+      }
+    };
+  
+    const fetchUserSettings = async () => {
+      try {
+        const response = await fetch('/api/user_settings');
+        if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
   
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
           const data = await response.json();
-          if (!data.success) {
-            throw new Error(data.message || 'Unknown error occurred');
+          if (data.success) {
+            setSelectedKnowledgeBase(data.knowledge_base);
+          } else {
+            console.warn('API request was not successful:', data);
           }
         } else {
           const text = await response.text();
           console.error('Unexpected response:', text);
-          throw new Error('Server returned unexpected content');
         }
       } catch (error) {
-        console.error('Error setting knowledge base:', error);
-        setError(`Failed to set knowledge base: ${error.message}`);
+        console.error('Error fetching user settings:', error);
       }
+    };
+  
+    fetchAppInfo();
+    fetchUserSettings();
+  }, []);
+
+  const handleKnowledgeBaseSelect = async (kb: string) => {
+    setSelectedKnowledgeBase(kb);
+    try {
+      const response = await fetch('/api/user_settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ knowledge_base: kb }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        const data = await response.json();
+        if (!data.success) {
+          throw new Error(data.message || 'Unknown error occurred');
+        }
+      } else {
+        const text = await response.text();
+        console.error('Unexpected response:', text);
+        throw new Error('Server returned unexpected content');
+      }
+    } catch (error) {
+      console.error('Error setting knowledge base:', error);
+    }
   };
+
   
   const handleShareClick = () => {
     setIsSharePanelOpen(true)
