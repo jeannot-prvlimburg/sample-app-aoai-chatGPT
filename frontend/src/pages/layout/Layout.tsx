@@ -28,22 +28,24 @@ const Layout = () => {
     appStateContext?.dispatch({ type: 'SET_KNOWLEDGE_BASE', payload: kb }); 
   };
 
-  useEffect(() => {
+   useEffect(() => {
       const fetchAppInfo = async () => {
         try {
           const response = await fetch('/api/app_info');
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
           const data = await response.json();
-          console.log(data.message);  // Log het bericht naar de console
+          console.log(data.message);
         } catch (error) {
           console.error('Error fetching app info:', error);
+          setError('Failed to fetch app info. Please try again later.');
         }
       };
     
       const fetchUserSettings = async () => {
         try {
           const response = await fetch('/api/user_settings');
-          console.log('Raw response:', response);
-    
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
@@ -51,20 +53,20 @@ const Layout = () => {
           const contentType = response.headers.get('content-type');
           if (contentType && contentType.includes('application/json')) {
             const data = await response.json();
-            console.log('JSON Response:', data);
-    
             if (data.success) {
               setSelectedKnowledgeBase(data.knowledge_base);
             } else {
               console.warn('API request was not successful:', data);
+              setError(data.message || 'Failed to load user settings');
             }
           } else {
             const text = await response.text();
-            console.log('Text Response:', text);
-            throw new Error('Server returned unexpected content');
+            console.error('Unexpected response:', text);
+            setError('Server returned unexpected content');
           }
         } catch (error) {
           console.error('Error fetching user settings:', error);
+          setError('Failed to fetch user settings. Please try again later.');
         }
       };
     
@@ -74,8 +76,8 @@ const Layout = () => {
 
     const handleKnowledgeBaseSelect = async (kb: string) => {
       setSelectedKnowledgeBase(kb);
+      setError(null); // Clear any previous errors
       try {
-        console.log('Sending request to set knowledge base:', kb);
         const response = await fetch('/api/user_settings', {
           method: 'POST',
           headers: {
@@ -83,21 +85,16 @@ const Layout = () => {
           },
           body: JSON.stringify({ knowledge_base: kb }),
         });
-        console.log('Response status:', response.status);
-        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-        
-        const contentType = response.headers.get("content-type");
-        console.log('Content-Type:', contentType);
-        
+  
         if (!response.ok) {
           const errorText = await response.text();
           console.error('Error response:', errorText);
-          throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-    
-        if (contentType && contentType.indexOf("application/json") !== -1) {
+  
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
           const data = await response.json();
-          console.log('Save user settings result:', data);
           if (!data.success) {
             throw new Error(data.message || 'Unknown error occurred');
           }
@@ -108,9 +105,9 @@ const Layout = () => {
         }
       } catch (error) {
         console.error('Error setting knowledge base:', error);
-        // setErrorMessage(`Er is een fout opgetreden bij het instellen van de kennisbank: ${error.message}`);
+        setError(`Failed to set knowledge base: ${error.message}`);
       }
-    };
+  };
   
   const handleShareClick = () => {
     setIsSharePanelOpen(true)
