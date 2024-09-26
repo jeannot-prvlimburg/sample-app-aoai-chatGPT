@@ -193,14 +193,17 @@ def create_app():
             app.startup_log += f"\nFailed to initialize CosmosDB client for chat history: {str(e)}"
             app.cosmos_conversation_client = None
 
-        app.cosmos_user_settings_client = init_user_settings_cosmosdb()
+        try:
+            app.cosmos_user_settings_client = init_user_settings_cosmosdb()
+        except Exception as e:
+            logging.warning(f"Probleem hier met initialisatie CosmosDB voor user settings: {e}")
+            app.cosmos_user_settings_client = None
+            
         if app.cosmos_user_settings_client:
             app.startup_log += "\nCosmosDB for user settings initialized successfully"
         else:
             app.startup_log += "\nFailed to initialize CosmosDB for user settings"
-        
-        logging.info(app.startup_log)
-        
+            
         # Log de status van de Cosmos DB verbindingen
         if app.cosmos_conversation_client:
             logging.info("Cosmos DB connection for chat history is ready")
