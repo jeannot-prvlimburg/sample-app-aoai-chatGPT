@@ -50,7 +50,7 @@ bp = Blueprint("routes", __name__, static_folder="static", template_folder="stat
 cosmos_db_ready = asyncio.Event()
 
 # Definieer een versienummer voor je app
-APP_VERSION = "1.0.10"
+APP_VERSION = "1.0.11"
 
 # CosmosDB instellingen
 url = "https://webapp-development-prvlimburg.documents.azure.com:443/"
@@ -66,6 +66,10 @@ async def init_user_settings_cosmosdb():
        logging.info(f"Initializing Cosmos DB client with endpoint: {cosmos_endpoint}")
        logging.info(f"Using database: {database_name} and container: {container_name}")
        
+       cosmos_client = CosmosClient(cosmos_endpoint, credential)
+       database = cosmos_client.get_database_client(database_name)
+       container = database.get_container_client(container_name)
+       
        cosmos_user_settings_client = CosmosConversationClient(
            cosmosdb_endpoint=cosmos_endpoint,
            credential=credential,
@@ -73,6 +77,7 @@ async def init_user_settings_cosmosdb():
            container_name=container_name,
            enable_message_feedback=False
        )
+       cosmos_user_settings_client.container = container
        logging.info("Successfully connected to Cosmos DB for user settings")
        return cosmos_user_settings_client
    except Exception as e:
@@ -94,8 +99,6 @@ class EnhancedJSONEncoder(json.JSONEncoder):
 
 async def save_user_settings(user_id, knowledge_base):
    logging.info(f"Attempting to save settings for user {user_id} with knowledge base {knowledge_base}")
-   logging.info(f"Using database: {current_app.cosmos_user_settings_client.database.id}")
-   logging.info(f"Using container: {current_app.cosmos_user_settings_client.container.id}")
    if not current_app.cosmos_user_settings_client:
        message = "User Settings Cosmos DB not available, skipping save operation"
        logging.warning(message)
@@ -108,15 +111,9 @@ async def save_user_settings(user_id, knowledge_base):
            'knowledge_base': knowledge_base
        }
        logging.debug(f"Saving item: {item}")
-       logging.debug(f"Cosmos client: {current_app.cosmos_user_settings_client}")
-       logging.debug(f"Available methods: {dir(current_app.cosmos_user_settings_client)}")
        
        result = await current_app.cosmos_user_settings_client.container.upsert_item(body=item)
        logging.info(f"Upsert result: {result}")
-       
-       # Verify if the item was actually saved
-       saved_item = await current_app.cosmos_user_settings_client.get_conversation(user_id, user_id)
-       logging.info(f"Verification - Retrieved item after save: {saved_item}")
        
        message = f"Knowledge base saved for user {user_id}"
        logging.info(message)
@@ -144,26 +141,27 @@ async def verify_user_settings(user_id):
            return None
 
 async def load_user_settings(user_id):
-    logging.info(f"Loading user settings123")
-    logging.info(f"Using database: {current_app.cosmos_user_settings_client.database.id}")
-    logging.info(f"Using container: {current_app.cosmos_user_settings_client.container.id}")
-
+    logging.info(f"Loading user settings for user {user_id}")
     if not current_app.cosmos_user_settings_client:
         message = "User Settings Cosmos DB not available, using default settings"
         logging.warning(message)
         return {"success": False, "message": message, "knowledge_base": None}
     
     try:
-        conversation = await current_app.cosmos_user_settings_client.get_conversation(user_id, user_id)
-        if conversation:
-            knowledge_base = conversation.get('knowledge_base')
+        query = f"SELECT * FROM c WHERE c.id = '{user_id}'"
+        items = current_app.cosmos_user_settings_client.container.query_items(
+            query=query,
+            enable_cross_partition_query=True
+        )
+        async for item in items:
+            knowledge_base = item.get('knowledge_base')
             message = f"Knowledge base loaded for user {user_id}"
             logging.info(message)
             return {"success": True, "message": message, "knowledge_base": knowledge_base}
-        else:
-            message = f"Settings not found for user {user_id}"
-            logging.info(message)
-            return {"success": False, "message": message, "knowledge_base": None}
+        
+        message = f"Settings not found for user {user_id}"
+        logging.info(message)
+        return {"success": False, "message": message, "knowledge_base": None}
     except Exception as e:
         message = f"Failed to load knowledge base: {str(e)}"
         logging.error(message)
@@ -273,19 +271,21 @@ MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "
 
 @bp.route("/api/user_settings", methods=['GET', 'POST'])
 async def user_settings():
-    user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
-    
-    if request.method == 'GET':
-        result = await load_user_settings(user_id)
-        return jsonify(result)
-    
-    elif request.method == 'POST':
-        data = await request.get_json()
-        knowledge_base = data.get('knowledge_base')
-        result = await save_user_settings(user_id, knowledge_base)
-        verification = await verify_user_settings(user_id)
-        logging.info(f"Verification result: {verification}")
-        return jsonify(result)
+    try:
+        user_id = get_authenticated_user_details(request.headers)["user_principal_id"]
+        
+        if request.method == 'GET':
+            result = await load_user_settings(user_id)
+            return jsonify(result)
+        
+        elif request.method == 'POST':
+            data = await request.get_json()
+            knowledge_base = data.get('knowledge_base')
+            result = await save_user_settings(user_id, knowledge_base)
+            return jsonify(result)
+    except Exception as e:
+        logging.exception("Exception in /api/user_settings")
+        return jsonify({"success": False, "message": str(e)}), 500
 
 @bp.route("/api/user_info", methods=["GET"])
 async def get_user_info():
