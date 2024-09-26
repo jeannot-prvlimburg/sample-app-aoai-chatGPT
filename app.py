@@ -50,7 +50,7 @@ bp = Blueprint("routes", __name__, static_folder="static", template_folder="stat
 cosmos_db_ready = asyncio.Event()
 
 # Definieer een versienummer voor je app
-APP_VERSION = "1.0.7"
+APP_VERSION = "1.0.8"
 
 # CosmosDB instellingen
 url = "https://webapp-development-prvlimburg.documents.azure.com:443/"
@@ -100,9 +100,10 @@ def save_user_settings(user_id, knowledge_base):
     try:
         item = {
             'id': user_id,
+            'user_id': user_id,
             'knowledge_base': knowledge_base
         }
-        current_app.cosmos_user_settings_client.upsert_item(body=item)
+        current_app.cosmos_user_settings_client.upsert_conversation(item)
         message = f"Knowledge base saved for user {user_id}"
         logging.info(message)
         return {"success": True, "message": message}
@@ -113,22 +114,23 @@ def save_user_settings(user_id, knowledge_base):
 
 
 def load_user_settings(user_id):
-    if not current_app.cosmos_user_settings_client or not current_app.cosmos_user_settings_client.container:
+    if not current_app.cosmos_user_settings_client:
         message = "User Settings Cosmos DB not available, using default settings"
         logging.warning(message)
         return {"success": False, "message": message, "knowledge_base": None}
     
     try:
-        item = current_app.cosmos_user_settings_client.container.read_item(item=user_id, partition_key=user_id)
-        knowledge_base = item.get('knowledge_base')
-        message = f"Knowledge base loaded for user {user_id}"
-        logging.info(message)
-        return {"success": True, "message": message, "knowledge_base": knowledge_base}
-    except exceptions.CosmosResourceNotFoundError:
-        message = f"Settings not found for user {user_id}"
-        logging.info(message)
-        return {"success": False, "message": message, "knowledge_base": None}
-    except exceptions.CosmosHttpResponseError as e:
+        conversation = current_app.cosmos_user_settings_client.get_conversation(user_id, user_id)
+        if conversation:
+            knowledge_base = conversation.get('knowledge_base')
+            message = f"Knowledge base loaded for user {user_id}"
+            logging.info(message)
+            return {"success": True, "message": message, "knowledge_base": knowledge_base}
+        else:
+            message = f"Settings not found for user {user_id}"
+            logging.info(message)
+            return {"success": False, "message": message, "knowledge_base": None}
+    except Exception as e:
         message = f"Failed to load knowledge base: {str(e)}"
         logging.error(message)
         return {"success": False, "message": message, "knowledge_base": None}
